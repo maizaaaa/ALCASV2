@@ -1,0 +1,1421 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+@layer base {
+  html {
+    --color-primary: #0891b2;
+    --color-accent-teal: #0d9488;
+    --color-accent-cyan: #06b6d4;
+    --color-background-light: #e2e8f0;
+    --color-background-dark: #ffffff;
+    --color-background-charcoal: #f8fafc;
+    --bg-hero-pattern: radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f5f9 100%);
+    --bg-gradient-primary: linear-gradient(to right, #0d9488, #06b6d4);
+  }
+
+  html.dark {
+    --color-primary: #0df2f2;
+    --color-accent-teal: #1F958D;
+    --color-accent-cyan: #17C6BA;
+    --color-background-light: #f6f8f7;
+    --color-background-dark: #050505;
+    --color-background-charcoal: #121212;
+    --bg-hero-pattern: radial-gradient(circle at 50% 50%, #121212 0%, #050505 100%);
+    --bg-gradient-primary: linear-gradient(to right, #1F958D, #17C6BA);
+  }
+
+  html,
+  body {
+    background-color: var(--color-background-dark);
+    color: #0f172a;
+    /* slate-900 */
+    font-family: 'Space Grotesk', sans-serif;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+
+  html.dark body {
+    color: #ffffff;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-cyan);
+    color: #ffffff;
+  }
+
+  html.dark ::selection {
+    color: #000000;
+  }
+
+  html.dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) hue-rotate(180deg);
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .text-gradient {
+    background: linear-gradient(90deg, #0d9488 0%, #06b6d4 50%, #0891b2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  html.dark .text-gradient {
+    background: linear-gradient(90deg, #1F958D 0%, #17C6BA 50%, #0df2f2 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .glow-button {
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+    transition: all 0.3s ease;
+  }
+
+  .glow-button:hover {
+    box-shadow: 0 0 25px rgba(6, 182, 212, 0.45);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.4s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .glass-card:hover {
+    border-color: rgba(6, 182, 212, 0.5);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 40px -10px rgba(6, 182, 212, 0.15);
+  }
+}
+
+/* 🌟 Tech Floating Squares Animation 🌟 */
+.tech-square {
+  position: absolute;
+  background: linear-gradient(135deg, rgba(13, 242, 242, 0.05) 0%, rgba(8, 145, 178, 0.02) 100%);
+  border: 1px solid rgba(13, 242, 242, 0.15);
+  box-shadow: 0 0 20px rgba(13, 242, 242, 0.05);
+  backdrop-filter: blur(2px);
+  animation: floatUp 20s linear infinite;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.sq-1 {
+  width: 80px;
+  height: 80px;
+  left: 10%;
+  bottom: -100px;
+  animation-duration: 15s;
+}
+
+.sq-2 {
+  width: 120px;
+  height: 120px;
+  left: 40%;
+  bottom: -150px;
+  animation-duration: 25s;
+  animation-delay: 2s;
+}
+
+.sq-3 {
+  width: 50px;
+  height: 50px;
+  left: 70%;
+  bottom: -80px;
+  animation-duration: 12s;
+  animation-delay: 5s;
+}
+
+.sq-4 {
+  width: 90px;
+  height: 90px;
+  left: 85%;
+  bottom: -120px;
+  animation-duration: 18s;
+  animation-delay: 8s;
+}
+
+.sq-5 {
+  width: 40px;
+  height: 40px;
+  left: 25%;
+  bottom: -60px;
+  animation-duration: 10s;
+  animation-delay: 12s;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-1200px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   GLOBAL LAYOUT & BACKGROUND STYLES (LIGHT & DARK MODE)
+   ========================================================================== */
+
+.admin-layout,
+.lecturer-layout {
+  background: linear-gradient(135deg, #ccfbf1 0%, #f0fdfa 25%, #f8fafc 60%, #e0f2fe 100%) !important;
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+.main-content {
+  background-color: transparent !important;
+  position: relative !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  margin-left: 260px !important;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 72px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 60px !important;
+  }
+}
+
+/* Bottom-Right Gradient Glow Layer */
+.main-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle at 100% 100%, rgba(20, 184, 166, 0.25) 0%, rgba(14, 165, 233, 0.2) 35%, transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.dashboard-modern-bg {
+  background-image: radial-gradient(rgba(15, 118, 110, 0.16) 1.2px, transparent 1.2px), linear-gradient(135deg, #ccfbf1 0%, #f0fdfa 25%, #f8fafc 60%, #e0f2fe 100%) !important;
+  background-size: 24px 24px, 100% 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Dark Mode Background Overrides */
+html.dark .admin-layout,
+html.dark .lecturer-layout {
+  background: radial-gradient(circle at 10% 20%, #0a2d36 0%, #03141a 45%, #020b0e 90%) !important;
+}
+
+html.dark .dashboard-modern-bg {
+  background-image: radial-gradient(rgba(45, 212, 191, 0.2) 1.5px, transparent 1.5px), radial-gradient(circle at 10% 20%, #0a2d36 0%, #03141a 45%, #020b0e 90%) !important;
+  background-size: 24px 24px, 100% 100% !important;
+}
+
+.student-dashboard-bg {
+  background-color: #f8fafc;
+  background-image: radial-gradient(#e2e8f0 1.5px, transparent 1.5px);
+  background-size: 32px 32px;
+}
+
+html.dark .student-dashboard-bg {
+  background-color: #0B191E !important;
+  background-image: radial-gradient(rgba(45, 212, 191, 0.1) 1.5px, transparent 1.5px) !important;
+}
+
+html.dark .main-content::after {
+  background: radial-gradient(circle at 100% 100%, rgba(45, 212, 191, 0.25) 0%, rgba(15, 118, 110, 0.2) 40%, transparent 70%) !important;
+  filter: blur(50px) !important;
+}
+
+/* 3. Dark Text colors and gradients */
+html.dark .page-title {
+  background: linear-gradient(135deg, #ffffff 40%, #a5f3fc 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  display: inline-block !important;
+}
+
+html.dark .page-subtitle {
+  color: #94a3b8 !important;
+}
+
+html.dark .card-header h2 {
+  background: linear-gradient(135deg, #ffffff 70%, #99f6e4 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  display: inline-block !important;
+}
+
+html.dark .card-subtitle {
+  color: #64748b !important;
+}
+
+/* 4. Glassmorphism dark cards with glowing borders */
+html.dark .glass-card {
+  background: rgba(9, 29, 36, 0.65) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(45, 212, 191, 0.15) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+html.dark .glass-card:hover {
+  border-color: rgba(45, 212, 191, 0.35) !important;
+  box-shadow: 0 20px 40px -15px rgba(15, 118, 110, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+html.dark .alert-border {
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+html.dark .alert-border:hover {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  box-shadow: 0 20px 40px -15px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* 5. Glowing Stat numbers and badges */
+html.dark .stat-title {
+  color: #94a3b8 !important;
+}
+
+html.dark .stat-action-hint {
+  color: #64748b !important;
+}
+
+html.dark .stat-value.text-forest,
+html.dark .stat-value.text-blue {
+  color: #2dd4bf !important;
+  text-shadow: 0 0 16px rgba(45, 212, 191, 0.35) !important;
+}
+
+html.dark .stat-value.text-orange {
+  color: #f59e0b !important;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.2) !important;
+}
+
+html.dark .stat-value.text-red {
+  color: #f87171 !important;
+  text-shadow: 0 0 16px rgba(239, 68, 68, 0.3) !important;
+}
+
+html.dark .stat-value.text-dark {
+  color: #ffffff !important;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark .icon-green {
+  background: rgba(45, 212, 191, 0.1) !important;
+  color: #2dd4bf !important;
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.15) !important;
+}
+
+html.dark .icon-orange {
+  background: rgba(249, 115, 22, 0.1) !important;
+  color: #ff9d43 !important;
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.15) !important;
+}
+
+html.dark .icon-red {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #f87171 !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.15) !important;
+}
+
+html.dark .card-selected {
+  border-color: #2dd4bf !important;
+  background: linear-gradient(135deg, rgba(9, 29, 36, 0.95), rgba(7, 39, 44, 0.95)) !important;
+  box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.4), 0 0 0 2px #2dd4bf !important;
+}
+
+/* 6. Dark table elements */
+html.dark .sophisticated-table th {
+  color: #94a3b8 !important;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.15) !important;
+}
+
+html.dark .sophisticated-table td {
+  color: #cbd5e1 !important;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.08) !important;
+}
+
+html.dark .sophisticated-table tbody tr:hover {
+  background-color: rgba(45, 212, 191, 0.04) !important;
+}
+
+html.dark .user-cell {
+  color: #f1f5f9 !important;
+}
+
+html.dark .sub-text {
+  color: #64748b !important;
+}
+
+html.dark .font-bold.text-dark {
+  color: #f1f5f9 !important;
+}
+
+html.dark .interactive-row:hover {
+  background-color: rgba(45, 212, 191, 0.05) !important;
+}
+
+/* 7. Dark table toolbar and inputs */
+html.dark .filter-tabs {
+  background-color: #051419 !important;
+  border: 1px solid rgba(45, 212, 191, 0.06) !important;
+}
+
+html.dark .tab-btn {
+  color: #94a3b8 !important;
+}
+
+html.dark .tab-btn:hover {
+  color: #2dd4bf !important;
+}
+
+html.dark .tab-btn.active {
+  background-color: #091d24 !important;
+  color: #2dd4bf !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
+
+html.dark .search-box input {
+  background-color: #091d24 !important;
+  border-color: #1e3e46 !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark .search-box input:focus {
+  border-color: #2dd4bf !important;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15) !important;
+}
+
+html.dark .clear-search {
+  color: #64748b !important;
+}
+
+html.dark .clear-search:hover {
+  color: #cbd5e1 !important;
+}
+
+html.dark .text-link {
+  color: #2dd4bf !important;
+}
+
+html.dark .text-link:hover {
+  color: #22d3ee !important;
+}
+
+/* 8. Dark breakdown styles */
+html.dark .breakdown-row {
+  background: rgba(9, 29, 36, 0.4) !important;
+  border: 1px solid rgba(45, 212, 191, 0.08) !important;
+}
+
+html.dark .breakdown-row:hover {
+  background: rgba(9, 29, 36, 0.7) !important;
+  border-color: rgba(45, 212, 191, 0.2) !important;
+}
+
+html.dark .breakdown-label {
+  color: #94a3b8 !important;
+}
+
+html.dark .breakdown-count {
+  color: #f1f5f9 !important;
+}
+
+html.dark .breakdown-stats {
+  color: #f1f5f9 !important;
+}
+
+html.dark .breakdown-percentage {
+  color: #64748b !important;
+}
+
+html.dark .progress-bar-bg {
+  background-color: #051419 !important;
+}
+
+/* 9. Dark Donut SVG styles */
+html.dark .donut-number {
+  fill: #f1f5f9 !important;
+}
+
+html.dark .donut-label {
+  fill: #94a3b8 !important;
+}
+
+html.dark .donut-chart-svg circle[stroke="#e2e8f0"] {
+  stroke: #051419 !important;
+}
+
+/* 10. Dark Button actions */
+html.dark .btn-premium {
+  background-color: #091d24 !important;
+  border-color: #2dd4bf !important;
+  color: #2dd4bf !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2) !important;
+}
+
+html.dark .btn-premium:hover {
+  background-color: #2dd4bf !important;
+  color: #020a0d !important;
+  box-shadow: 0 8px 16px rgba(45, 212, 191, 0.25) !important;
+}
+
+html.dark .btn-premium:disabled {
+  border-color: #1e3e46 !important;
+  color: #475569 !important;
+}
+
+/* 11. Dark Details Modal */
+html.dark .modal-backdrop {
+  background-color: rgba(2, 10, 13, 0.7) !important;
+}
+
+html.dark .modal-card {
+  background: rgba(9, 29, 36, 0.95) !important;
+  border: 1px solid rgba(45, 212, 191, 0.2) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+}
+
+html.dark .modal-header {
+  border-bottom: 1px solid rgba(45, 212, 191, 0.15) !important;
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.15), rgba(9, 29, 36, 0.15)) !important;
+}
+
+html.dark .modal-header h3 {
+  color: #f1f5f9 !important;
+}
+
+html.dark .btn-close {
+  color: #64748b !important;
+}
+
+html.dark .btn-close:hover {
+  color: #cbd5e1 !important;
+}
+
+html.dark .detail-row {
+  border-bottom: 1px solid rgba(45, 212, 191, 0.08) !important;
+}
+
+html.dark .detail-label {
+  color: #94a3b8 !important;
+}
+
+html.dark .detail-val {
+  color: #f1f5f9 !important;
+}
+
+html.dark .topic-highlight {
+  color: #2dd4bf !important;
+}
+
+html.dark .notes-text {
+  background: #051419 !important;
+  border: 1px solid rgba(45, 212, 191, 0.1) !important;
+  color: #cbd5e1 !important;
+}
+
+html.dark .btn-secondary {
+  background: #091d24 !important;
+  border: 1px solid #1e3e46 !important;
+  color: #cbd5e1 !important;
+}
+
+html.dark .btn-secondary:hover {
+  background: #1e3e46 !important;
+  color: #f1f5f9 !important;
+}
+
+/* 12. Active nav items */
+html.dark .nav-item.active {
+  background-color: rgba(45, 212, 191, 0.1) !important;
+  color: #2dd4bf !important;
+  border-left: 4px solid #2dd4bf !important;
+  box-shadow: inset 4px 0 12px rgba(45, 212, 191, 0.05) !important;
+}
+
+/* 13. Sidebar Collapsed text node and responsive overrides */
+@media (max-width: 1024px) {
+  html.dark .sidebar {
+    width: 72px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  html.dark .sidebar {
+    width: 60px !important;
+  }
+}
+
+/* 14. Global Unified Font Settings (Light and Dark Mode) */
+html,
+body,
+.admin-layout,
+.lecturer-layout,
+.student-dashboard-bg,
+.sidebar,
+.dashboard-wrapper,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+button,
+input,
+select,
+textarea,
+.brand-icon,
+td,
+th,
+span,
+p,
+a {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+/* 15. Usability & Contrast Adjustments in Dark Mode */
+html.dark .nav-item {
+  color: #94a3b8 !important;
+}
+
+html.dark .nav-item:hover {
+  color: #2dd4bf !important;
+  background-color: rgba(45, 212, 191, 0.08) !important;
+}
+
+html.dark .nav-item.active {
+  color: #2dd4bf !important;
+  background-color: rgba(45, 212, 191, 0.1) !important;
+}
+
+html.dark .logout-btn {
+  color: #f87171 !important;
+}
+
+html.dark .logout-btn:hover {
+  color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+html.dark .sub-text,
+html.dark .breakdown-percentage {
+  color: #94a3b8 !important;
+  /* Raised contrast for secondary labels */
+}
+
+html.dark label,
+html.dark .form-group label {
+  color: #2dd4bf !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.3px !important;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea,
+html.dark .modern-input,
+html.dark .modern-select {
+  background-color: #051419 !important;
+  border: 1px solid rgba(45, 212, 191, 0.3) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+html.dark input::placeholder,
+html.dark .modern-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.dark .modal-container {
+  background: #091d24 !important;
+  border: 1px solid rgba(45, 212, 191, 0.3) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
+}
+
+html.dark .modal-header {
+  background: #051419 !important;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.2) !important;
+}
+
+html.dark .modal-header h2 {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  background: linear-gradient(135deg, #ffffff 60%, #a5f3fc 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+html.dark .modal-body {
+  background-color: #091d24 !important;
+  background: #091d24 !important;
+}
+
+html.dark .modal-footer {
+  background-color: #051419 !important;
+  background: #051419 !important;
+  border-top: 1px solid rgba(45, 212, 191, 0.2) !important;
+  border-bottom: none !important;
+}
+
+html.dark input[type="time"]::-webkit-calendar-picker-indicator,
+html.dark input[type="date"]::-webkit-calendar-picker-indicator,
+html.dark .modern-input::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(2) !important;
+  cursor: pointer !important;
+  opacity: 0.95 !important;
+}
+
+html.dark .empty-day {
+  color: #5eead4 !important;
+  background: rgba(15, 118, 110, 0.15) !important;
+  border: 1.5px dashed rgba(45, 212, 191, 0.35) !important;
+  text-align: center !important;
+  font-weight: 700 !important;
+  padding: 16px !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  text-shadow: 0 0 10px rgba(45, 212, 191, 0.25) !important;
+}
+
+/* Dark Mode Slot Cards matching dark translucent style */
+html.dark .day-header {
+  background: rgba(226, 232, 240, 0.12) !important;
+  border-bottom: 2px solid rgba(45, 212, 191, 0.25) !important;
+}
+
+html.dark .day-header h3 {
+  color: #2dd4bf !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px !important;
+}
+
+html.dark .slot-card {
+  background: rgba(5, 20, 25, 0.75) !important;
+  border: 1px solid rgba(45, 212, 191, 0.2) !important;
+  border-radius: 12px !important;
+  padding: 14px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+html.dark .slot-card:hover {
+  background: rgba(9, 29, 36, 0.9) !important;
+  border-color: rgba(45, 212, 191, 0.35) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.dark .available-border {
+  border-left: 4px solid #2dd4bf !important;
+}
+
+html.dark .class-border {
+  border-left: 4px solid #c084fc !important;
+}
+
+html.dark .busy-border {
+  border-left: 4px solid #94a3b8 !important;
+}
+
+html.dark .slot-title {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark .slot-time {
+  color: #e2e8f0 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+}
+
+html.dark .time-icon {
+  color: #2dd4bf !important;
+}
+
+html.dark .edit-icon {
+  color: #cbd5e1 !important;
+}
+
+html.dark .edit-icon:hover {
+  color: #2dd4bf !important;
+  background: rgba(45, 212, 191, 0.2) !important;
+}
+
+html.dark .delete-icon {
+  color: #cbd5e1 !important;
+}
+
+html.dark .delete-icon:hover {
+  color: #f87171 !important;
+  background: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* --- Soft Dark Mode Overrides for Lecturer Appointments --- */
+html.dark .controls-card {
+  background: rgba(5, 20, 25, 0.5) !important;
+  border: 1px solid rgba(45, 212, 191, 0.12) !important;
+  backdrop-filter: blur(12px) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.dark .tab-btn {
+  color: #94a3b8 !important;
+  font-weight: 700 !important;
+  border: 1px solid transparent !important;
+}
+
+html.dark .tab-btn:hover {
+  color: #5eead4 !important;
+  background: rgba(45, 212, 191, 0.08) !important;
+}
+
+html.dark .tab-btn.active {
+  background: rgba(15, 118, 110, 0.25) !important;
+  color: #5eead4 !important;
+  border: 1px solid rgba(45, 212, 191, 0.2) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html.dark .appt-card {
+  background: rgba(9, 29, 36, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(45, 212, 191, 0.25) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  overflow: hidden !important;
+}
+
+html.dark .appt-header {
+  background: rgba(5, 20, 25, 0.95) !important;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.18) !important;
+}
+
+html.dark .student-name {
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark .matric-text {
+  color: #cbd5e1 !important;
+  font-weight: 600 !important;
+}
+
+html.dark .appt-date {
+  color: #94a3b8 !important;
+}
+
+html.dark .avatar {
+  background: rgba(45, 212, 191, 0.2) !important;
+  color: #2dd4bf !important;
+  border: 1.5px solid rgba(45, 212, 191, 0.4) !important;
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.25) !important;
+}
+
+html.dark .appt-body {
+  background: rgba(9, 29, 36, 0.75) !important;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.12) !important;
+}
+
+html.dark .appt-body label {
+  color: #2dd4bf !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+}
+
+html.dark .reason-text {
+  color: #f1f5f9 !important;
+  font-weight: 500 !important;
+}
+
+html.dark .appt-footer {
+  background: rgba(5, 20, 25, 0.95) !important;
+  border-top: 1px solid rgba(45, 212, 191, 0.18) !important;
+}
+
+html.dark .btn-solid-blue {
+  background-color: #0F766E !important;
+  color: #ffffff !important;
+  border: 1px solid #2dd4bf !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.4) !important;
+}
+
+html.dark .btn-solid-blue:hover {
+  background-color: #115e59 !important;
+  box-shadow: 0 6px 16px rgba(45, 212, 191, 0.5) !important;
+}
+
+html.dark .btn-outline-red {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.6) !important;
+  color: #f87171 !important;
+  font-weight: 700 !important;
+}
+
+html.dark .btn-outline-red:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #ffffff !important;
+}
+
+html.dark .btn-outline-gray {
+  background: rgba(148, 163, 184, 0.12) !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.4) !important;
+  color: #cbd5e1 !important;
+  font-weight: 700 !important;
+}
+
+html.dark .btn-outline-gray:hover {
+  background: rgba(148, 163, 184, 0.25) !important;
+  color: #ffffff !important;
+}
+
+/* --- High-Contrast Dark Mode Overrides for Lecturer Consultation History --- */
+html.dark .filter-card,
+html.dark .content-card {
+  background: rgba(5, 20, 25, 0.65) !important;
+  border: 1px solid rgba(45, 212, 191, 0.18) !important;
+  backdrop-filter: blur(16px) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.dark .filter-group label {
+  color: #2dd4bf !important;
+  font-weight: 800 !important;
+}
+
+html.dark .input-with-icon input,
+html.dark .modern-input,
+html.dark .modern-select {
+  background-color: #051419 !important;
+  border: 1.5px solid rgba(45, 212, 191, 0.25) !important;
+  color: #ffffff !important;
+}
+
+html.dark .input-with-icon input::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.dark .input-icon {
+  color: #2dd4bf !important;
+}
+
+html.dark .btn-text {
+  color: #cbd5e1 !important;
+  border: 1px solid rgba(45, 212, 191, 0.25) !important;
+}
+
+html.dark .btn-text:hover {
+  color: #5eead4 !important;
+  background: rgba(45, 212, 191, 0.15) !important;
+  border-color: #2dd4bf !important;
+}
+
+html.dark .btn-outline-blue {
+  background: linear-gradient(135deg, #0F766E 0%, #115e59 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #2dd4bf !important;
+  box-shadow: 0 4px 14px rgba(15, 118, 110, 0.4) !important;
+}
+
+html.dark .btn-outline-blue:hover {
+  background: linear-gradient(135deg, #115e59 0%, #042f2e 100%) !important;
+  box-shadow: 0 8px 20px rgba(45, 212, 191, 0.4) !important;
+}
+
+/* Dark Mode Table Rows */
+html.dark .sophisticated-table th {
+  color: #2dd4bf !important;
+  font-weight: 800 !important;
+}
+
+html.dark .sophisticated-table tbody tr {
+  background: rgba(9, 29, 36, 0.85) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .sophisticated-table tbody tr:hover {
+  background: rgba(15, 45, 55, 0.95) !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.6) !important;
+}
+
+html.dark .sophisticated-table td {
+  border-top: 1px solid rgba(45, 212, 191, 0.15) !important;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.15) !important;
+}
+
+html.dark .sophisticated-table td:first-child {
+  border-left: 1px solid rgba(45, 212, 191, 0.15) !important;
+}
+
+html.dark .sophisticated-table td:last-child {
+  border-right: 1px solid rgba(45, 212, 191, 0.15) !important;
+}
+
+html.dark .date-text {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+html.dark .time-text {
+  color: #2dd4bf !important;
+  font-weight: 700 !important;
+}
+
+html.dark .student-name {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark .matric-text {
+  color: #cbd5e1 !important;
+  font-weight: 600 !important;
+}
+
+html.dark .reason-truncate {
+  color: #f1f5f9 !important;
+  font-weight: 500 !important;
+}
+
+html.dark .action-btn.view-btn {
+  background: rgba(45, 212, 191, 0.15) !important;
+  color: #2dd4bf !important;
+  border: 1px solid rgba(45, 212, 191, 0.35) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .action-btn.view-btn:hover {
+  background: #0F766E !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(45, 212, 191, 0.4) !important;
+}
+
+/* Dark Mode Badges */
+html.dark .status-badge.completed,
+html.dark .status-banner.completed-bg {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+}
+
+html.dark .status-badge.no-show,
+html.dark .status-banner.no-show-bg {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(251, 191, 36, 0.35) !important;
+}
+
+html.dark .status-badge.rejected,
+html.dark .status-banner.rejected-bg {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(248, 113, 113, 0.35) !important;
+}
+
+/* Dark Mode Modal Dialog */
+html.dark .modal-container {
+  background: #091d24 !important;
+  border: 1.5px solid rgba(45, 212, 191, 0.3) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+}
+
+html.dark .modal-header {
+  background: rgba(5, 20, 25, 0.95) !important;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.2) !important;
+}
+
+html.dark .modal-header h2 {
+  color: #ffffff !important;
+}
+
+html.dark .modal-subtitle {
+  color: #94a3b8 !important;
+}
+
+html.dark .close-btn {
+  color: #94a3b8 !important;
+}
+
+html.dark .close-btn:hover {
+  color: #f87171 !important;
+  background: rgba(239, 68, 68, 0.2) !important;
+}
+
+html.dark .modal-body {
+  background: #091d24 !important;
+}
+
+html.dark .detail-group label {
+  color: #2dd4bf !important;
+}
+
+html.dark .detail-group p {
+  color: #ffffff !important;
+}
+
+html.dark .divider {
+  background: rgba(45, 212, 191, 0.18) !important;
+}
+
+html.dark .text-box.outline {
+  background: #051419 !important;
+  border-color: rgba(45, 212, 191, 0.25) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+html.dark .text-box.filled {
+  background: rgba(15, 118, 110, 0.25) !important;
+  border-color: rgba(45, 212, 191, 0.35) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+html.dark .modal-footer {
+  background-color: #051419 !important;
+  border-top: 1px solid rgba(45, 212, 191, 0.2) !important;
+}
+
+html.dark .delete-icon:hover {
+  color: #f87171 !important;
+  background: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* --- High-Contrast Dark Mode Overrides for Lecturer Profile --- */
+html.dark .card-header h3 {
+  color: #ffffff !important;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark .card-header p {
+  color: #cbd5e1 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+html.dark .profile-name {
+  color: #ffffff !important;
+  font-size: 22px !important;
+  font-weight: 800 !important;
+}
+
+html.dark .profile-id {
+  color: #94a3b8 !important;
+  font-weight: 700 !important;
+}
+
+html.dark .q-label {
+  color: #2dd4bf !important;
+  font-weight: 800 !important;
+}
+
+html.dark .q-value {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+html.dark .q-value.text-teal {
+  color: #2dd4bf !important;
+  font-weight: 700 !important;
+}
+
+html.dark .dept-badge {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+  color: #34d399 !important;
+  width: fit-content !important;
+  align-self: center !important;
+}
+
+html.dark .role-badge.lecturer {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+  color: #34d399 !important;
+  width: fit-content !important;
+  align-self: flex-start !important;
+}
+
+/* Dark Mode Stat Pill Color Themes */
+html.dark .stat-pill.pill-emerald {
+  background: rgba(6, 78, 59, 0.45) !important;
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .stat-pill.pill-emerald .stat-number {
+  color: #34d399 !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+
+html.dark .stat-pill.pill-emerald .stat-title {
+  color: #a7f3d0 !important;
+  font-weight: 800 !important;
+}
+
+html.dark .stat-pill.pill-amber {
+  background: rgba(120, 53, 15, 0.45) !important;
+  border: 1px solid rgba(251, 191, 36, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .stat-pill.pill-amber .stat-number {
+  color: #fbbf24 !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+
+html.dark .stat-pill.pill-amber .stat-title {
+  color: #fde68a !important;
+  font-weight: 800 !important;
+}
+
+html.dark .stat-pill.pill-blue {
+  background: rgba(30, 58, 138, 0.45) !important;
+  border: 1px solid rgba(96, 165, 250, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .stat-pill.pill-blue .stat-number {
+  color: #60a5fa !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+
+html.dark .stat-pill.pill-blue .stat-title {
+  color: #bfdbfe !important;
+  font-weight: 800 !important;
+}
+
+html.dark .profile-nav-card {
+  background: rgba(5, 20, 25, 0.6) !important;
+  border: 1px solid rgba(45, 212, 191, 0.2) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+html.dark .profile-tab-btn {
+  color: #cbd5e1 !important;
+  font-weight: 700 !important;
+}
+
+html.dark .profile-tab-btn:hover {
+  color: #5eead4 !important;
+  background: rgba(45, 212, 191, 0.1) !important;
+}
+
+html.dark .profile-tab-btn.active {
+  background: rgba(15, 118, 110, 0.3) !important;
+  color: #2dd4bf !important;
+  border: 1px solid rgba(45, 212, 191, 0.4) !important;
+}
+
+html.dark .form-group label {
+  color: #2dd4bf !important;
+  font-weight: 800 !important;
+}
+
+html.dark .modern-input,
+html.dark .modern-textarea {
+  background-color: #051419 !important;
+  border: 1.5px solid rgba(45, 212, 191, 0.3) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+html.dark .bg-gray {
+  background-color: rgba(5, 20, 25, 0.8) !important;
+  color: #94a3b8 !important;
+  border: 1.5px solid rgba(45, 212, 191, 0.2) !important;
+}
+
+html.dark .pref-item {
+  background: #051419 !important;
+  border: 1.5px solid rgba(45, 212, 191, 0.25) !important;
+}
+
+html.dark .pref-item:hover {
+  background: rgba(9, 29, 36, 0.9) !important;
+  border-color: rgba(45, 212, 191, 0.4) !important;
+}
+
+html.dark .pref-title {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+html.dark .pref-desc {
+  color: #cbd5e1 !important;
+  font-weight: 500 !important;
+}
+
+/* Dark Mode Student Profile Modal Overrides */
+html.dark .student-avatar-lg {
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.4), rgba(20, 184, 166, 0.5)) !important;
+  color: #5eead4 !important;
+  border-color: #2dd4bf !important;
+}
+
+html.dark .matric-badge {
+  background: rgba(45, 212, 191, 0.15) !important;
+  border-color: rgba(45, 212, 191, 0.3) !important;
+  color: #2dd4bf !important;
+}
+
+html.dark .info-group label {
+  color: #2dd4bf !important;
+}
+
+html.dark .info-group p {
+  color: #ffffff !important;
+}
+
+html.dark .text-teal-val {
+  color: #2dd4bf !important;
+}
+
+html.dark .mini-stat {
+  background: rgba(5, 20, 25, 0.6) !important;
+  border: 1px solid rgba(45, 212, 191, 0.25) !important;
+}
+
+html.dark .stat-val {
+  color: #ffffff !important;
+}
+
+html.dark .stat-val.text-green {
+  color: #34d399 !important;
+}
+
+html.dark .stat-lbl {
+  color: #cbd5e1 !important;
+}
+
+html.dark .last-topic-box {
+  background: #051419 !important;
+  border: 1px solid rgba(45, 212, 191, 0.25) !important;
+}
+
+html.dark .last-topic-box label {
+  color: #2dd4bf !important;
+}
+
+html.dark .last-topic-box p {
+  color: #ffffff !important;
+}
+
+/* Dark Mode Auto-Display Student Hover Card */
+html.dark .student-hover-card {
+  background: #051419 !important;
+  border: 1.5px solid rgba(45, 212, 191, 0.35) !important;
+  box-shadow: 0 14px 40px -5px rgba(0, 0, 0, 0.85), 0 0 20px rgba(45, 212, 191, 0.2) !important;
+}
+
+html.dark .student-hover-card::before {
+  background: #051419 !important;
+  border-top-color: rgba(45, 212, 191, 0.35) !important;
+  border-left-color: rgba(45, 212, 191, 0.35) !important;
+}
+
+html.dark .hover-card-header {
+  border-bottom-color: rgba(45, 212, 191, 0.2) !important;
+}
+
+html.dark .hover-avatar-sm {
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.4), rgba(20, 184, 166, 0.5)) !important;
+  color: #5eead4 !important;
+  border-color: #2dd4bf !important;
+}
+
+html.dark .hover-name {
+  color: #ffffff !important;
+}
+
+html.dark .hover-matric-pill {
+  background: rgba(45, 212, 191, 0.18) !important;
+  color: #2dd4bf !important;
+}
+
+html.dark .h-label {
+  color: #2dd4bf !important;
+}
+
+html.dark .h-val {
+  color: #ffffff !important;
+}
+
+html.dark .hover-footer-hint {
+  border-top-color: rgba(45, 212, 191, 0.2) !important;
+  color: #2dd4bf !important;
+}
+
+html.dark .text-green-val {
+  color: #34d399 !important;
+}
+
+/* Dark Mode Upcoming Session Meta Bar Overrides */
+html.dark .location-badge {
+  background: rgba(45, 212, 191, 0.15) !important;
+  border-color: rgba(45, 212, 191, 0.3) !important;
+  color: #2dd4bf !important;
+}
+
+html.dark .location-badge.is-online {
+  background: rgba(56, 189, 248, 0.15) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+  color: #38bdf8 !important;
+}
+
+html.dark .confirmed-pill {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+  color: #34d399 !important;
+}
+
+html.dark .btn-outline-teal {
+  border-color: #2dd4bf !important;
+  color: #2dd4bf !important;
+}
+
+html.dark .btn-outline-teal:hover {
+  background: rgba(45, 212, 191, 0.2) !important;
+  color: #ffffff !important;
+}

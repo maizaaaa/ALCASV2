@@ -1,0 +1,165 @@
+<div class="admin-layout">
+
+  <!-- Left Sidebar Navigation -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Right Side: Consultation Logs Content -->
+  <main class="main-content dashboard-modern-bg">
+
+    <div class="ambient-glow"></div>
+
+    <div class="dashboard-wrapper relative z-10">
+
+      <div class="dashboard-header glass-header">
+        <div>
+          <h1 class="page-title">Consultation Logs</h1>
+          <p class="page-subtitle">Track and review all departmental consultation records.</p>
+        </div>
+        <button class="btn-premium" (click)="exportLogs()">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          Export CSV
+        </button>
+      </div>
+
+      <div class="filter-card glass-card">
+        <div class="filter-group flex-2">
+          <label>Search Logs</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input type="text" [(ngModel)]="searchQuery" placeholder="Search ID, Student, or Lecturer...">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label>Status</label>
+          <select [(ngModel)]="statusFilter" class="modern-select">
+            <option value="ALL">All Statuses</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="PENDING">Pending</option>
+            <option value="NO-SHOW">No-Show</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Specific Date</label>
+          <input type="date" [(ngModel)]="dateFilter" class="modern-input">
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn-text" (click)="clearFilters()">Clear Filters</button>
+        </div>
+      </div>
+
+      <div class="content-card glass-card">
+        <div class="table-container">
+          <table class="sophisticated-table">
+            <thead>
+            <tr>
+              <th>Log Details</th>
+              <th>Participants</th>
+              <th>Reason for Visit</th>
+              <th>Status</th>
+              <th class="text-right">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngIf="filteredLogs.length === 0">
+              <td colspan="5" class="empty-state">
+                No logs found matching your filters.
+              </td>
+            </tr>
+
+            <tr *ngFor="let log of filteredLogs">
+              <td>
+                <div class="log-id-text">{{ log.id }}</div>
+                <div class="date-time-text">{{ log.date }} </div>
+                <div class="date-time-text">{{ log.time }}</div>
+              </td>
+              <td>
+                <div class="participant-text"><strong>S:</strong> {{ log.student }}</div>
+                <div class="participant-text text-muted"><strong>L:</strong> {{ log.lecturer }}</div>
+              </td>
+              <td>
+                <div class="reason-text">{{ log.reason }}</div>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="log.status.toLowerCase()">
+                  {{ log.status }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button class="action-btn view-btn" title="View Full Details" (click)="viewDetails(log)">View Details</button>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-backdrop" *ngIf="showModal && selectedLog">
+      <div class="modal-container fade-in-up">
+
+        <div class="modal-header">
+          <div>
+            <h2>Consultation Details</h2>
+            <p class="modal-subtitle">Log ID: {{ selectedLog.id }}</p>
+          </div>
+          <button class="close-btn" (click)="closeModal()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+
+          <div class="status-banner" [ngClass]="selectedLog.status.toLowerCase() + '-bg'">
+            Current Status: <strong>{{ selectedLog.status }}</strong>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail-group">
+              <label>Student</label>
+              <p>{{ selectedLog.student }}</p>
+            </div>
+            <div class="detail-group">
+              <label>Lecturer</label>
+              <p>{{ selectedLog.lecturer }}</p>
+            </div>
+            <div class="detail-group">
+              <label>Date & Time</label>
+              <p>{{ selectedLog.date }} | {{ selectedLog.time }}</p>
+            </div>
+            <div class="detail-group">
+              <label>Location / Platform</label>
+              <p>{{ selectedLog.location }}</p>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="detail-group full-width">
+            <label>Reason for Visit (Student Input)</label>
+            <div class="text-box">
+              {{ selectedLog.reason }}
+            </div>
+          </div>
+
+          <div class="detail-group full-width">
+            <label>Lecturer Remarks / Notes</label>
+            <div class="text-box bg-gray">
+              {{ selectedLog.notes || 'No remarks provided.' }}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-premium-solid" (click)="closeModal()">Close Window</button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>

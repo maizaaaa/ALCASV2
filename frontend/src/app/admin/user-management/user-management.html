@@ -1,0 +1,151 @@
+<div class="admin-layout">
+
+  <!-- Left Sidebar Navigation -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Right Side: User Management Content -->
+  <main class="main-content dashboard-modern-bg">
+    <!-- Faint ambient glow -->
+    <div class="ambient-glow"></div>
+
+    <div class="dashboard-wrapper relative z-10">
+      <!-- Header & Add Button -->
+      <div class="dashboard-header glass-header">
+        <div>
+          <h1 class="page-title">User Management</h1>
+          <p class="page-subtitle">Add, update, or deactivate system accounts.</p>
+        </div>
+        <button class="btn-premium-solid" (click)="addUser()">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          Add New User
+        </button>
+      </div>
+
+      <!-- Controls Card (Search & Tabs) -->
+      <div class="controls-card glass-card">
+        <div class="tabs-container">
+          <button class="tab-btn" [class.active]="activeTab === 'ALL'" (click)="setTab('ALL')">All Users</button>
+          <button class="tab-btn" [class.active]="activeTab === 'STUDENT'" (click)="setTab('STUDENT')">Students</button>
+          <button class="tab-btn" [class.active]="activeTab === 'LECTURER'" (click)="setTab('LECTURER')">Lecturers</button>
+        </div>
+
+        <div class="search-container">
+          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <input type="text" [(ngModel)]="searchQuery" placeholder="Search by name, email, or ID..." class="search-input">
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="content-card glass-card">
+        <div class="table-container">
+          <table class="sophisticated-table">
+            <thead>
+            <tr>
+              <th>User Details</th>
+              <th>Role & ID</th>
+              <th>Last Login</th>
+              <th>Status</th>
+              <th class="text-right">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngIf="filteredUsers.length === 0">
+              <td colspan="5" class="empty-state">No users match your search.</td>
+            </tr>
+
+            <tr *ngFor="let user of filteredUsers">
+              <td>
+                <div class="user-profile-cell">
+                  <div class="avatar" [ngClass]="user.role.toLowerCase()">
+                    {{ user.name.charAt(0) }}
+                  </div>
+                  <div>
+                    <div class="user-name">{{ user.name }}</div>
+                    <div class="user-email">{{ user.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="role-text">{{ user.role | titlecase }}</div>
+                <div class="id-text">{{ user.id }}</div>
+              </td>
+              <td class="last-login">{{ user.lastLogin }}</td>
+              <td>
+                  <span class="status-badge" [ngClass]="user.status.toLowerCase()">
+                    {{ user.status }}
+                  </span>
+              </td>
+              <td class="actions-cell">
+                <div class="action-group">
+                  <button class="action-btn edit-btn" (click)="editUser(user)" title="Edit User">
+                    Edit
+                  </button>
+                  <button class="action-btn toggle-btn" [ngClass]="user.status.toLowerCase()" (click)="toggleStatus(user)" title="Toggle Status">
+                    {{ user.status === 'ACTIVE' ? 'Deactivate' : 'Activate' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============================================== -->
+  <!-- ADD / EDIT USER MODAL OVERLAY                  -->
+  <!-- ============================================== -->
+  <div class="modal-backdrop" *ngIf="showModal">
+    <div class="modal-container fade-in-up">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h2>{{ isEditing ? 'Edit User Profile' : 'Add New User' }}</h2>
+        <button class="close-btn" (click)="closeModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body (Form) -->
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label>Full Name <span class="text-teal">*</span></label>
+            <input type="text" [(ngModel)]="userForm.name" class="modern-input" placeholder="e.g. Nur Amirah">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label>Email Address <span class="text-teal">*</span></label>
+            <input type="email" [(ngModel)]="userForm.email" class="modern-input" placeholder="student@uum.edu.my">
+          </div>
+        </div>
+
+        <div class="form-row gap-4">
+          <div class="form-group flex-1">
+            <label>User Role <span class="text-teal">*</span></label>
+            <select [(ngModel)]="userForm.role" class="modern-select" [disabled]="isEditing">
+              <option value="STUDENT">Student</option>
+              <option value="LECTURER">Lecturer</option>
+            </select>
+            <small class="helper-text" *ngIf="isEditing">Role cannot be changed after creation.</small>
+          </div>
+
+          <div class="form-group flex-1">
+            <label>ID Number (Matric/Staff) <span class="text-teal">*</span></label>
+            <input type="text" [(ngModel)]="userForm.id" class="modern-input" placeholder="e.g. S12345" [disabled]="isEditing">
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer (Actions) -->
+      <div class="modal-footer">
+        <button class="btn-text" (click)="closeModal()">Cancel</button>
+        <button class="btn-premium-solid" (click)="saveUser()">
+          {{ isEditing ? 'Save Changes' : 'Create User' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

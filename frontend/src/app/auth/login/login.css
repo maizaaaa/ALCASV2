@@ -1,0 +1,649 @@
+/* 🌟 Teal & Turquoise Design System Variables 🌟 */
+.login-page-wrapper {
+  /* Brand Palette */
+  --teal-dark: #0F766E;
+  --teal-medium: #0D9488;
+  --teal-light: #14B8A6;
+  --turquoise: #2DD4BF;
+  --cyan: #06B6D4;
+  --dark-accent: #042F2E;
+
+  /* Theme Variables */
+  --bg-gradient: radial-gradient(circle at 10% 20%, #14B8A6 0%, #0D9488 40%, #0F766E 90%);
+  --card-bg: rgba(255, 255, 255, 0.82);
+  --card-border: rgba(255, 255, 255, 0.35);
+  --input-bg: #FFFFFF;
+  --text-main: #042F2E;
+  --text-muted: #115E59;
+  --border-color: #CCFBF1;
+  --motif-color: rgba(255, 255, 255, 0.22);
+
+  --shadow-card: 0 20px 40px -15px rgba(4, 47, 46, 0.15), 0 10px 10px -10px rgba(4, 47, 46, 0.05);
+  --shadow-input-focus: 0 0 0 4px rgba(20, 184, 166, 0.18);
+
+  /* Viewport Container */
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  position: relative;
+  background: var(--bg-gradient);
+  color: var(--text-color);
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* 🌟 Dark Mode Override 🌟 */
+:host-context(.dark) .login-page-wrapper {
+  --bg-gradient: radial-gradient(circle at 10% 20%, #0D9488 0%, #0F766E 40%, #042F2E 90%);
+  --card-bg: rgba(11, 23, 27, 0.75);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --input-bg: #0D1E21;
+  --text-main: #F2FBF9;
+  --text-muted: #99F6E4;
+  --border-color: #115E59;
+  --motif-color: rgba(45, 212, 191, 0.15);
+
+  --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  --shadow-input-focus: 0 0 0 4px rgba(45, 212, 191, 0.25);
+}
+
+/* 🌟 Centered Grid Layout 🌟 */
+.centered-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 2rem;
+  z-index: 10;
+  position: relative;
+}
+
+/* 🌟 Animated Fluid Background 🌟 */
+.fluid-teal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.35;
+  transition: opacity 0.5s ease;
+}
+
+.orb-1 {
+  top: -20%;
+  left: -10%;
+  width: 600px;
+  height: 600px;
+  background-color: var(--turquoise);
+  animation: float-orb 28s ease-in-out infinite alternate;
+}
+
+.orb-2 {
+  bottom: -20%;
+  right: -10%;
+  width: 700px;
+  height: 700px;
+  background-color: var(--cyan);
+  animation: float-orb 32s ease-in-out infinite alternate-reverse;
+}
+
+.orb-3 {
+  top: 30%;
+  right: 20%;
+  width: 500px;
+  height: 500px;
+  background-color: #059669;
+  /* emerald highlight */
+  animation: float-orb 25s ease-in-out infinite alternate;
+}
+
+@keyframes float-orb {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(80px, -50px) scale(1.1);
+  }
+
+  100% {
+    transform: translate(-40px, 60px) scale(0.95);
+  }
+}
+
+/* 🌟 University Academic Floating Motifs 🌟 */
+.university-motifs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.motif-svg {
+  position: absolute;
+  color: var(--motif-color);
+  fill: none;
+  opacity: 0.85;
+  transition: color 0.5s ease;
+}
+
+/* Specific positioning & timings for academic illustrations */
+.motif-cap {
+  top: 15%;
+  left: 12%;
+  width: 90px;
+  height: 90px;
+  animation: float-motif 12s ease-in-out infinite alternate;
+}
+
+.motif-books {
+  bottom: 15%;
+  left: 10%;
+  width: 100px;
+  height: 100px;
+  animation: float-motif 15s ease-in-out infinite alternate-reverse;
+}
+
+.motif-chat {
+  top: 20%;
+  right: 12%;
+  width: 85px;
+  height: 85px;
+  animation: float-motif 10s ease-in-out infinite alternate;
+}
+
+.motif-calendar {
+  bottom: 18%;
+  right: 15%;
+  width: 90px;
+  height: 90px;
+  animation: float-motif 14s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes float-motif {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(4deg) scale(1.05);
+  }
+
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+/* 🌟 Login Card 🌟 */
+.login-card {
+  width: 100%;
+  max-width: 600px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 2.25rem 2.25rem;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.login-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(45, 212, 191, 0.5);
+  box-shadow: 0 30px 60px -15px rgba(11, 23, 27, 0.25), var(--shadow-card);
+}
+
+/* Header & Brand Logo styling */
+.card-header-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.logo-box {
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 0.6rem;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.login-card:hover .logo-box {
+  transform: scale(1.06) rotate(3deg);
+  border-color: var(--turquoise);
+}
+
+.uum-logo {
+  width: 100%;
+  height: 100%;
+}
+
+.project-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
+  margin: 0 0 0.5rem 0;
+}
+
+.welcome-message {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* 🌟 Form Layout 🌟 */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: color 0.3s ease;
+}
+
+.input-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text-main);
+  background-color: var(--input-bg);
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: var(--teal-light);
+  box-shadow: var(--shadow-input-focus);
+}
+
+.form-control:focus+.input-icon {
+  color: var(--teal-light);
+}
+
+/* Password Toggle Icon */
+.password-toggle-btn {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.password-toggle-btn:hover {
+  color: var(--teal-light);
+}
+
+.password-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.password-input {
+  padding-right: 2.75rem;
+}
+
+/* 🌟 Access Role Indicators (High Contrast Amber/Gold) 🌟 */
+.role-badge-container {
+  margin-top: 0.5rem;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #FEF3C7;
+  /* warm amber light background */
+  border: 1.5px solid #FDE68A;
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #78350F;
+  /* dark amber text for excellent contrast */
+  box-shadow: 0 2px 4px rgba(120, 53, 15, 0.05);
+  transition: all 0.3s ease;
+}
+
+:host-context(.dark) .role-badge {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #FBBF24;
+  /* bright amber text for dark mode contrast */
+  box-shadow: none;
+}
+
+.status-indicator-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #D97706;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #F59E0B;
+}
+
+:host-context(.dark) .status-indicator-dot {
+  background-color: #FBBF24;
+  box-shadow: 0 0 6px #FBBF24;
+}
+
+.role-label {
+  color: var(--text-muted);
+}
+
+.role-value {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+/* 🌟 Form Options (Remember Me & Forgot Link) 🌟 */
+.form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  padding-left: 1.75rem;
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.custom-checkbox {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 18px;
+  width: 18px;
+  background-color: var(--input-bg);
+  border: 1.5px solid var(--border-color);
+  border-radius: 6px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.checkbox-container:hover input~.custom-checkbox {
+  border-color: var(--teal-light);
+}
+
+.checkbox-container input:checked~.custom-checkbox {
+  background-color: var(--teal-medium);
+  border-color: var(--teal-medium);
+}
+
+.custom-checkbox::after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-container input:checked~.custom-checkbox::after {
+  display: block;
+}
+
+.checkbox-label {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.checkbox-container:hover .checkbox-label {
+  color: var(--text-main);
+}
+
+.forgot-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.forgot-link:hover {
+  color: var(--teal-light);
+}
+
+/* 🌟 Teal Gradient Login Action Button 🌟 */
+.btn-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, var(--teal-medium) 0%, var(--teal-dark) 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  padding: 0.95rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(15, 118, 110, 0.25);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 0.75rem;
+}
+
+.btn-login:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 118, 110, 0.35);
+  background: linear-gradient(135deg, var(--teal-light) 0%, var(--teal-medium) 100%);
+}
+
+.btn-login:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-login:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-arrow-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+}
+
+.btn-login:hover:not(:disabled) .btn-arrow-icon {
+  transform: translateX(4px);
+}
+
+/* 🌟 Register Footer Link 🌟 */
+.register-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  margin-top: 1rem;
+}
+
+.register-text {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.register-link {
+  color: var(--teal-medium);
+  text-decoration: none;
+  font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+.register-link:hover {
+  color: var(--teal-dark);
+  text-decoration: underline;
+}
+
+:host-context(.dark) .register-link {
+  color: var(--turquoise);
+}
+
+:host-context(.dark) .register-link:hover {
+  color: #22D3EE;
+}
+
+/* 🌟 Theme Toggle Floating Button 🌟 */
+.theme-toggle-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 99;
+  background-color: var(--card-bg);
+  border: 1.5px solid var(--card-border);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-main);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.08) rotate(15deg);
+  border-color: var(--teal-light);
+}
+
+.icon-sun {
+  width: 20px;
+  height: 20px;
+  color: #FBBF24;
+}
+
+.icon-moon {
+  width: 20px;
+  height: 20px;
+  color: var(--teal-dark);
+}
+
+:host-context(.dark) .icon-moon {
+  color: #E2E8F0;
+}
+
+/* Animations */
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 🌟 Responsive Settings 🌟 */
+@media (max-width: 768px) {
+  .motif-svg {
+    transform: scale(0.7);
+    /* Scale down floating SVGs on mobile/tablets */
+  }
+}
+
+@media (max-width: 480px) {
+  .centered-container {
+    padding: 1rem;
+  }
+
+  .login-card {
+    padding: 2.25rem 1.5rem;
+    border-radius: 12px;
+  }
+
+  .university-motifs {
+    display: none;
+    /* Hide motifs on tiny mobile phone screens to focus on simple form layout */
+  }
+}

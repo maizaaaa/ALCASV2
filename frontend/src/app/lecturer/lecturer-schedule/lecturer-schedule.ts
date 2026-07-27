@@ -1,0 +1,172 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
+
+@Component({
+  selector: 'app-lecturer-schedule',
+  standalone: true,
+  imports: [CommonModule, FormsModule, SidebarLect],
+  templateUrl: './lecturer-schedule.html',
+  styleUrls: ['./lecturer-schedule.css'],
+})
+export class LecturerScheduleComponent implements OnInit {
+  showModal = false;
+  isEditing = false;
+  editingSlotId: number | null = null;
+
+  slotForm = { day: 'Monday', startTime: '', endTime: '', type: 'AVAILABLE', title: '' };
+
+  weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+  scheduleData = [
+    {
+      id: 1,
+      day: 'Monday',
+      startTime: '09:00 AM',
+      endTime: '11:00 AM',
+      type: 'CLASS',
+      title: 'STIA1123 Programming 1',
+    },
+    {
+      id: 2,
+      day: 'Monday',
+      startTime: '02:00 PM',
+      endTime: '04:00 PM',
+      type: 'AVAILABLE',
+      title: 'Open Consultation',
+    },
+    {
+      id: 3,
+      day: 'Tuesday',
+      startTime: '10:00 AM',
+      endTime: '12:00 PM',
+      type: 'AVAILABLE',
+      title: 'FYP Advising Only',
+    },
+    {
+      id: 4,
+      day: 'Wednesday',
+      startTime: '08:00 AM',
+      endTime: '01:00 PM',
+      type: 'BUSY',
+      title: 'Faculty Meeting',
+    },
+    {
+      id: 5,
+      day: 'Thursday',
+      startTime: '02:30 PM',
+      endTime: '04:30 PM',
+      type: 'AVAILABLE',
+      title: 'Open Consultation',
+    },
+  ];
+
+  constructor(private router: Router) {}
+
+  ngOnInit(): void {}
+
+  getSlotsForDay(day: string) {
+    return this.scheduleData
+      .filter((slot) => slot.day === day)
+      .sort((a, b) =>
+        this.convertTo24Hour(a.startTime).localeCompare(this.convertTo24Hour(b.startTime)),
+      );
+  }
+
+  // --- MODAL & EDIT LOGIC ---
+
+  openAddSlotModal() {
+    this.isEditing = false;
+    this.editingSlotId = null;
+    this.slotForm = { day: 'Monday', startTime: '', endTime: '', type: 'AVAILABLE', title: '' };
+    this.showModal = true;
+  }
+
+  editSlot(slot: any) {
+    this.isEditing = true;
+    this.editingSlotId = slot.id;
+    // We must convert "02:00 PM" back to "14:00" so the HTML <input type="time"> can read it!
+    this.slotForm = {
+      day: slot.day,
+      startTime: this.convertTo24Hour(slot.startTime),
+      endTime: this.convertTo24Hour(slot.endTime),
+      type: slot.type,
+      title: slot.title,
+    };
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+  }
+
+  saveSlot() {
+    if (!this.slotForm.startTime || !this.slotForm.endTime || !this.slotForm.title) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    // Convert the 24h input (e.g., "14:30") to 12h AM/PM (e.g., "02:30 PM") before saving
+    const formattedStart = this.formatToAMPM(this.slotForm.startTime);
+    const formattedEnd = this.formatToAMPM(this.slotForm.endTime);
+
+    if (this.isEditing) {
+      const index = this.scheduleData.findIndex((s) => s.id === this.editingSlotId);
+      if (index !== -1) {
+        this.scheduleData[index] = {
+          ...this.scheduleData[index],
+          ...this.slotForm,
+          startTime: formattedStart,
+          endTime: formattedEnd,
+        };
+      }
+      alert('Schedule updated!');
+    } else {
+      this.scheduleData.push({
+        id: Math.random(),
+        ...this.slotForm,
+        startTime: formattedStart,
+        endTime: formattedEnd,
+      });
+      alert('New slot added!');
+    }
+
+    this.closeModal();
+  }
+
+  deleteSlot(id: number) {
+    if (confirm('Remove this time slot? Any students booked here will be notified.')) {
+      this.scheduleData = this.scheduleData.filter((slot) => slot.id !== id);
+    }
+  }
+
+  // --- TIME FORMAT HELPERS ---
+
+  // Converts "14:30" -> "02:30 PM"
+  formatToAMPM(time24: string): string {
+    if (!time24) return '';
+    const [hours, minutes] = time24.split(':');
+    let h = parseInt(hours, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12; // Convert '0' to '12'
+    const hStr = h < 10 ? '0' + h : h.toString();
+    return `${hStr}:${minutes} ${ampm}`;
+  }
+
+  // Converts "02:30 PM" -> "14:30"
+  convertTo24Hour(time12: string): string {
+    if (!time12 || !time12.includes(' ')) return time12; // fallback if already 24h
+    const [time, modifier] = time12.split(' ');
+    let [hours, minutes] = time.split(':');
+    if (hours === '12') hours = '00';
+    if (modifier === 'PM') hours = (parseInt(hours, 10) + 12).toString();
+    if (hours.length === 1) hours = '0' + hours;
+    return `${hours}:${minutes}`;
+  }
+
+  onLogout() {
+    this.router.navigate(['/login']);
+  }
+}

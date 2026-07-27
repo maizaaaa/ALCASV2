@@ -1,0 +1,168 @@
+<div class="login-page-wrapper">
+
+  <!-- Animated Fluid Teal & Turquoise Backdrop -->
+  <div class="fluid-teal-backdrop">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <!-- Attractive University Academic Vector Motifs (Floating) -->
+  <div class="university-motifs">
+    <!-- Graduation Cap Motif -->
+    <svg class="motif-svg motif-cap" viewBox="0 0 100 100" aria-hidden="true">
+      <polygon points="50,20 90,40 50,60 10,40" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" />
+      <polygon points="30,50 30,75 50,85 70,75 70,50" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" />
+      <path d="M70,40 L90,65 L90,80" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+      <circle cx="90" cy="80" r="3" fill="currentColor" />
+    </svg>
+
+    <!-- Stack of Books Motif -->
+    <svg class="motif-svg motif-books" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M15,75 L80,75 L85,85 L20,85 Z" fill="none" stroke="currentColor" stroke-width="3" />
+      <path d="M15,75 L15,81 L20,85" fill="none" stroke="currentColor" stroke-width="3" />
+      <path d="M20,55 L75,55 L80,68 L25,68 Z" fill="none" stroke="currentColor" stroke-width="3" />
+      <path d="M20,55 L20,62 L25,68" fill="none" stroke="currentColor" stroke-width="3" />
+      <g transform="rotate(-15 45 45)">
+        <rect x="30" y="25" width="45" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="3" />
+      </g>
+    </svg>
+
+    <!-- Consultation Chat Motif -->
+    <svg class="motif-svg motif-chat" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M20,25 H80 A5,5 0 0,1 85,30 V65 A5,5 0 0,1 80,70 H45 L25,85 V70 H20 A5,5 0 0,1 15,65 V30 A5,5 0 0,1 20,25 Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" />
+      <circle cx="35" cy="48" r="4" fill="currentColor" />
+      <circle cx="50" cy="48" r="4" fill="currentColor" />
+      <circle cx="65" cy="48" r="4" fill="currentColor" />
+    </svg>
+
+    <!-- Calendar Schedule Motif -->
+    <svg class="motif-svg motif-calendar" viewBox="0 0 100 100" aria-hidden="true">
+      <rect x="20" y="25" width="60" height="55" rx="8" fill="none" stroke="currentColor" stroke-width="3" />
+      <line x1="20" y1="42" x2="80" y2="42" stroke="currentColor" stroke-width="3" />
+      <line x1="38" y1="18" x2="38" y2="28" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+      <line x1="62" y1="18" x2="62" y2="28" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+      <path d="M42,58 L48,64 L62,50" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </div>
+
+  <div class="centered-container">
+    <div class="login-card verify-card animate-fade-in">
+      <!-- Header -->
+      <div class="card-header-brand">
+        <h2 class="project-title">VERIFICATION ACCOUNT</h2>
+        <p class="welcome-message">Enter the code we just sent to your email to verify your account</p>
+      </div>
+
+      <!-- Verification Form -->
+      <form (ngSubmit)="onSubmit()" #verifyForm="ngForm" class="login-form">
+        <!-- Error / Success Alerts -->
+        <div *ngIf="errorMessage" class="alert alert-danger animate-fade-in">
+          <span class="alert-icon">⚠️</span>
+          <span class="alert-text">{{ errorMessage }}</span>
+        </div>
+
+        <div *ngIf="successMessage" class="alert alert-success animate-fade-in">
+          <span class="alert-icon">✨</span>
+          <span class="alert-text">{{ successMessage }}</span>
+        </div>
+
+        <!-- Hidden input for Angular Form Validation -->
+        <input type="hidden" name="verificationCode" [(ngModel)]="verificationCode" required pattern="[0-9]{6}" />
+
+        <!-- 6-digit Code Input Fields -->
+        <div class="form-group" *ngIf="!isVerified">
+          <label class="form-label">Code</label>
+          <div class="code-inputs-container">
+            <input
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              id="otp-0"
+              [value]="otpDigits[0]"
+              (input)="onOtpInput($event, 0)"
+              (keydown)="onOtpKeyDown($event, 0)"
+              (paste)="onOtpPaste($event)"
+              class="form-control otp-field"
+            />
+            <input
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              id="otp-1"
+              [value]="otpDigits[1]"
+              (input)="onOtpInput($event, 1)"
+              (keydown)="onOtpKeyDown($event, 1)"
+              (paste)="onOtpPaste($event)"
+              class="form-control otp-field"
+            />
+            <input
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              id="otp-2"
+              [value]="otpDigits[2]"
+              (input)="onOtpInput($event, 2)"
+              (keydown)="onOtpKeyDown($event, 2)"
+              (paste)="onOtpPaste($event)"
+              class="form-control otp-field"
+            />
+            <input
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              id="otp-3"
+              [value]="otpDigits[3]"
+              (input)="onOtpInput($event, 3)"
+              (keydown)="onOtpKeyDown($event, 3)"
+              (paste)="onOtpPaste($event)"
+              class="form-control otp-field"
+            />
+            <input
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              id="otp-4"
+              [value]="otpDigits[4]"
+              (input)="onOtpInput($event, 4)"
+              (keydown)="onOtpKeyDown($event, 4)"
+              (paste)="onOtpPaste($event)"
+              class="form-control otp-field"
+            />
+            <input
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              id="otp-5"
+              [value]="otpDigits[5]"
+              (input)="onOtpInput($event, 5)"
+              (keydown)="onOtpKeyDown($event, 5)"
+              (paste)="onOtpPaste($event)"
+              class="form-control otp-field"
+            />
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" [disabled]="!verifyForm.valid || isSubmitting || isVerified" class="btn-login" *ngIf="!isVerified">
+          <span *ngIf="!isSubmitting">Continue</span>
+          <span *ngIf="isSubmitting" class="loading-dots">Verifying...</span>
+        </button>
+
+        <!-- Footer Resend Actions -->
+        <div class="verify-footer" *ngIf="!isVerified">
+          <span class="resend-question">Didn,t get the code? </span>
+          <button type="button" (click)="resendCode()" [disabled]="isResending" class="resend-link-btn">
+            <span *ngIf="!isResending">Resend code</span>
+            <span *ngIf="isResending">Sending...</span>
+          </button>
+        </div>
+
+        <!-- Back to Login option -->
+        <div class="register-footer">
+          <a routerLink="/login" class="register-link">Return to Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

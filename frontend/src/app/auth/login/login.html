@@ -1,0 +1,191 @@
+<div class="login-page-wrapper">
+  <!-- Theme Toggle Button -->
+  <button type="button" (click)="toggleDarkMode()" class="theme-toggle-btn"
+    [attr.aria-label]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'">
+    <svg *ngIf="isDarkMode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <svg *ngIf="!isDarkMode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-moon">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+  </button>
+
+  <!-- Animated Fluid Teal & Turquoise Backdrop -->
+  <div class="fluid-teal-backdrop">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <!-- Attractive University Academic Vector Motifs (Floating) -->
+  <div class="university-motifs">
+    <!-- Graduation Cap Motif -->
+    <svg class="motif-svg motif-cap" viewBox="0 0 100 100" aria-hidden="true">
+      <polygon points="50,20 90,40 50,60 10,40" fill="none" stroke="currentColor" stroke-width="3"
+        stroke-linejoin="round" />
+      <polygon points="30,50 30,75 50,85 70,75 70,50" fill="none" stroke="currentColor" stroke-width="3"
+        stroke-linejoin="round" />
+      <path d="M70,40 L90,65 L90,80" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+      <circle cx="90" cy="80" r="3" fill="currentColor" />
+    </svg>
+
+    <!-- Stack of Books Motif -->
+    <svg class="motif-svg motif-books" viewBox="0 0 100 100" aria-hidden="true">
+      <!-- Book 1 (base) -->
+      <path d="M15,75 L80,75 L85,85 L20,85 Z" fill="none" stroke="currentColor" stroke-width="3" />
+      <path d="M15,75 L15,81 L20,85" fill="none" stroke="currentColor" stroke-width="3" />
+      <!-- Book 2 (middle) -->
+      <path d="M20,55 L75,55 L80,68 L25,68 Z" fill="none" stroke="currentColor" stroke-width="3" />
+      <path d="M20,55 L20,62 L25,68" fill="none" stroke="currentColor" stroke-width="3" />
+      <!-- Book 3 (tilted) -->
+      <g transform="rotate(-15 45 45)">
+        <rect x="30" y="25" width="45" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="3" />
+      </g>
+    </svg>
+
+    <!-- Consultation Chat Motif -->
+    <svg class="motif-svg motif-chat" viewBox="0 0 100 100" aria-hidden="true">
+      <path
+        d="M20,25 H80 A5,5 0 0,1 85,30 V65 A5,5 0 0,1 80,70 H45 L25,85 V70 H20 A5,5 0 0,1 15,65 V30 A5,5 0 0,1 20,25 Z"
+        fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" />
+      <circle cx="35" cy="48" r="4" fill="currentColor" />
+      <circle cx="50" cy="48" r="4" fill="currentColor" />
+      <circle cx="65" cy="48" r="4" fill="currentColor" />
+    </svg>
+
+    <!-- Calendar Schedule Motif -->
+    <svg class="motif-svg motif-calendar" viewBox="0 0 100 100" aria-hidden="true">
+      <rect x="20" y="25" width="60" height="55" rx="8" fill="none" stroke="currentColor" stroke-width="3" />
+      <line x1="20" y1="42" x2="80" y2="42" stroke="currentColor" stroke-width="3" />
+      <line x1="38" y1="18" x2="38" y2="28" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+      <line x1="62" y1="18" x2="62" y2="28" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+      <path d="M42,58 L48,64 L62,50" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"
+        stroke-linejoin="round" />
+    </svg>
+  </div>
+
+  <div class="centered-container">
+    <div class="login-card">
+      <!-- Logo & Header -->
+      <div class="card-header-brand">
+        <div class="logo-box">
+          <!-- Stylized UUM Geometric SVG Logo -->
+          <svg viewBox="0 0 100 100" class="uum-logo" aria-label="UUM Logo">
+            <defs>
+              <linearGradient id="uumGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0F766E" />
+                <stop offset="100%" stop-color="#2DD4BF" />
+              </linearGradient>
+            </defs>
+            <!-- Outer gold/teal shield contour -->
+            <path d="M50 5 L85 25 L85 65 L50 95 L15 65 L15 25 Z" fill="none" stroke="#2DD4BF" stroke-width="4"
+              stroke-linejoin="round" />
+            <!-- Inner blue/teal shield face -->
+            <path d="M50 12 L77 28 L77 60 L50 86 L23 60 L23 28 Z" fill="url(#uumGrad)" />
+            <!-- Centered abstract U shape -->
+            <path d="M35 32 L35 55 C35 63, 65 63, 65 55 L65 32" fill="none" stroke="#FFFFFF" stroke-width="6"
+              stroke-linecap="round" />
+            <!-- Crown/star element inside shield -->
+            <polygon points="50,18 53,24 60,24 55,28 57,34 50,30 43,34 45,28 40,24 47,24" fill="#2DD4BF" />
+          </svg>
+        </div>
+        <h2 class="project-title">ALCAS</h2>
+        <p class="welcome-message">Welcome back! Sign in to access UUM consultation scheduling portal.</p>
+      </div>
+
+      <!-- Login Form -->
+      <form (ngSubmit)="onLogin()" #loginForm="ngForm" class="login-form">
+        <!-- Email Input -->
+        <div class="form-group">
+          <label for="email" class="form-label">University Email</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="feather">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </span>
+            <input type="email" id="email" name="email" placeholder="name@uum.edu" [(ngModel)]="loginData.email"
+              (ngModelChange)="onEmailChange($event)" required autocomplete="email" class="form-control" />
+          </div>
+
+          <!-- Detected Role Banner (Premium Unified Teal Styling) -->
+          <div *ngIf="loginData.email" class="role-badge-container animate-fade-in">
+            <div class="role-badge">
+              <span class="status-indicator-dot animate-pulse"></span>
+              <span class="role-label">Detected Access:</span>
+              <span class="role-value">{{ detectedRole || 'Analyzing...' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password Input -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="feather">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
+            <input [type]="showPassword ? 'text' : 'password'" id="password" name="password" placeholder="••••••••"
+              [(ngModel)]="loginData.password" required autocomplete="current-password"
+              class="form-control password-input" />
+            <button type="button" (click)="togglePasswordVisibility()" class="password-toggle-btn"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+              <svg *ngIf="!showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" class="feather">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" class="feather">
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                </path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember Me & Forgot Password -->
+        <div class="form-options">
+          <label class="checkbox-container">
+            <input type="checkbox" name="rememberMe" [(ngModel)]="loginData.rememberMe" />
+            <span class="custom-checkbox"></span>
+            <span class="checkbox-label">Remember Me</span>
+          </label>
+          <a routerLink="/forgot-password" class="forgot-link">Forgot Password?</a>
+        </div>
+
+        <!-- Login Button -->
+        <button type="submit" [disabled]="!loginForm.valid" class="btn-login">
+          <span>Sign In</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" class="btn-arrow-icon">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+
+        <!-- Register Link for Students -->
+        <div *ngIf="detectedRole === 'STUDENT'" class="register-footer animate-fade-in">
+          <span class="register-text">New student? </span>
+          <a routerLink="/register" class="register-link">Create an Account</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

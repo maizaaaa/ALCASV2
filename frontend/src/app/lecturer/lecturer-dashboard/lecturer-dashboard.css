@@ -1,0 +1,767 @@
+/* --- Lecturer Layout Fundamentals --- */
+.lecturer-layout {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+  position: relative;
+}
+
+.dashboard-modern-bg {
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+
+
+.dashboard-wrapper {
+  padding: 32px 40px;
+  min-height: 100vh;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #1f2937;
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0B191E;
+  letter-spacing: -0.8px;
+  margin: 0 0 6px 0;
+}
+
+.page-subtitle {
+  color: #64748b;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* --- Stats Grid --- */
+.stats-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* Glass Card design matching Admin Dashboard */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 1);
+  box-shadow: 0 10px 30px -10px rgba(15, 118, 110, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -15px rgba(15, 118, 110, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.stat-card {
+  border-top: 4px solid #0F766E;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.stat-card.border-orange {
+  border-top-color: #f59e0b;
+}
+
+.stat-title {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: 800;
+  margin: 8px 0;
+  letter-spacing: -0.5px;
+  text-align: center;
+  width: 100%;
+}
+
+.text-blue {
+  color: #0F766E;
+}
+
+.text-orange {
+  color: #d97706;
+}
+
+.text-dark {
+  color: #0B191E;
+}
+
+.stat-trend {
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.neutral {
+  color: #64748b;
+}
+
+.negative {
+  color: #dc2626;
+}
+
+.positive {
+  color: #059669;
+}
+
+/* --- Main Grid --- */
+.main-content-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.card-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0B191E;
+  margin: 0;
+}
+
+.card-subtitle {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 4px 0 0 0;
+}
+
+.text-link {
+  color: #0F766E;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.text-link:hover {
+  color: #14b8a6;
+  text-decoration: underline;
+}
+
+.date-badge {
+  color: #bc2121;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(212, 45, 45, 0.4);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* --- Schedule Table --- */
+.table-container {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  margin-top: -6px;
+}
+
+.schedule-table th {
+  padding: 12px 16px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 2px solid rgba(15, 118, 110, 0.15);
+  text-align: left;
+}
+
+.schedule-table td {
+  padding: 14px 16px;
+  background: rgba(248, 250, 252, 0.7);
+  vertical-align: middle;
+  font-size: 14px;
+  transition: all 0.25s ease;
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.schedule-table tr td:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  border-left: 3px solid transparent;
+}
+
+.schedule-table tr td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  border-right: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.schedule-table .interactive-row:hover td {
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(15, 118, 110, 0.08);
+}
+
+.schedule-table .interactive-row:hover td:first-child {
+  border-left-color: #0F766E;
+}
+
+/* Time Badge (Light Mode) */
+.time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(254, 243, 199, 0.6);
+  color: #b45309;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.time-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Event Title */
+.event-name {
+  font-weight: 700;
+  color: #0F172A;
+  font-size: 14px;
+}
+
+/* Type Tags (Light Mode) */
+.type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.type-tag.class {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid rgba(126, 34, 206, 0.2);
+}
+
+.tag-dot.class {
+  background-color: #9333ea;
+}
+
+.type-tag.consultation {
+  background: #ccfbf1;
+  color: #0f766e;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+}
+
+.tag-dot.consultation {
+  background-color: #0d9488;
+}
+
+.type-tag.busy {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid rgba(71, 85, 105, 0.2);
+}
+
+.tag-dot.busy {
+  background-color: #64748b;
+}
+
+/* Location Badge */
+.location-badge {
+  font-size: 13px;
+  color: #475569;
+  font-weight: 600;
+  background: rgba(226, 232, 240, 0.6);
+  padding: 4px 10px;
+  border-radius: 8px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* --- Pending Requests List --- */
+.empty-state {
+  padding: 32px 16px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+}
+
+.request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.request-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px;
+  transition: all 0.2s ease;
+  border-left: 4px solid #f59e0b;
+  background: #ffffff;
+}
+
+.request-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.req-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.req-student {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 15px;
+}
+
+.req-datetime {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.req-reason {
+  font-size: 13px;
+  color: #475569;
+  font-style: italic;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.req-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+.btn-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-action {
+  background: #0F766E;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.2);
+}
+
+.btn-action:hover {
+  background: #115e59;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.3);
+}
+
+/* ==========================================================================
+   DARK MODE OVERRIDES FOR LECTURER DASHBOARD
+   ========================================================================== */
+
+html.dark .lecturer-layout {
+  background: radial-gradient(circle at top right, #0a2d36 0%, #031317 50%, #020a0d 100%) !important;
+}
+
+html.dark .page-title {
+  background: linear-gradient(135deg, #ffffff 40%, #a5f3fc 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  display: inline-block !important;
+}
+
+html.dark .page-subtitle {
+  color: #94a3b8 !important;
+}
+
+html.dark .glass-card {
+  background: rgba(9, 29, 36, 0.65) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(45, 212, 191, 0.15) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+html.dark .glass-card:hover {
+  border-color: rgba(45, 212, 191, 0.35) !important;
+  box-shadow: 0 20px 40px -15px rgba(15, 118, 110, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+html.dark .stat-card {
+  border-top: 4px solid #2dd4bf !important;
+}
+
+html.dark .stat-card.border-orange {
+  border-top: 4px solid #f59e0b !important;
+}
+
+html.dark .stat-title {
+  color: #94a3b8 !important;
+}
+
+html.dark .text-blue {
+  color: #609b96 !important;
+  text-shadow: 0 0 16px rgba(45, 212, 191, 0.35) !important;
+}
+
+html.dark .text-orange {
+  color: #f59e0b !important;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.2) !important;
+}
+
+html.dark .stat-value,
+html.dark .stat-value.text-dark {
+  color: #ffffff !important;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark .stat-trend.neutral {
+  color: #94a3b8 !important;
+}
+
+html.dark .stat-trend.negative {
+  color: #f87171 !important;
+}
+
+html.dark .stat-trend.positive {
+  color: #34d399 !important;
+}
+
+html.dark .card-header h2 {
+  background: linear-gradient(135deg, #ffffff 70%, #99f6e4 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  display: inline-block !important;
+}
+
+html.dark .card-subtitle,
+:host-context(.dark) .card-subtitle,
+:host-context(html.dark) .card-subtitle {
+  color: #94a3b8 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+html.dark .text-link {
+  color: #2dd4bf !important;
+}
+
+html.dark .text-link:hover {
+  color: #22d3ee !important;
+}
+
+html.dark .date-badge,
+:host-context(.dark) .date-badge,
+:host-context(html.dark) .date-badge {
+  background: rgba(252, 252, 252, 0.50) !important;
+  color: #ff2323 !important;
+  border: 1px solid rgba(250, 40, 40, 0.4) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 10px rgba(212, 45, 45, 0.2) !important;
+}
+
+
+/* Dark Schedule Table Overrides */
+html.dark .schedule-table th {
+  color: #94a3b8 !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid rgba(45, 212, 191, 0.25) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+}
+
+html.dark .schedule-table td {
+  background: rgba(5, 20, 25, 0.85) !important;
+  border: 1px solid rgba(45, 212, 191, 0.15) !important;
+  color: #ffffff !important;
+}
+
+html.dark .schedule-table tr td:first-child {
+  border-left: 3px solid rgba(45, 212, 191, 0.3) !important;
+}
+
+html.dark .schedule-table tr td:last-child {
+  border-right: 3px solid rgba(45, 212, 191, 0.15) !important;
+}
+
+html.dark .schedule-table .interactive-row:hover td {
+  background: rgba(9, 29, 36, 0.95) !important;
+  border-color: rgba(45, 212, 191, 0.35) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.dark .schedule-table .interactive-row:hover td:first-child {
+  border-left-color: #2dd4bf !important;
+}
+
+/* Time Badge (Dark Mode) */
+html.dark .time-badge,
+:host-context(.dark) .time-badge,
+:host-context(html.dark) .time-badge {
+  background: rgba(254, 243, 199, 0.6) !important;
+  color: #b45309 !important;
+  border: 1px solid rgba(1, 1, 1, 0.2) !important;
+  font-weight: 700 !important;
+}
+
+html.dark .time-badge svg,
+:host-context(.dark) .time-badge svg,
+html.dark .time-icon,
+:host-context(.dark) .time-icon {
+  color: #714b09 !important;
+}
+
+/* Event Name (Dark Mode) */
+html.dark .event-name {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+}
+
+/* Type Tags (Dark Mode) */
+html.dark .type-tag.class {
+  background: rgba(147, 51, 234, 0.25) !important;
+  color: #e9d5ff !important;
+  border: 1px solid rgba(168, 85, 247, 0.4) !important;
+  font-weight: 700 !important;
+}
+
+html.dark .tag-dot.class {
+  background-color: #c084fc !important;
+  box-shadow: 0 0 6px rgba(192, 132, 252, 0.5) !important;
+}
+
+html.dark .type-tag.consultation {
+  background: rgba(45, 212, 191, 0.2) !important;
+  color: #077060 !important;
+  border: 1px solid rgba(45, 212, 191, 0.4) !important;
+  font-weight: 700 !important;
+}
+
+html.dark .tag-dot.consultation {
+  background-color: #2dd4bf !important;
+  box-shadow: 0 0 6px rgba(45, 212, 191, 0.5) !important;
+}
+
+html.dark .type-tag.busy {
+  background: rgba(148, 163, 184, 0.25) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(148, 163, 184, 0.4) !important;
+  font-weight: 700 !important;
+}
+
+html.dark .tag-dot.busy {
+  background-color: #cbd5e1 !important;
+}
+
+/* Location Badge (Dark Mode) */
+html.dark .location-badge,
+:host-context(.dark) .location-badge,
+:host-context(html.dark) .location-badge {
+  background: rgba(45, 212, 191, 0.2) !important;
+  color: #000000 !important;
+  border: 1px solid rgba(252, 194, 94, 0.4) !important;
+  font-weight: 500 !important;
+}
+
+/* Dark Pending Requests */
+html.dark .empty-state {
+  background: rgba(5, 20, 25, 0.5) !important;
+  border-color: rgba(45, 212, 191, 0.15) !important;
+  color: #94a3b8 !important;
+}
+
+html.dark .request-card {
+  background: rgba(5, 20, 25, 0.6) !important;
+  border-color: rgba(45, 212, 191, 0.12) !important;
+  border-left: 4px solid #f59e0b !important;
+}
+
+html.dark .request-card:hover {
+  border-color: rgba(45, 212, 191, 0.3) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .req-student {
+  color: #f1f5f9 !important;
+}
+
+html.dark .req-datetime {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fde68a !important;
+}
+
+html.dark .req-reason {
+  color: #cbd5e1 !important;
+}
+
+html.dark .btn-icon {
+  border-color: rgba(45, 212, 191, 0.2) !important;
+  color: #94a3b8 !important;
+}
+
+html.dark .btn-icon:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #f87171 !important;
+}
+
+html.dark .btn-action {
+  background: #2dd4bf !important;
+  color: #020a0d !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(45, 212, 191, 0.25) !important;
+}
+
+html.dark .btn-action:hover {
+  background: #14b8a6 !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .dashboard-wrapper {
+    padding: 24px 16px;
+  }
+
+  .stats-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .main-content-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-wrapper {
+    padding: 16px 12px;
+  }
+
+  .flex-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .stat-card,
+  .content-card {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .timeline-item {
+    gap: 12px;
+  }
+
+  .timeline-time {
+    width: 55px;
+    font-size: 11px;
+  }
+
+  .timeline-item:not(:last-child)::after {
+    left: 62px;
+  }
+
+  .req-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

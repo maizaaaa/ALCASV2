@@ -1,0 +1,790 @@
+/* --- ADMIN LAYOUT --- */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+
+
+/* MAIN CONTENT AREA */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* --- KEEP ALL YOUR EXISTING DASHBOARD CSS BELOW THIS LINE --- */
+.dashboard-wrapper {
+  padding: 32px;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0d2219;
+  /* Admin Forest */
+  letter-spacing: -0.8px;
+  margin: 0 0 6px 0;
+}
+
+.page-subtitle {
+  color: #64748b;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* 1. Add this to your existing .glass-card class to enable smooth movement */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  /* Slightly more opaque for formality */
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  /* Slightly tighter, more professional radius */
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  /* Very subtle shadow */
+  transition: all 0.2s ease;
+  /* Minimalist transition */
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  /* Very slight lift, no glow */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  /* Minimal depth increase */
+  border-color: rgba(20, 184, 166, 0.3);
+  /* Only a faint hint of brand color */
+}
+
+/* 3. Ensure the background elements are rendering correctly */
+.dashboard-modern-bg {
+  background-color: #f8fafc;
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  /* Slightly larger dots */
+  background-size: 32px 32px;
+  position: relative;
+  overflow: hidden;
+  /* Keeps the glow contained */
+}
+
+/* Ensure the ambient glow is behind the cards */
+.ambient-glow {
+  position: absolute;
+  top: -100px;
+  left: 100px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Colors & Utilities */
+.text-brand {
+  color: #14b8a6 !important;
+}
+
+.text-green {
+  color: #16a34a !important;
+}
+
+.text-dark {
+  color: #1f2937 !important;
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 1);
+  box-shadow: 0 10px 30px -10px rgba(13, 34, 25, 0.05);
+}
+
+/* Report Controls Card */
+.report-controls-card {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+  border-top: 4px solid #14b8a6;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr auto;
+  gap: 16px;
+  align-items: end;
+}
+
+@media (max-width: 1024px) {
+  .controls-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .form-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modern-input,
+.modern-select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+  box-sizing: border-box;
+  background: #f8fafc;
+}
+
+.modern-input:focus,
+.modern-select:focus {
+  border-color: #14b8a6;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+/* Buttons */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #1a4331;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+  height: 45px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #143426;
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid #cbd5e1;
+  color: #475569;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-outline:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.btn-solid-dark {
+  background: #0f172a;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-solid-dark:hover {
+  background: #1e293b;
+}
+
+.btn-premium-solid {
+  background-color: #0d2219;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-premium-solid:hover {
+  background-color: #1a4331;
+  transform: translateY(-2px);
+}
+
+.spinner {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Empty State */
+.empty-report-state {
+  background: white;
+  border-radius: 12px;
+  padding: 64px 20px;
+  text-align: center;
+  border: 2px dashed #e2e8f0;
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.empty-report-state h3 {
+  font-size: 18px;
+  color: #334155;
+  margin: 0 0 8px 0;
+}
+
+.empty-report-state p {
+  color: #64748b;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Generated Report UI */
+.report-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.report-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.export-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.metric-card {
+  padding: 24px;
+  border: 1px solid #f1f5f9;
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0d2219;
+}
+
+/* Charts Layout */
+.charts-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .charts-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  border: 1px solid #f1f5f9;
+}
+
+.chart-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0d2219;
+  margin-bottom: 24px;
+}
+
+.chart-caption {
+  font-size: 12px;
+  color: #94a3b8;
+  font-style: italic;
+  margin-top: 24px;
+  text-align: center;
+}
+
+/* Pure CSS Bar Chart */
+.pure-css-bar-chart {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 220px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  justify-content: flex-end;
+  width: 40px;
+}
+
+.bar {
+  width: 100%;
+  background: linear-gradient(to top, #0f766e, #14b8a6);
+  border-radius: 6px 6px 0 0;
+  transition: height 1s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);
+}
+
+.bar:hover {
+  transform: scaleX(1.05) translateY(-2px);
+  box-shadow: 0 6px 20px rgba(20, 184, 166, 0.4);
+  filter: brightness(1.1);
+}
+
+.bar-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.bar-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+}
+
+
+/* Fake Pie Chart for visual mockup */
+.pie-chart-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.fake-pie {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: conic-gradient(#16a34a 0% 88.5%, #dc2626 88.5% 97%, #94a3b8 97% 100%);
+  box-shadow: inset 0 0 0 30px white;
+  /* makes it a doughnut */
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dot.green {
+  background: #16a34a;
+}
+
+.dot.red {
+  background: #dc2626;
+}
+
+.dot.gray {
+  background: #94a3b8;
+}
+
+/* Larger Modal for Reports */
+.modal-container-large {
+  width: 95%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-body-large {
+  padding: 32px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Adjust metrics grid for the larger modal width */
+.modal-body-large .metrics-grid {
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 32px;
+}
+
+.modal-footer {
+  padding: 20px 32px;
+  background: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* --- DARK MODE STYLES --- */
+
+/* 1. Layout & Ambient Glow */
+:host-context(.dark) .admin-layout {
+  background: radial-gradient(circle at top right, #0a2d36 0%, #031317 50%, #020a0d 100%);
+}
+
+:host-context(.dark) .main-content {
+  background-color: transparent;
+}
+
+:host-context(.dark) .ambient-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(45, 212, 191, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 20%, rgba(15, 118, 110, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(20, 184, 166, 0.06) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+:host-context(.dark) .dashboard-modern-bg {
+  background-image: radial-gradient(rgba(45, 212, 191, 0.12) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  background-color: transparent;
+}
+
+/* 2. Page Typography */
+:host-context(.dark) .page-title {
+  background: linear-gradient(135deg, #ffffff 40%, #a5f3fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+:host-context(.dark) .page-subtitle {
+  color: #94a3b8;
+}
+
+/* 3. Cards (Glassmorphism) */
+:host-context(.dark) .glass-card {
+  background: rgba(9, 29, 36, 0.65);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(45, 212, 191, 0.15);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+:host-context(.dark) .glass-card:hover {
+  border-color: rgba(45, 212, 191, 0.35);
+  box-shadow: 0 20px 40px -15px rgba(15, 118, 110, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* 4. Controls Card (Filter bar) */
+:host-context(.dark) .report-controls-card {
+  background: rgba(9, 29, 36, 0.65);
+  border: 1px solid rgba(45, 212, 191, 0.15);
+  border-top: 4px solid #2dd4bf;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
+}
+
+:host-context(.dark) .form-group label {
+  color: #cbd5e1;
+}
+
+:host-context(.dark) .modern-input,
+:host-context(.dark) .modern-select {
+  background-color: #091d24;
+  border-color: #1e3e46;
+  color: #f1f5f9;
+}
+
+:host-context(.dark) .modern-input:focus,
+:host-context(.dark) .modern-select:focus {
+  border-color: #2dd4bf;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
+}
+
+/* 5. Buttons */
+:host-context(.dark) .btn-premium-solid {
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  color: #020a0d;
+  box-shadow: 0 4px 14px rgba(20, 184, 166, 0.4);
+  font-weight: 700;
+}
+
+:host-context(.dark) .btn-premium-solid:hover {
+  background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(20, 184, 166, 0.6);
+}
+
+:host-context(.dark) .btn-outline {
+  background-color: #091d24;
+  border-color: #2dd4bf;
+  color: #2dd4bf;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+:host-context(.dark) .btn-outline:hover {
+  background-color: #2dd4bf;
+  color: #020a0d;
+  box-shadow: 0 8px 16px rgba(45, 212, 191, 0.25);
+}
+
+/* 6. Empty State */
+:host-context(.dark) .empty-report-state {
+  background: rgba(9, 29, 36, 0.4);
+  border-color: rgba(45, 212, 191, 0.15);
+}
+
+:host-context(.dark) .empty-report-state h3 {
+  color: #f1f5f9;
+}
+
+:host-context(.dark) .empty-report-state p {
+  color: #94a3b8;
+}
+
+/* 7. Generated Report UI (Toolbar & Metrics) */
+:host-context(.dark) .report-toolbar {
+  border-bottom: 1px solid rgba(45, 212, 191, 0.15);
+}
+
+:host-context(.dark) .report-title {
+  color: #f1f5f9;
+}
+
+:host-context(.dark) .metric-card {
+  border-color: rgba(45, 212, 191, 0.08);
+}
+
+:host-context(.dark) .metric-label {
+  color: #94a3b8;
+}
+
+:host-context(.dark) .metric-value {
+  color: #f1f5f9;
+}
+
+:host-context(.dark) .metric-value.text-forest {
+  color: #2dd4bf !important;
+}
+
+:host-context(.dark) .metric-value.text-green {
+  color: #34d399 !important;
+}
+
+:host-context(.dark) .metric-value.text-dark {
+  color: #f1f5f9 !important;
+}
+
+/* 8. Weekly Bar Chart & Status Doughnut Chart */
+:host-context(.dark) .chart-card {
+  background: rgba(9, 29, 36, 0.65);
+  border-color: rgba(45, 212, 191, 0.08);
+}
+
+:host-context(.dark) .chart-card h3 {
+  color: #f1f5f9;
+}
+
+:host-context(.dark) .pure-css-bar-chart {
+  border-bottom-color: rgba(45, 212, 191, 0.15);
+}
+
+:host-context(.dark) .bar {
+  background: linear-gradient(to top, rgba(13, 148, 136, 0.4), #2dd4bf);
+  box-shadow: 0 4px 12px rgba(45, 212, 191, 0.15);
+}
+
+:host-context(.dark) .bar:hover {
+  box-shadow: 0 6px 20px rgba(45, 212, 191, 0.5);
+}
+
+:host-context(.dark) .bar-value {
+  color: #f1f5f9;
+}
+
+:host-context(.dark) .bar-label {
+  color: #cbd5e1;
+}
+
+:host-context(.dark) .fake-pie {
+  box-shadow: inset 0 0 0 30px #091d24;
+  /* Doughnut center cutout matches dark bg */
+}
+
+:host-context(.dark) .legend-item {
+  color: #cbd5e1;
+}
+
+/* --- RESPONSIVE MEDIA QUERIES --- */
+@media (max-width: 1024px) {
+  .dashboard-wrapper {
+    padding: 24px 32px;
+  }
+
+  .controls-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .form-actions {
+    grid-column: 1 / -1;
+  }
+
+  .btn-premium-solid {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .charts-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-wrapper {
+    padding: 20px 16px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .controls-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    grid-column: span 1;
+  }
+
+  .report-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .export-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .export-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}

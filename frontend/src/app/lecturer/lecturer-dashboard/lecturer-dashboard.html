@@ -1,0 +1,126 @@
+<div class="lecturer-layout">
+
+  <!-- Shared Lecturer Sidebar -->
+  <app-sidebar-lect></app-sidebar-lect>
+
+  <!-- Right Side: Main Dashboard Content -->
+  <main class="main-content dashboard-modern-bg">
+    <div class="dashboard-wrapper">
+
+      <div class="dashboard-header flex-between">
+        <div>
+          <h1 class="page-title">Welcome back, Dr. Ahmad!</h1>
+          <p class="page-subtitle">Here is your schedule and pending tasks for today.</p>
+        </div>
+      </div>
+
+      <div class="stats-grid-3">
+        <div class="glass-card stat-card">
+          <div class="stat-title">Meetings Today</div>
+          <div class="stat-value text-blue">{{ stats.todayMeetings }}</div>
+          <div class="stat-trend neutral">2 Classes, 2 Consultations</div>
+        </div>
+        <div class="glass-card stat-card border-orange">
+          <div class="stat-title">Pending Approvals</div>
+          <div class="stat-value text-orange">{{ stats.pendingRequests }}</div>
+          <div class="stat-trend negative">Requires your action</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-title">Upcoming This Week</div>
+          <div class="stat-value text-dark">{{ stats.upcomingThisWeek }}</div>
+          <div class="stat-trend positive">Fully booked for Thursday</div>
+        </div>
+      </div>
+
+      <div class="main-content-grid">
+
+        <div class="glass-card content-card">
+          <div class="card-header">
+            <div>
+              <h2>Today's Schedule</h2>
+              <p class="card-subtitle">Overview of today's classes and consultations</p>
+            </div>
+            <span class="badge date-badge">Today</span>
+          </div>
+
+          <div class="table-container">
+            <table class="sophisticated-table schedule-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Event / Title</th>
+                  <th>Type</th>
+                  <th>Location</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of todaySchedule" class="interactive-row">
+                  <td>
+                    <span class="time-badge">
+                      <svg class="time-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      {{ item.time }}
+                    </span>
+                  </td>
+                  <td class="event-title-cell">
+                    <span class="event-name">{{ item.title }}</span>
+                  </td>
+                  <td class="type-cell">
+                    <span class="type-tag" [ngClass]="item.type.toLowerCase()">
+                      <span class="tag-dot" [ngClass]="item.type.toLowerCase()"></span>
+                      {{ item.type }}
+                    </span>
+                  </td>
+                  <td class="location-cell">
+                    <span class="location-badge">📍 {{ item.location }}</span>
+                  </td>
+                </tr>
+                <tr *ngIf="todaySchedule.length === 0">
+                  <td colspan="4" class="no-results-cell">
+                    <div class="no-results-content">
+                      <p>No events scheduled for today.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="glass-card content-card">
+          <div class="card-header">
+            <h2>Pending Requests</h2>
+            <a routerLink="/lecturer/appointments" class="text-link">Manage All</a>
+          </div>
+
+          <div class="empty-state" *ngIf="pendingRequests.length === 0">
+            You're all caught up! No pending requests.
+          </div>
+
+          <div class="request-list">
+            <div class="request-card" *ngFor="let req of pendingRequests">
+              <div class="req-header">
+                <div class="req-student">{{ req.student }}</div>
+                <div class="req-datetime">{{ req.date }} • {{ req.time }}</div>
+              </div>
+              <div class="req-reason">"{{ req.reason }}"</div>
+              <div class="req-actions">
+                <button class="btn-icon reject" title="Decline" (click)="rejectRequest(req)">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                  </svg>
+                </button>
+                <button class="btn-action approve" (click)="approveRequest(req)">Approve Slot</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+</div>

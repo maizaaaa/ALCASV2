@@ -1,0 +1,85 @@
+<div class="admin-layout">
+
+  <!-- Left Sidebar Navigation -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Right Side: Main Content -->
+  <main class="main-content dashboard-modern-bg">
+    <div class="ambient-glow"></div>
+
+    <div class="dashboard-wrapper relative z-10">
+
+      <div class="dashboard-header glass-header">
+        <div>
+          <h1 class="page-title">Broadcast Hub</h1>
+          <p class="page-subtitle">Send urgent announcements and track delivery history.</p>
+        </div>
+      </div>
+
+      <div class="broadcast-grid">
+        <div class="content-card glass-card">
+          <div class="card-header border-bottom">
+            <h2 class="h2-text">New Announcement</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Target Audience</label>
+              <div class="audience-pills">
+                <button class="pill-btn" [class.active]="broadcast.targetAudience === 'ALL'" (click)="setAudience('ALL')">Everyone</button>
+                <button class="pill-btn" [class.active]="broadcast.targetAudience === 'STUDENTS'" (click)="setAudience('STUDENTS')">Students Only</button>
+                <button class="pill-btn" [class.active]="broadcast.targetAudience === 'LECTURERS'" (click)="setAudience('LECTURERS')">Lecturers Only</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Delivery Method</label>
+              <div class="checkbox-group">
+                <label class="custom-checkbox">
+                  <input type="checkbox" [(ngModel)]="broadcast.sendInApp">
+                  <span class="checkmark"></span> In-App
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" [(ngModel)]="broadcast.sendEmail">
+                  <span class="checkmark"></span> Email Blast
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group mt-4">
+              <label>Subject</label>
+              <input type="text" [(ngModel)]="broadcast.subject" class="modern-input" placeholder="e.g., System Maintenance">
+            </div>
+
+            <div class="form-group">
+              <label>Message Body</label>
+              <textarea [(ngModel)]="broadcast.message" class="modern-textarea" rows="6" placeholder="Type your message here..."></textarea>
+              <small class="helper-text text-right">{{ broadcast.message.length }} / 500 chars</small>
+            </div>
+
+            <button class="btn-premium-solid btn-full" (click)="sendBroadcast()" [disabled]="isSending">
+              {{ isSending ? 'Broadcasting...' : 'Send Broadcast Now' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="content-card glass-card no-padding">
+          <div class="card-header border-bottom">
+            <h2 class="h2-text">Recent Broadcasts</h2>
+          </div>
+          <ul class="history-list">
+            <li *ngFor="let item of broadcastHistory" class="history-item">
+              <div class="history-header">
+                <span class="history-date">{{ item.date }}</span>
+                <span class="status-badge sent">✓ Sent</span>
+              </div>
+              <h3 class="history-subject">{{ item.subject }}</h3>
+              <div class="history-meta">
+                <span class="meta-tag audience">{{ item.audience }}</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

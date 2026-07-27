@@ -1,0 +1,162 @@
+<div class="lecturer-layout">
+
+  <!-- Shared Lecturer Sidebar -->
+  <app-sidebar-lect></app-sidebar-lect>
+
+  <!-- Main Content Area -->
+  <main class="main-content dashboard-modern-bg">
+    <div class="dashboard-wrapper">
+
+      <div class="dashboard-header flex-between">
+        <div>
+          <h1 class="page-title">Consultation History</h1>
+          <p class="page-subtitle">View your past meetings, student records, and saved notes.</p>
+        </div>
+        <button class="btn-outline-blue" (click)="exportHistory()">
+          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          Export CSV Report
+        </button>
+      </div>
+
+      <div class="glass-card filter-card">
+        <div class="filter-group flex-2">
+          <label>Search Records</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input type="text" [(ngModel)]="searchQuery" placeholder="Search student name, matric, or ID...">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label>Status</label>
+          <select [(ngModel)]="statusFilter" class="modern-select">
+            <option value="ALL">All Statuses</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="NO-SHOW">No-Show</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Specific Date</label>
+          <input type="date" [(ngModel)]="dateFilter" class="modern-input">
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn-text" (click)="clearFilters()">Clear Filters</button>
+        </div>
+      </div>
+
+      <div class="glass-card content-card">
+        <div class="table-container">
+          <table class="sophisticated-table">
+            <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Student Details</th>
+              <th>Reason for Visit</th>
+              <th>Status</th>
+              <th class="text-right">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngIf="filteredLogs.length === 0">
+              <td colspan="5" class="empty-state">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <p>No past consultations found matching your filters.</p>
+              </td>
+            </tr>
+
+            <tr *ngFor="let log of filteredLogs">
+              <td>
+                <div class="date-text">{{ log.date }}</div>
+                <div class="time-text">{{ log.time }}</div>
+              </td>
+              <td>
+                <div class="student-name">{{ log.student }}</div>
+                <div class="matric-text">{{ log.matric }} • {{ log.type }}</div>
+              </td>
+              <td>
+                <div class="reason-truncate">"{{ log.reason }}"</div>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="log.status.toLowerCase()">
+                  {{ log.status }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button class="action-btn view-btn" (click)="viewDetails(log)">View Notes</button>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="modal-backdrop" *ngIf="showModal && selectedLog">
+    <div class="modal-container fade-in-up">
+
+      <div class="modal-header">
+        <div>
+          <h2>Consultation Record</h2>
+          <span class="modal-subtitle">ID: {{ selectedLog.id }}</span>
+        </div>
+        <button class="close-btn" (click)="closeModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="status-banner" [ngClass]="selectedLog.status.toLowerCase() + '-bg'">
+          Final Status: <strong>{{ selectedLog.status }}</strong>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-group">
+            <label>Student</label>
+            <p>{{ selectedLog.student }} ({{ selectedLog.matric }})</p>
+          </div>
+          <div class="detail-group">
+            <label>Topic / Type</label>
+            <p>{{ selectedLog.type }}</p>
+          </div>
+          <div class="detail-group">
+            <label>Date</label>
+            <p>{{ selectedLog.date }}</p>
+          </div>
+          <div class="detail-group">
+            <label>Time</label>
+            <p>{{ selectedLog.time }}</p>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="detail-group full-width">
+          <label>Student's Reason for Request</label>
+          <div class="text-box outline">
+            "{{ selectedLog.reason }}"
+          </div>
+        </div>
+
+        <div class="detail-group full-width">
+          <label>Your Remarks & Notes</label>
+          <div class="text-box filled">
+            {{ selectedLog.notes }}
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-solid-blue" (click)="closeModal()">Close</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,100 @@
+<div class="admin-layout">
+
+  <!-- Left Sidebar Navigation -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Right Side: Main Content -->
+  <main class="main-content dashboard-modern-bg">
+    <div class="ambient-glow"></div>
+
+    <div class="dashboard-wrapper relative z-10">
+
+      <div class="dashboard-header glass-header">
+        <div>
+          <h1 class="page-title">Advanced Analytics</h1>
+          <p class="page-subtitle">Generate custom period reports and export visual summaries.</p>
+        </div>
+      </div>
+
+      <div class="report-controls-card glass-card">
+        <div class="controls-grid">
+          <div class="form-group">
+            <label>Start Date</label>
+            <input type="date" [(ngModel)]="reportStartDate" class="modern-input">
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <input type="date" [(ngModel)]="reportEndDate" class="modern-input">
+          </div>
+          <div class="form-group">
+            <label>Department Filter</label>
+            <select [(ngModel)]="selectedDepartment" class="modern-select">
+              <option value="ALL">All Departments</option>
+              <option value="CS">Computer Science</option>
+              <option value="IT">Information Technology</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button class="btn-premium-solid" (click)="generateReport()" [disabled]="isGenerating">
+              {{ isGenerating ? 'Aggregating...' : 'Generate Report' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-container fade-in" *ngIf="reportGenerated">
+        <div class="report-toolbar">
+          <h2 class="report-title">Report: {{ reportStartDate | date:'mediumDate' }} - {{ reportEndDate | date:'mediumDate' }}</h2>
+          <div class="export-actions">
+            <button class="btn-outline" (click)="exportToCSV()">Export CSV</button>
+            <button class="btn-premium-solid" (click)="exportToPDF()">Download PDF</button>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-card glass-card">
+            <div class="metric-label">Total Consultations</div>
+            <div class="metric-value text-forest">{{ reportData.totalConsultations }}</div>
+          </div>
+          <div class="metric-card glass-card">
+            <div class="metric-label">Completion Rate</div>
+            <div class="metric-value text-green">{{ reportData.completionRate }}</div>
+          </div>
+          <div class="metric-card glass-card">
+            <div class="metric-label">Top Lecturer</div>
+            <div class="metric-value text-dark" style="font-size: 18px;">{{ reportData.mostActiveLecturer }}</div>
+          </div>
+          <div class="metric-card glass-card">
+            <div class="metric-label">Peak Booking Day</div>
+            <div class="metric-value text-dark" style="font-size: 18px;">{{ reportData.peakDay }}</div>
+          </div>
+        </div>
+
+        <div class="charts-layout">
+          <div class="chart-card glass-card">
+            <h3>Consultation Volume by Week</h3>
+            <div class="pure-css-bar-chart">
+              <div class="bar-wrapper" *ngFor="let data of weeklyTrend">
+                <div class="bar-value">{{ data.count }}</div>
+                <div class="bar" [style.height]="data.height"></div>
+                <div class="bar-label">{{ data.week }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-card glass-card">
+            <h3>Status Distribution</h3>
+            <div class="pie-chart-placeholder">
+              <div class="fake-pie"></div>
+              <div class="legend">
+                <div class="legend-item"><span class="dot green"></span> Completed (88.5%)</div>
+                <div class="legend-item"><span class="dot red"></span> No-Show (8.5%)</div>
+                <div class="legend-item"><span class="dot gray"></span> Cancelled (3.0%)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,279 @@
+<div class="admin-layout">
+
+  <!-- Left Sidebar Navigation -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Right Side: Main Dashboard Content -->
+  <main class="main-content dashboard-modern-bg">
+
+    <div class="ambient-glow"></div>
+
+    <div class="dashboard-wrapper">
+
+      <div class="dashboard-header">
+        <div>
+          <h1 class="page-title">Admin Overview</h1>
+          <p class="page-subtitle">Welcome back. Here is your operational snapshot for today.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-premium" (click)="exportLogs()" [disabled]="isExporting">
+            <ng-container *ngIf="!isExporting">
+              <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                </path>
+              </svg>
+              Export Daily Summary
+            </ng-container>
+            <ng-container *ngIf="isExporting">
+              <span class="spinner"></span>
+              Generating...
+            </ng-container>
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-grid-3">
+        <div class="glass-card stat-clickable" (click)="filterByStatus('All')"
+          [class.card-selected]="selectedStatus === 'All'">
+          <div class="stat-header">
+            <div class="stat-title">Consultations Today</div>
+            <div class="icon-wrapper icon-green">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value text-forest">{{ stats.todayConsultations }}</div>
+          <div class="stat-trend positive">↑ 12% vs yesterday</div>
+          <div class="stat-action-hint">Click to show all</div>
+        </div>
+
+        <div class="glass-card stat-clickable" (click)="filterByStatus('Pending')"
+          [class.card-selected]="selectedStatus === 'Pending'">
+          <div class="stat-header">
+            <div class="stat-title">Pending Approvals</div>
+            <div class="icon-wrapper icon-orange">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value text-orange">{{ stats.pendingApprovals }}</div>
+          <div class="stat-trend negative">Requires attention</div>
+          <div class="stat-action-hint">Click to filter table</div>
+        </div>
+
+        <div class="glass-card alert-border stat-clickable" (click)="filterByStatus('No-Show')"
+          [class.card-selected]="selectedStatus === 'No-Show'">
+          <div class="stat-header">
+            <div class="stat-title">Weekly No-Shows</div>
+            <div class="icon-wrapper icon-red">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                </path>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value text-red">{{ stats.weeklyNoShows }}</div>
+          <div class="stat-trend negative">↓ 2 more than last week</div>
+          <div class="stat-action-hint">Click to filter table</div>
+        </div>
+      </div>
+
+      <div class="main-content-grid">
+
+        <div class="glass-card">
+          <div class="card-header">
+            <h2>Today's Breakdown</h2>
+            <span class="badge glow-badge">Live</span>
+          </div>
+          <div class="breakdown-layout">
+            <div class="chart-wrapper">
+              <svg width="120" height="120" viewBox="0 0 100 100" class="donut-chart-svg">
+                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e2e8f0" stroke-width="10"></circle>
+                <!-- Teal (Completed): 60% of 251.2 = 150.72 -->
+                <circle class="donut-segment segment-completed" cx="50" cy="50" r="40" fill="transparent"
+                  stroke="#0F766E" stroke-width="10" stroke-dasharray="150.72 100.48" stroke-dashoffset="0"
+                  transform="rotate(-90 50 50)"></circle>
+                <!-- Yellow (Pending): 35% of 251.2 = 87.92 -->
+                <circle class="donut-segment segment-pending" cx="50" cy="50" r="40" fill="transparent" stroke="#f59e0b"
+                  stroke-width="10" stroke-dasharray="87.92 163.28" stroke-dashoffset="-150.72"
+                  transform="rotate(-90 50 50)"></circle>
+                <!-- Red (No-Shows): 5% of 251.2 = 12.56 -->
+                <circle class="donut-segment segment-noshow" cx="50" cy="50" r="40" fill="transparent" stroke="#ef4444"
+                  stroke-width="10" stroke-dasharray="12.56 238.64" stroke-dashoffset="-238.64"
+                  transform="rotate(-90 50 50)"></circle>
+                <text x="50" y="47" text-anchor="middle" class="donut-number">{{ stats.todayConsultations }}</text>
+                <text x="50" y="62" text-anchor="middle" class="donut-label">Total</text>
+              </svg>
+            </div>
+
+            <div class="breakdown-container">
+              <div class="breakdown-row" *ngFor="let item of todayBreakdown">
+                <div class="breakdown-info">
+                  <div class="breakdown-label-wrapper">
+                    <span class="breakdown-dot" [ngClass]="item.colorClass"></span>
+                    <span class="breakdown-label">{{ item.label }}</span>
+                  </div>
+                  <span class="breakdown-stats">
+                    {{ item.count }}
+                    <span class="breakdown-percentage">({{ item.percentage }}%)</span>
+                  </span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill {{ item.colorClass }}" [style.width.%]="item.percentage"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-header border-none">
+            <div>
+              <h2>Recent Consultations</h2>
+              <p class="card-subtitle">Click a row to view full details</p>
+            </div>
+            <a href="/admin/logs" class="text-link">View All →</a>
+          </div>
+
+          <!-- Interactive Toolbar -->
+          <div class="table-toolbar">
+            <div class="filter-tabs">
+              <button class="tab-btn" [class.active]="selectedStatus === 'All'"
+                (click)="filterByStatus('All')">All</button>
+              <button class="tab-btn" [class.active]="selectedStatus === 'Completed'"
+                (click)="filterByStatus('Completed')">Completed</button>
+              <button class="tab-btn" [class.active]="selectedStatus === 'Pending'"
+                (click)="filterByStatus('Pending')">Pending</button>
+              <button class="tab-btn" [class.active]="selectedStatus === 'No-Show'"
+                (click)="filterByStatus('No-Show')">No-Show</button>
+            </div>
+            <div class="search-box">
+              <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <input type="text" [(ngModel)]="searchQuery" placeholder="Search student or lecturer..." />
+              <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''">&times;</button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="sophisticated-table">
+              <thead>
+                <tr>
+                  <th>Time / ID</th>
+                  <th>Student</th>
+                  <th>Lecturer</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let log of filteredLogs" (click)="viewDetails(log)" class="interactive-row">
+                  <td>
+                    <div class="font-bold text-dark">{{ log.time }}</div>
+                    <div class="sub-text">{{ log.id }}</div>
+                  </td>
+                  <td class="user-cell">{{ log.student }}</td>
+                  <td>{{ log.lecturer }}</td>
+                  <td>
+                    <span class="status-badge" [ngClass]="{
+                    'completed': log.status === 'Completed',
+                    'pending': log.status === 'Pending',
+                    'no-show': log.status === 'No-Show'
+                  }">{{ log.status }}</span>
+                  </td>
+                </tr>
+                <tr *ngIf="filteredLogs.length === 0">
+                  <td colspan="4" class="no-results-cell">
+                    <div class="no-results-content">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      <p>No consultations found matching your criteria.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Consultation Details Modal (Glassmorphism overlay) -->
+  <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <span class="modal-badge-id">{{ selectedLog?.id }}</span>
+          <h3>Consultation Details</h3>
+        </div>
+        <button class="btn-close" (click)="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row">
+          <div class="detail-label">Student</div>
+          <div class="detail-val font-bold">{{ selectedLog?.student }}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Lecturer</div>
+          <div class="detail-val font-bold">{{ selectedLog?.lecturer }}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Scheduled Time</div>
+          <div class="detail-val">{{ selectedLog?.time }}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Status</div>
+          <div class="detail-val">
+            <span class="status-badge" [ngClass]="{
+              'completed': selectedLog?.status === 'Completed',
+              'pending': selectedLog?.status === 'Pending',
+              'no-show': selectedLog?.status === 'No-Show'
+            }">{{ selectedLog?.status }}</span>
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Topic</div>
+          <div class="detail-val topic-highlight">{{ selectedLog?.topic }}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Venue / Room</div>
+          <div class="detail-val">{{ selectedLog?.room }}</div>
+        </div>
+        <div class="detail-notes">
+          <div class="detail-label">Notes / Remarks</div>
+          <p class="notes-text">{{ selectedLog?.notes }}</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" [class.show]="showToast">
+    <div class="toast-card">
+      <div class="toast-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      <div class="toast-content">
+        <h4>System Action</h4>
+        <p>{{ toastMessage }}</p>
+      </div>
+    </div>
+  </div>
+</div>

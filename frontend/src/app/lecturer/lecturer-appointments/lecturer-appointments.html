@@ -1,0 +1,233 @@
+<div class="lecturer-layout">
+
+  <!-- Shared Lecturer Sidebar -->
+  <app-sidebar-lect></app-sidebar-lect>
+
+  <!-- Main Content Area -->
+  <main class="main-content dashboard-modern-bg">
+    <div class="dashboard-wrapper">
+
+      <div class="dashboard-header flex-between">
+        <div>
+          <h1 class="page-title">Manage Appointments</h1>
+          <p class="page-subtitle">Review pending requests and manage your upcoming consultations.</p>
+        </div>
+      </div>
+
+      <div class="glass-card controls-card">
+        <div class="tabs-container">
+          <button class="tab-btn" [class.active]="activeTab === 'PENDING'" (click)="setTab('PENDING')">
+            Pending Requests
+            <span class="badge yellow" *ngIf="activeTab !== 'PENDING'">New</span>
+          </button>
+          <button class="tab-btn" [class.active]="activeTab === 'UPCOMING'" (click)="setTab('UPCOMING')">
+            Upcoming Sessions
+          </button>
+        </div>
+
+        <div class="search-container">
+          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input type="text" [(ngModel)]="searchQuery" placeholder="Search student name or matric..."
+            class="search-input">
+        </div>
+      </div>
+
+      <div class="appointments-grid">
+
+        <div class="glass-card empty-state" *ngIf="filteredAppointments.length === 0">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <h3>No {{ activeTab | titlecase }} Appointments</h3>
+          <p>You have no {{ activeTab.toLowerCase() }} sessions at the moment.</p>
+        </div>
+
+        <div class="glass-card appt-card" *ngFor="let appt of filteredAppointments"
+          [ngClass]="appt.status.toLowerCase() + '-border'">
+
+          <div class="appt-header">
+            <div class="student-info clickable" (click)="openStudentModal(appt.student)"
+              title="Click to view full student profile modal">
+              <div class="avatar">{{ appt.student.charAt(0) }}</div>
+              <div>
+                <h3 class="student-name">{{ appt.student }}</h3>
+                <span class="matric-text">{{ appt.matric }} • {{ appt.type }}</span>
+              </div>
+
+              <!-- Quick Hover Card (School & Email) -->
+              <div class="student-hover-card">
+                <div class="hover-card-header">
+                  <div class="hover-avatar-sm">{{ appt.student.charAt(0) }}</div>
+                  <div>
+                    <h4 class="hover-name">{{ appt.student }}</h4>
+                    <span class="hover-matric-pill">{{ appt.matric }}</span>
+                  </div>
+                </div>
+                <div class="hover-card-body">
+                  <div class="hover-row">
+                    <span class="h-label">School / Faculty</span>
+                    <span class="h-val">{{ getStudentInfo(appt.student).faculty }}</span>
+                  </div>
+                  <div class="hover-row">
+                    <span class="h-label">Student Email</span>
+                    <span class="h-val">{{ getStudentInfo(appt.student).email }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="time-block">
+              <div class="appt-date">{{ appt.date }}</div>
+              <div class="appt-time" [ngClass]="appt.status.toLowerCase() + '-text'">{{ appt.time }}</div>
+            </div>
+          </div>
+
+          <div class="appt-body">
+            <label>Reason for Consultation:</label>
+            <p class="reason-text">"{{ appt.reason }}"</p>
+          </div>
+
+          <div class="appt-footer">
+
+            <ng-container *ngIf="activeTab === 'PENDING'">
+              <button class="btn-outline-red" (click)="openActionModal(appt, 'REJECT')">Decline</button>
+              <button class="btn-solid-yellow" (click)="approveRequest(appt)">Approve Request</button>
+            </ng-container>
+
+            <ng-container *ngIf="activeTab === 'UPCOMING'">
+              <button class="btn-outline-red" (click)="openActionModal(appt, 'NO_SHOW')">Mark No-Show</button>
+              <button class="btn-solid-blue" (click)="openActionModal(appt, 'COMPLETE')">Complete Session</button>
+            </ng-container>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Action Modal -->
+  <div class="modal-backdrop" *ngIf="showActionModal">
+    <div class="modal-container fade-in-up">
+
+      <div class="modal-header">
+        <h2 *ngIf="actionType === 'REJECT'">Decline Appointment</h2>
+        <h2 *ngIf="actionType === 'COMPLETE'">Complete Session</h2>
+        <h2 *ngIf="actionType === 'NO_SHOW'">Mark No-Show</h2>
+        <button class="close-btn" (click)="closeActionModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="summary-box" [ngClass]="{'pending-summary': selectedAppt?.status === 'PENDING'}">
+          <strong>Student:</strong> {{ selectedAppt?.student }} <br>
+          <strong>Time:</strong> {{ selectedAppt?.date }} at {{ selectedAppt?.time }}
+        </div>
+
+        <div class="form-group mt-4">
+          <label *ngIf="actionType === 'REJECT'">Reason for Declining <span class="text-red">*</span></label>
+          <label *ngIf="actionType === 'COMPLETE'">Lecturer Remarks / Notes (Optional)</label>
+          <label *ngIf="actionType === 'NO_SHOW'">Reason / Notes for No-Show (Optional)</label>
+
+          <textarea [(ngModel)]="actionNotes" class="modern-textarea" rows="4"
+            [placeholder]="actionType === 'REJECT' ? 'e.g., I am busy during this time, please book next week.' : (actionType === 'COMPLETE' ? 'e.g., Discussed Chapter 2, student needs to revise methodology.' : 'e.g., Waited 15 minutes. Student did not show up.')">
+          </textarea>
+
+          <small class="helper-text" *ngIf="actionType === 'REJECT'">This reason will be emailed to the student.</small>
+          <small class="helper-text" *ngIf="actionType === 'COMPLETE' || actionType === 'NO_SHOW'">These notes will be
+            saved to the Consultation
+            History logs.</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-text" (click)="closeActionModal()">Cancel</button>
+        <button class="btn-solid-blue"
+          [ngClass]="{'bg-red': actionType === 'REJECT' || actionType === 'NO_SHOW', 'bg-green': actionType === 'COMPLETE'}"
+          (click)="submitAction()">
+          {{ actionType === 'REJECT' ? 'Confirm Decline' : (actionType === 'NO_SHOW' ? 'Confirm No-Show' : 'Save &
+          Complete') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Student Quick Info Modal Card -->
+  <div class="modal-backdrop" *ngIf="showStudentModal" (click)="closeStudentModal()">
+    <div class="modal-container student-modal fade-in-up" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="student-header-info">
+          <div class="student-avatar-lg">{{ selectedStudentInfo?.name?.charAt(0) }}</div>
+          <div>
+            <h2>{{ selectedStudentInfo?.name }}</h2>
+            <span class="matric-badge">{{ selectedStudentInfo?.matric }}</span>
+          </div>
+        </div>
+        <button class="close-btn" (click)="closeStudentModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body student-body">
+        <div class="info-grid">
+          <div class="info-group">
+            <label>Program / Major</label>
+            <p>{{ selectedStudentInfo?.program }}</p>
+          </div>
+          <div class="info-group">
+            <label>Faculty</label>
+            <p>{{ selectedStudentInfo?.faculty }}</p>
+          </div>
+          <div class="info-group">
+            <label>Year & Semester</label>
+            <p>{{ selectedStudentInfo?.yearSemester }} (CGPA: {{ selectedStudentInfo?.cgpa }})</p>
+          </div>
+          <div class="info-group">
+            <label>Academic Advisor</label>
+            <p>{{ selectedStudentInfo?.advisor }}</p>
+          </div>
+          <div class="info-group">
+            <label>Student Email</label>
+            <p>{{ selectedStudentInfo?.email }}</p>
+          </div>
+          <div class="info-group">
+            <label>Phone Number</label>
+            <p>{{ selectedStudentInfo?.phone }}</p>
+          </div>
+        </div>
+        <br>
+        <div class="divider"></div>
+
+        <div class="student-stats-row">
+          <div class="mini-stat">
+            <span class="stat-val">{{ selectedStudentInfo?.completedSessions }}</span>
+            <span class="stat-lbl">Completed Sessions</span>
+          </div>
+          <div class="mini-stat">
+            <span class="stat-val text-green">{{ selectedStudentInfo?.attendanceRate }}</span>
+            <span class="stat-lbl">Attendance Rate</span>
+          </div>
+        </div>
+
+        <div class="last-topic-box">
+          <label>Recent Consultation Topic:</label>
+          <p>"{{ selectedStudentInfo?.lastTopic }}"</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-solid-blue" (click)="closeStudentModal()">Close Profile</button>
+      </div>
+    </div>
+  </div>
+
+</div>

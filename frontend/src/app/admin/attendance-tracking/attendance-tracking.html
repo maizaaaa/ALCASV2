@@ -1,0 +1,96 @@
+<div class="admin-layout">
+
+  <!-- Left Sidebar Navigation -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Right Side: Main Content -->
+  <main class="main-content dashboard-modern-bg">
+
+    <div class="ambient-glow"></div>
+
+    <div class="dashboard-wrapper relative z-10">
+
+      <div class="dashboard-header glass-header">
+        <div>
+          <h1 class="page-title">Attendance & No-Shows</h1>
+          <p class="page-subtitle">Monitor student participation and flag frequent absentees.</p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card glass-card">
+          <div class="stat-title">Overall Attendance</div>
+          <div class="stat-value positive">{{ stats.attendanceRate || '94%' }}</div>
+        </div>
+        <div class="stat-card glass-card alert-border">
+          <div class="stat-title text-red">Monthly No-Shows</div>
+          <div class="stat-value text-red">{{ stats.totalNoShows || '12' }}</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-title">Warnings Issued</div>
+          <div class="stat-value text-orange">{{ stats.warningsIssued || '4' }}</div>
+        </div>
+      </div>
+
+      <div class="controls-card glass-card">
+        <div class="tabs-container">
+          <button class="tab-btn" [class.active]="filterStatus === 'ALL'" (click)="filterStatus = 'ALL'">All Records</button>
+          <button class="tab-btn" [class.active]="filterStatus === 'NO-SHOW'" (click)="filterStatus = 'NO-SHOW'">No-Shows Only</button>
+          <button class="tab-btn" [class.active]="filterStatus === 'EXCUSED'" (click)="filterStatus = 'EXCUSED'">Excused</button>
+        </div>
+
+        <div class="search-container">
+          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <input type="text" [(ngModel)]="searchQuery" placeholder="Search Student Name or Matric..." class="search-input">
+        </div>
+      </div>
+
+      <div class="content-card glass-card">
+        <div class="table-container">
+          <table class="sophisticated-table">
+            <thead>
+            <tr>
+              <th>Student Details</th>
+              <th>Session Info</th>
+              <th>Status</th>
+              <th>Notes</th>
+              <th>Administrative Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngIf="filteredRecords.length === 0">
+              <td colspan="5" class="empty-state">No attendance records found.</td>
+            </tr>
+
+            <tr *ngFor="let record of filteredRecords" [class.row-alert]="record.status === 'NO-SHOW'">
+              <td>
+                <div class="student-name">{{ record.student }}</div>
+                <div class="student-matric">{{ record.matric }}</div>
+              </td>
+              <td>
+                <div class="lecturer-name">{{ record.lecturer }}</div>
+                <div class="session-date">{{ record.date }}</div>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="record.status.toLowerCase()">
+                  {{ record.status }}
+                </span>
+              </td>
+              <td class="notes-cell">{{ record.notes }}</td>
+
+              <td class="actions-cell">
+                <div *ngIf="record.status === 'NO-SHOW'" class="action-group">
+                  <button class="action-btn warning-btn" (click)="issueWarning(record.student)">Issue Warning</button>
+                  <button class="action-btn excuse-btn" (click)="markExcused(record)">Excuse</button>
+                </div>
+                <span *ngIf="record.status !== 'NO-SHOW'" class="text-muted">No action needed</span>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
