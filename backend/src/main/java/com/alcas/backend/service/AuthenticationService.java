@@ -191,6 +191,37 @@ public class AuthenticationService {
         return "Account verified successfully";
     }
 
+    public String requestPasswordReset(String email) {
+
+        User user = userService.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        String code = String.format(
+                "%06d",
+                new java.util.Random().nextInt(1_000_000)
+        );
+
+        VerificationCode verificationCode = new VerificationCode();
+
+        verificationCode.setUser(user);
+        verificationCode.setCode(code);
+        verificationCode.setPurpose(
+                VerificationCode.Purpose.PASSWORD_RESET
+        );
+        verificationCode.setExpiresAt(
+                LocalDateTime.now().plusMinutes(10)
+        );
+        verificationCode.setIsUsed(false);
+        verificationCode.setCreatedAt(LocalDateTime.now());
+
+        verificationCodeService.save(verificationCode);
+
+        System.out.println("Password reset OTP: " + code);
+
+        return "Password reset code sent";
+    }
+
     public String encodePassword(String password) {
         return passwordEncoder.encode(password);
     }
