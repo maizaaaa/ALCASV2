@@ -222,6 +222,52 @@ public class AuthenticationService {
         return "Password reset code sent";
     }
 
+    public String resetPassword(
+            String email,
+            String code,
+            String newPassword) {
+
+        User user = userService.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        VerificationCode verificationCode =
+                verificationCodeService
+                        .findByUserIdAndCodeAndPurpose(
+                                user.getId(),
+                                code,
+                                VerificationCode.Purpose.PASSWORD_RESET
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException("Invalid password reset code"));
+
+        if (verificationCode.getIsUsed()) {
+            throw new RuntimeException(
+                    "Password reset code has already been used");
+        }
+
+        if (verificationCode.getExpiresAt()
+                .isBefore(LocalDateTime.now())) {
+
+            throw new RuntimeException(
+                    "Password reset code has expired");
+        }
+
+        user.setPassword(
+                passwordEncoder.encode(newPassword)
+        );
+
+        user.setUpdatedAt(LocalDateTime.now());
+
+        userService.save(user);
+
+        verificationCode.setIsUsed(true);
+
+        verificationCodeService.save(verificationCode);
+
+        return "Password reset successfully";
+    }
+
     public String encodePassword(String password) {
         return passwordEncoder.encode(password);
     }

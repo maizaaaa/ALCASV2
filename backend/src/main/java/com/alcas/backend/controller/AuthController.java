@@ -5,6 +5,7 @@ import com.alcas.backend.dto.LoginResponse;
 import com.alcas.backend.dto.RegisterRequest;
 import com.alcas.backend.dto.VerifyCodeRequest;
 import com.alcas.backend.dto.ForgotPasswordRequest;
+import com.alcas.backend.dto.ResetPasswordRequest;
 import com.alcas.backend.service.AuthenticationService;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,6 +52,17 @@ public class AuthController {
 
         return authenticationService.requestPasswordReset(
                 request.getEmail()
+        );
+    }
+
+    @PostMapping("/reset-password")
+    public String resetPassword(
+            @RequestBody ResetPasswordRequest request) {
+
+        return authenticationService.resetPassword(
+                request.getEmail(),
+                request.getCode(),
+                request.getNewPassword()
         );
     }
 }
