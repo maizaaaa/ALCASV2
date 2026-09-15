@@ -12,7 +12,8 @@ public class VerificationCodeService {
 
     private final VerificationCodeRepository verificationCodeRepository;
 
-    public VerificationCodeService(VerificationCodeRepository verificationCodeRepository) {
+    public VerificationCodeService(
+            VerificationCodeRepository verificationCodeRepository) {
         this.verificationCodeRepository = verificationCodeRepository;
     }
 
@@ -30,5 +31,14 @@ public class VerificationCodeService {
 
     public void deleteById(Integer id) {
         verificationCodeRepository.deleteById(id);
+    }
+
+    public Optional<VerificationCode> findByUserIdAndCodeAndPurpose(
+            Integer userId,
+            String code,
+            VerificationCode.Purpose purpose) {
+
+        return verificationCodeRepository
+                .findByUserIdAndCodeAndPurpose(userId, code, purpose);
     }
 }
