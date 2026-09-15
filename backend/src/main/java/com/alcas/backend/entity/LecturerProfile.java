@@ -1,44 +1,156 @@
 package com.alcas.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "lecturer_profiles")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Table(name = "lecturer_profile")
 public class LecturerProfile {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "user_id")
+    private Integer userId;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", referencedColumnName = "id", unique = true, nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(length = 20)
-    private String title;
+    @Column(name = "staff_number", nullable = false, unique = true, length = 30)
+    private String staffNumber;
 
-    @Column(name = "office_location", length = 100)
-    private String officeLocation;
+    @Column(nullable = false, length = 100)
+    private String department;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "school_id", nullable = false)
-    private School school;
+    @Column(name = "office_room", nullable = false, length = 100)
+    private String officeRoom;
 
     @Column(length = 20)
     private String phone;
 
-    @Column(length = 1000)
-    private String biography;
+    @Column(name = "office_hours", length = 150)
+    private String officeHours;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "virtual_room_url", length = 255)
+    private String virtualRoomUrl;
+
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    @Column(name = "avatar_url", length = 255)
+    private String avatarUrl;
+
+    @Column(name = "email_notifications")
+    private Boolean emailNotifications = true;
+
+    @Column(name = "auto_reminder_24h")
+    private Boolean autoReminder24h = true;
+
+    @Column(name = "auto_approve_fyp")
+    private Boolean autoApproveFyp = false;
+
+    // Getters and Setters
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public String getStaffNumber() {
+        return staffNumber;
+    }
+
+    public void setStaffNumber(String staffNumber) {
+        this.staffNumber = staffNumber;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getOfficeRoom() {
+        return officeRoom;
+    }
+
+    public void setOfficeRoom(String officeRoom) {
+        this.officeRoom = officeRoom;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getOfficeHours() {
+        return officeHours;
+    }
+
+    public void setOfficeHours(String officeHours) {
+        this.officeHours = officeHours;
+    }
+
+    public String getVirtualRoomUrl() {
+        return virtualRoomUrl;
+    }
+
+    public void setVirtualRoomUrl(String virtualRoomUrl) {
+        this.virtualRoomUrl = virtualRoomUrl;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public Boolean getEmailNotifications() {
+        return emailNotifications;
+    }
+
+    public void setEmailNotifications(Boolean emailNotifications) {
+        this.emailNotifications = emailNotifications;
+    }
+
+    public Boolean getAutoReminder24h() {
+        return autoReminder24h;
+    }
+
+    public void setAutoReminder24h(Boolean autoReminder24h) {
+        this.autoReminder24h = autoReminder24h;
+    }
+
+    public Boolean getAutoApproveFyp() {
+        return autoApproveFyp;
+    }
+
+    public void setAutoApproveFyp(Boolean autoApproveFyp) {
+        this.autoApproveFyp = autoApproveFyp;
+    }
 }

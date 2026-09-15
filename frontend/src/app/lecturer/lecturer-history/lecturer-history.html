@@ -34,6 +34,7 @@
             <option value="COMPLETED">Completed</option>
             <option value="NO-SHOW">No-Show</option>
             <option value="REJECTED">Rejected</option>
+            <option value="CANCELLED">Cancelled</option>
           </select>
         </div>
 
@@ -74,7 +75,7 @@
               </td>
               <td>
                 <div class="student-name">{{ log.student }}</div>
-                <div class="matric-text">{{ log.matric }} • {{ log.type }}</div>
+                <div class="matric-text">{{ log.studentMatric || log.matric }} • {{ log.type }}</div>
               </td>
               <td>
                 <div class="reason-truncate">"{{ log.reason }}"</div>
@@ -118,7 +119,7 @@
         <div class="detail-grid">
           <div class="detail-group">
             <label>Student</label>
-            <p>{{ selectedLog.student }} ({{ selectedLog.matric }})</p>
+            <p>{{ selectedLog.student }} ({{ selectedLog.studentMatric || selectedLog.matric }})</p>
           </div>
           <div class="detail-group">
             <label>Topic / Type</label>
@@ -132,6 +133,10 @@
             <label>Time</label>
             <p>{{ selectedLog.time }}</p>
           </div>
+          <div class="detail-group full-width" *ngIf="selectedLog.location">
+            <label>Venue / Location</label>
+            <p>📍 {{ selectedLog.location }}</p>
+          </div>
         </div>
 
         <div class="divider"></div>
@@ -144,9 +149,9 @@
         </div>
 
         <div class="detail-group full-width">
-          <label>Your Remarks & Notes</label>
+          <label>Lecturer Remarks & Notes</label>
           <div class="text-box filled">
-            {{ selectedLog.notes }}
+            {{ selectedLog.remarks || selectedLog.notes || 'No additional remarks recorded.' }}
           </div>
         </div>
 

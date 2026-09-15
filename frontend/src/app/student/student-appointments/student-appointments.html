@@ -42,28 +42,47 @@
         </div>
 
         <div *ngFor="let appt of upcomingAppointments"
-          class="group bg-white dark:bg-[#071317]/80 border border-slate-100 dark:border-teal-900/30 shadow-md hover:shadow-lg rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between transition-all duration-300">
+          class="group student-card bg-white dark:bg-[#071317]/80 border border-slate-100 dark:border-teal-900/30 shadow-md hover:shadow-lg rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between transition-all duration-300">
 
           <div class="flex items-center gap-5 w-full md:w-auto mb-4 md:mb-0">
             <div
-              class="w-14 h-14 rounded-full bg-gradient-to-br from-teal-100 to-emerald-100 dark:from-teal-950 dark:to-teal-900 border-2 border-white dark:border-teal-800 shadow-sm flex items-center justify-center text-xl font-black text-teal-600 dark:text-teal-300">
-              {{ appt.lecturer.charAt(4) }}
+              class="lecturer-avatar bg-gradient-to-br from-teal-100 to-emerald-100 dark:from-teal-950 dark:to-teal-900 border-2 border-white dark:border-teal-800 shadow-sm text-teal-700 dark:text-teal-300">
+              {{ appt.lecturer.charAt(4) || 'L' }}
             </div>
             <div>
-              <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">{{ appt.lecturer }}</h3>
-              <p class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">{{
-                appt.reason }}</p>
+              <h3 class="lecturer-name text-slate-900 dark:text-white">{{ appt.lecturer }}</h3>
+              <p class="consultation-reason text-slate-500 dark:text-slate-400 mt-0.5">{{ appt.reason }}</p>
+
+              <!-- Venue / Room Number Display -->
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                <ng-container *ngIf="appt.status === 'UPCOMING' || appt.status === 'CONFIRMED'">
+                  <span class="location-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-800 dark:bg-teal-950/80 dark:text-teal-200 border border-emerald-300 dark:border-teal-700/60 shadow-sm">
+                    📍 <strong>{{ appt.location }}</strong>
+                  </span>
+                  <span class="status-pill text-[10px] text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-md">Room Assigned</span>
+                </ng-container>
+
+                <ng-container *ngIf="appt.status === 'PENDING'">
+                  <span class="location-pill inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-900/30">
+                    ⏳ Venue Pending Approval
+                  </span>
+                </ng-container>
+              </div>
+
+              <div *ngIf="appt.remarks" class="mt-2 text-xs font-medium text-teal-800 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/40">
+                💬 Note: "{{ appt.remarks }}"
+              </div>
             </div>
           </div>
 
           <div class="flex items-center gap-8 w-full md:w-auto">
             <div class="text-left md:text-right">
-              <p class="text-sm font-bold text-teal-700 dark:text-teal-400">{{ appt.date }}</p>
-              <p class="text-xs font-bold text-slate-500 mt-1">{{ appt.time }}</p>
+              <p class="date-text text-teal-700 dark:text-teal-400">{{ appt.date }}</p>
+              <p class="time-text text-slate-500 dark:text-slate-400 mt-0.5">{{ appt.time }}</p>
             </div>
-            <span class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider w-24 text-center border"
-              [ngClass]="appt.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-800 border-emerald-200/50 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800/40' : 'bg-orange-100 text-orange-800 border-orange-200/50 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/40'">
-              {{ appt.status }}
+            <span class="status-pill px-3 py-1.5 rounded-xl w-28 text-center border"
+              [ngClass]="(appt.status === 'CONFIRMED' || appt.status === 'UPCOMING') ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800/40' : 'bg-orange-100 text-orange-800 border-orange-200/50 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/40'">
+              {{ (appt.status === 'UPCOMING' || appt.status === 'CONFIRMED') ? 'CONFIRMED' : appt.status }}
             </span>
 
             <div class="flex gap-2">
@@ -95,27 +114,31 @@
       <div class="space-y-4 animate-fade-in-up" *ngIf="activeTab === 'history'">
 
         <div *ngFor="let appt of historyAppointments"
-          class="group bg-white/40 dark:bg-[#071317]/50 backdrop-blur-md border border-white/60 dark:border-teal-900/20 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between opacity-85 hover:opacity-100 transition-all">
+          class="group student-card bg-white/40 dark:bg-[#071317]/50 backdrop-blur-md border border-white/60 dark:border-teal-900/20 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between opacity-85 hover:opacity-100 transition-all">
 
           <div class="flex items-center gap-5 w-full md:w-auto mb-4 md:mb-0">
             <div
-              class="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-teal-900/30 flex items-center justify-center text-xl font-black text-slate-400 dark:text-slate-500">
-              {{ appt.lecturer.charAt(4) }}
+              class="lecturer-avatar bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-teal-900/30 text-slate-400 dark:text-slate-500">
+              {{ appt.lecturer.charAt(4) || 'L' }}
             </div>
             <div>
-              <h3 class="text-lg font-extrabold text-slate-700 dark:text-slate-200">{{ appt.lecturer }}</h3>
-              <p class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">{{
-                appt.reason }}</p>
+              <h3 class="lecturer-name text-slate-700 dark:text-slate-200">{{ appt.lecturer }}</h3>
+              <p class="consultation-reason text-slate-500 dark:text-slate-400 mt-0.5">{{ appt.reason }}</p>
+              <div class="mt-1.5" *ngIf="appt.location">
+                <span class="location-pill inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                  📍 {{ appt.location }}
+                </span>
+              </div>
             </div>
           </div>
 
           <div class="flex items-center gap-8 w-full md:w-auto">
             <div class="text-left md:text-right">
-              <p class="text-sm font-bold text-slate-600 dark:text-slate-400">{{ appt.date }}</p>
-              <p class="text-xs font-bold text-slate-400 dark:text-slate-500 mt-1">{{ appt.time }}</p>
+              <p class="date-text text-slate-600 dark:text-slate-400">{{ appt.date }}</p>
+              <p class="time-text text-slate-400 dark:text-slate-500 mt-0.5">{{ appt.time }}</p>
             </div>
             <span
-              class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider w-24 text-center border dark:border-none"
+              class="status-pill px-3 py-1.5 rounded-xl w-24 text-center border dark:border-none"
               [ngClass]="appt.status === 'COMPLETED' ? 'bg-slate-200 text-slate-600 dark:bg-slate-950 dark:text-slate-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'">
               {{ appt.status }}
             </span>
@@ -133,7 +156,7 @@
   <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity" (click)="closeModal()"></div>
 
   <div
-    class="relative bg-white/95 dark:bg-[#091d24]/95 backdrop-blur-3xl border border-slate-100 dark:border-teal-900/35 shadow-2xl rounded-[2.5rem] w-full max-w-lg overflow-hidden transform transition-all p-8 animate-fade-in-up">
+    class="relative bg-white/95 dark:bg-[#091d24]/95 backdrop-blur-3xl border border-slate-100 dark:border-teal-900/35 shadow-2xl rounded-[2.5rem] w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden transform transition-all p-8 animate-fade-in-up">
 
     <button (click)="closeModal()"
       class="absolute top-6 right-6 p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all">
@@ -142,40 +165,70 @@
       </svg>
     </button>
 
-    <div *ngIf="modalMode === 'view'">
-      <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-6">Appointment Details</h2>
+    <div *ngIf="modalMode === 'view' && selectedAppointment" class="overflow-y-auto max-h-[calc(85vh-120px)] pr-1">
+      <h2 class="modal-section-title text-slate-900 dark:text-white mb-6">Appointment Details</h2>
 
       <div
         class="bg-slate-50 dark:bg-[#071317]/50 border border-slate-200 dark:border-teal-900/35 rounded-2xl p-6 space-y-4">
         <div class="flex justify-between items-center border-b border-slate-200 dark:border-teal-900/20 pb-4">
           <div>
-            <p class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Lecturer</p>
-            <p class="text-lg font-bold text-slate-800 dark:text-slate-200">{{ selectedAppointment.lecturer }}</p>
+            <p class="modal-label text-slate-400 dark:text-slate-500 mb-1">Lecturer</p>
+            <p class="modal-val text-slate-800 dark:text-slate-200">{{ selectedAppointment.lecturer }}</p>
           </div>
           <div class="text-right">
-            <p class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Status</p>
-            <span class="text-xs font-black uppercase"
-              [ngClass]="{'text-emerald-600 dark:text-emerald-400': selectedAppointment.status === 'CONFIRMED', 'text-orange-500 dark:text-orange-400': selectedAppointment.status === 'PENDING', 'text-rose-500 dark:text-rose-400': selectedAppointment.status === 'CANCELLED'}">{{
-              selectedAppointment.status }}</span>
+            <p class="modal-label text-slate-400 dark:text-slate-500 mb-1">Status</p>
+            <span class="status-pill text-xs"
+              [ngClass]="{'text-emerald-600 dark:text-emerald-400': (selectedAppointment.status === 'CONFIRMED' || selectedAppointment.status === 'UPCOMING'), 'text-orange-500 dark:text-orange-400': selectedAppointment.status === 'PENDING', 'text-rose-500 dark:text-rose-400': (selectedAppointment.status === 'CANCELLED' || selectedAppointment.status === 'REJECTED')}">
+              {{ (selectedAppointment.status === 'UPCOMING' || selectedAppointment.status === 'CONFIRMED') ? 'CONFIRMED' : selectedAppointment.status }}
+            </span>
           </div>
         </div>
+
         <div class="pt-2">
-          <p class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Schedule</p>
-          <p class="text-md font-bold text-teal-700 dark:text-teal-400">{{ selectedAppointment.date }} @ {{
+          <p class="modal-label text-slate-400 dark:text-slate-500 mb-1">Schedule</p>
+          <p class="date-text text-teal-700 dark:text-teal-400">{{ selectedAppointment.date }} @ {{
             selectedAppointment.time }}
           </p>
         </div>
+
+        <!-- Venue / Room Section in Modal -->
         <div class="pt-2">
-          <p class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Reason</p>
-          <p class="text-md font-medium text-slate-700 dark:text-slate-300">{{ selectedAppointment.reason }}</p>
+          <p class="modal-label text-slate-400 dark:text-slate-500 mb-1">Venue / Room Number</p>
+          <div *ngIf="selectedAppointment.status === 'UPCOMING' || selectedAppointment.status === 'CONFIRMED'"
+               class="p-3 bg-emerald-50 dark:bg-teal-950/60 border border-emerald-200 dark:border-teal-800 rounded-xl">
+            <p class="modal-val text-emerald-900 dark:text-teal-200 flex items-center gap-2">
+              📍 {{ selectedAppointment.location }}
+            </p>
+            <small class="text-emerald-700 dark:text-teal-400 block mt-0.5 font-medium">Assigned by lecturer upon slot approval.</small>
+          </div>
+
+          <div *ngIf="selectedAppointment.status === 'PENDING'"
+               class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/30 rounded-xl">
+            <p class="modal-val text-amber-800 dark:text-amber-300">
+              ⏳ {{ selectedAppointment.location || 'To be assigned upon approval' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <p class="modal-label text-slate-400 dark:text-slate-500 mb-1">Reason</p>
+          <p class="modal-val font-normal text-slate-700 dark:text-slate-300">{{ selectedAppointment.reason }}</p>
+        </div>
+
+        <div class="pt-2" *ngIf="selectedAppointment.remarks">
+          <p class="modal-label text-teal-600 dark:text-teal-400 mb-1">Lecturer Instructions</p>
+          <p class="text-sm font-medium italic text-slate-700 dark:text-slate-300 bg-teal-50/60 dark:bg-teal-950/40 p-3 rounded-xl border border-teal-100 dark:border-teal-900/30">
+            "{{ selectedAppointment.remarks }}"
+          </p>
         </div>
       </div>
+
       <button (click)="closeModal()"
         class="w-full mt-6 py-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-teal-700 dark:hover:bg-teal-600 text-white font-bold transition-all">Close</button>
     </div>
 
-    <div *ngIf="modalMode === 'cancel'">
-      <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">Cancel Appointment</h2>
+    <div *ngIf="modalMode === 'cancel' && selectedAppointment" class="overflow-y-auto max-h-[calc(85vh-120px)] pr-1">
+      <h2 class="modal-section-title text-slate-900 dark:text-white mb-2">Cancel Appointment</h2>
 
       <div
         class="bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/35 rounded-xl p-4 mb-6 flex items-start gap-3">
@@ -208,8 +261,8 @@
       </div>
     </div>
 
-    <div *ngIf="modalMode === 'reschedule'">
-      <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">Reschedule Session</h2>
+    <div *ngIf="modalMode === 'reschedule' && selectedAppointment" class="overflow-y-auto max-h-[calc(85vh-120px)] pr-1">
+      <h2 class="modal-section-title text-slate-900 dark:text-white mb-2">Reschedule Session</h2>
       <p class="text-slate-500 font-medium mb-6">Change your session with {{ selectedAppointment.lecturer }}.</p>
 
       <div
@@ -217,7 +270,7 @@
         <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-400/30 rounded-full blur-2xl opacity-50"></div>
 
         <h3
-          class="text-xs font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest flex items-center gap-1.5 mb-2 relative z-10">
+          class="modal-label text-teal-600 dark:text-teal-400 flex items-center gap-1.5 mb-2 relative z-10">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd"
               d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
@@ -238,16 +291,15 @@
 
       <div class="flex items-center gap-4 mb-6">
         <hr class="flex-1 border-slate-200 dark:border-teal-900/20">
-        <span class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">OR SELECT
-          MANUALLY</span>
+        <span class="modal-label text-slate-400 dark:text-slate-500">OR SELECT MANUALLY</span>
         <hr class="flex-1 border-slate-200 dark:border-teal-900/20">
       </div>
 
       <select [(ngModel)]="selectedNewSlot"
         class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-teal-900/30 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 transition-all font-medium text-slate-700 dark:text-slate-200 shadow-sm cursor-pointer appearance-none mb-4">
         <option value="" disabled selected>Select alternative slot...</option>
-        <option value="May 14, 2026 @ 10:00 AM">May 14, 2026 @ 10:00 AM</option>
-        <option value="May 15, 2026 @ 02:00 PM">May 15, 2026 @ 02:00 PM</option>
+        <option value="2026-05-14 @ 10:00 AM">2026-05-14 @ 10:00 AM</option>
+        <option value="2026-05-15 @ 02:00 PM">2026-05-15 @ 02:00 PM</option>
       </select>
 
       <textarea [(ngModel)]="rescheduleReason" rows="2" placeholder="Reason for rescheduling (Required)..."

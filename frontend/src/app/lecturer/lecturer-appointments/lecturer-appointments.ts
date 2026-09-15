@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
+import { AppointmentService, Appointment } from '../../services/appointment.service';
 
 @Component({
   selector: 'app-lecturer-appointments',
@@ -11,17 +13,25 @@ import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
   templateUrl: './lecturer-appointments.html',
   styleUrls: ['./lecturer-appointments.css'],
 })
-export class LecturerAppointmentsComponent implements OnInit {
+export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
   activeTab: string = 'PENDING';
   searchQuery: string = '';
 
-  // Modal State for Actions (Rejecting, Completing, or No-Show)
+  // Modal State for Actions (Approving, Rejecting, Completing, or No-Show)
   showActionModal = false;
   selectedAppt: any = null;
-  actionType: 'REJECT' | 'COMPLETE' | 'NO_SHOW' = 'REJECT';
+  actionType: 'APPROVE' | 'REJECT' | 'COMPLETE' | 'NO_SHOW' = 'APPROVE';
   actionNotes: string = '';
+  approvalRoomNumber: string = 'Block A, Room BK-34';
+  quickRooms: string[] = [
+    'Block A, Room BK-34',
+    'Lecturer Office BK-02',
+    'Lab 2 (Software Lab)',
+    'Seminar Room 1',
+    'Webex Virtual Room'
+  ];
 
-  // Student Profile Quick View Modal State
+  // Student Info Modal State
   showStudentModal = false;
   selectedStudentInfo: any = null;
 
@@ -84,21 +94,43 @@ export class LecturerAppointmentsComponent implements OnInit {
     },
   };
 
+  appointments: Appointment[] = [];
+  private apptSub!: Subscription;
+
+  constructor(
+    private router: Router,
+    private appointmentService: AppointmentService
+  ) { }
+
+  ngOnInit(): void {
+    this.apptSub = this.appointmentService.appointments$.subscribe((data) => {
+      this.appointments = data;
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.apptSub) {
+      this.apptSub.unsubscribe();
+    }
+  }
+
   getStudentInfo(studentName: string) {
-    return this.studentDatabase[studentName] || {
-      name: studentName,
-      matric: 'S12399',
-      program: 'Bachelor of Computer Science (Software Engineering)',
-      faculty: 'School of Computing & IT',
-      yearSemester: 'Year 3, Semester 1',
-      cgpa: '3.75',
-      email: `${studentName.toLowerCase().replace(/\s+/g, '.')}@student.university.edu`,
-      phone: '+60 12-345 6789',
-      advisor: 'Dr. Ahmad Fauzi (FYP Advisor)',
-      completedSessions: 3,
-      attendanceRate: '100%',
-      lastTopic: 'General Academic Consultation',
-    };
+    return (
+      this.studentDatabase[studentName] || {
+        name: studentName,
+        matric: 'S12399',
+        program: 'Bachelor of Computer Science (Software Engineering)',
+        faculty: 'School of Computing & IT',
+        yearSemester: 'Year 3, Semester 1',
+        cgpa: '3.75',
+        email: `${studentName.toLowerCase().replace(/\s+/g, '.')}@student.university.edu`,
+        phone: '+60 12-345 6789',
+        advisor: 'Dr. Ahmad Fauzi (FYP Advisor)',
+        completedSessions: 3,
+        attendanceRate: '100%',
+        lastTopic: 'General Academic Consultation',
+      }
+    );
   }
 
   openStudentModal(studentName: string) {
@@ -126,71 +158,18 @@ export class LecturerAppointmentsComponent implements OnInit {
     alert('Virtual meeting link copied to clipboard!');
   }
 
-  // Mock Database
-  appointments = [
-    {
-      id: 'REQ-01',
-      student: 'Siti Nurhaliza',
-      matric: 'S12347',
-      date: '2024-05-10',
-      time: '10:00 AM',
-      type: 'FYP Advising',
-      mode: 'In-Person',
-      location: 'Block A, Room BK-34',
-      reason: 'I need you to check my Chapter 1 methodology before submission.',
-      status: 'PENDING',
-    },
-    {
-      id: 'REQ-02',
-      student: 'Muthu Kumar',
-      matric: 'S12348',
-      date: '2024-05-12',
-      time: '03:00 PM',
-      type: 'General Consultation',
-      mode: 'Online (Webex)',
-      location: 'Webex Virtual Room',
-      meetingUrl: 'https://university.webex.com/meet/ahmad.fauzi',
-      reason: "I am struggling to understand the pointers concept from yesterday's lecture.",
-      status: 'PENDING',
-    },
-    {
-      id: 'APT-99',
-      student: 'Nur Amirah',
-      matric: 'S12345',
-      date: '2024-05-08',
-      time: '09:00 AM',
-      type: 'FYP Advising',
-      mode: 'In-Person',
-      location: 'Block A, Room BK-34',
-      reason: 'System architecture review and Chapter 2 ER Diagram inspection.',
-      status: 'UPCOMING',
-    },
-    {
-      id: 'APT-100',
-      student: 'Jason Lee',
-      matric: 'S12346',
-      date: '2024-05-08',
-      time: '02:30 PM',
-      type: 'General Consultation',
-      mode: 'Online (Webex)',
-      location: 'Webex Virtual Room',
-      meetingUrl: 'https://university.webex.com/meet/ahmad.fauzi',
-      reason: 'Career advice regarding software engineering internships and course path.',
-      status: 'UPCOMING',
-    },
-  ];
-
-  constructor(private router: Router) { }
-
-  ngOnInit(): void { }
+  selectQuickRoom(room: string) {
+    this.approvalRoomNumber = room;
+  }
 
   get filteredAppointments() {
     return this.appointments.filter((appt) => {
       const matchesTab = appt.status === this.activeTab;
       const searchLower = this.searchQuery.toLowerCase();
+      const studentMatric = appt.studentMatric || '';
       const matchesSearch =
         appt.student.toLowerCase().includes(searchLower) ||
-        appt.matric.toLowerCase().includes(searchLower);
+        studentMatric.toLowerCase().includes(searchLower);
       return matchesTab && matchesSearch;
     });
   }
@@ -201,17 +180,23 @@ export class LecturerAppointmentsComponent implements OnInit {
 
   // --- Quick Actions ---
   approveRequest(appt: any) {
-    if (confirm(`Approve appointment for ${appt.student}?`)) {
-      appt.status = 'UPCOMING';
-      alert('Appointment approved! An email confirmation has been sent to the student.');
-    }
+    this.openActionModal(appt, 'APPROVE');
   }
 
-  // --- Modal Actions (Require text input) ---
-  openActionModal(appt: any, type: 'REJECT' | 'COMPLETE' | 'NO_SHOW') {
+  // --- Modal Actions ---
+  openActionModal(appt: any, type: 'APPROVE' | 'REJECT' | 'COMPLETE' | 'NO_SHOW') {
     this.selectedAppt = appt;
     this.actionType = type;
     this.actionNotes = '';
+    if (type === 'APPROVE') {
+      if (appt.mode?.includes('Online')) {
+        this.approvalRoomNumber = 'Webex Virtual Room';
+      } else if (appt.location && appt.location !== 'To be assigned upon approval') {
+        this.approvalRoomNumber = appt.location;
+      } else {
+        this.approvalRoomNumber = 'Block A, Room BK-34';
+      }
+    }
     this.showActionModal = true;
   }
 
@@ -221,18 +206,33 @@ export class LecturerAppointmentsComponent implements OnInit {
   }
 
   submitAction() {
-    if (this.actionType === 'REJECT') {
-      if (!this.actionNotes) {
+    if (!this.selectedAppt) return;
+
+    if (this.actionType === 'APPROVE') {
+      if (!this.approvalRoomNumber || !this.approvalRoomNumber.trim()) {
+        alert('Please specify a room number or venue for the appointment.');
+        return;
+      }
+      this.appointmentService.approveAppointment(
+        this.selectedAppt.id,
+        this.approvalRoomNumber,
+        this.actionNotes
+      );
+      alert(
+        `Appointment approved! Room "${this.approvalRoomNumber.trim()}" assigned and live notification updated for ${this.selectedAppt.student}.`
+      );
+    } else if (this.actionType === 'REJECT') {
+      if (!this.actionNotes || !this.actionNotes.trim()) {
         alert('Please provide a reason for declining the request.');
         return;
       }
-      this.selectedAppt.status = 'REJECTED';
+      this.appointmentService.rejectAppointment(this.selectedAppt.id, this.actionNotes);
       alert(`Request declined. Student notified with reason: "${this.actionNotes}"`);
     } else if (this.actionType === 'COMPLETE') {
-      this.selectedAppt.status = 'COMPLETED';
-      alert('Session marked as completed and saved to History!');
+      this.appointmentService.completeAppointment(this.selectedAppt.id, this.actionNotes);
+      alert('Session marked as completed and saved to Consultation History!');
     } else if (this.actionType === 'NO_SHOW') {
-      this.selectedAppt.status = 'NO-SHOW';
+      this.appointmentService.markNoShow(this.selectedAppt.id, this.actionNotes);
       alert(`Recorded as No-Show with notes: "${this.actionNotes || 'None'}"`);
     }
 

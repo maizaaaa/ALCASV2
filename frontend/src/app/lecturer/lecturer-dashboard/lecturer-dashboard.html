@@ -113,7 +113,7 @@
                     </path>
                   </svg>
                 </button>
-                <button class="btn-action approve" (click)="approveRequest(req)">Approve Slot</button>
+                <button class="btn-action approve" (click)="openApprovalModal(req)">Approve Slot</button>
               </div>
             </div>
           </div>
@@ -123,4 +123,77 @@
 
     </div>
   </main>
+
+  <!-- Dashboard Room Assignment Modal -->
+  <div class="modal-backdrop" *ngIf="showActionModal">
+    <div class="modal-container fade-in-up">
+
+      <div class="modal-header">
+        <h2>Approve & Assign Room Number</h2>
+        <button class="close-btn" (click)="closeApprovalModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="summary-box pending-summary">
+          <strong>Student:</strong> {{ selectedAppt?.student }} ({{ selectedAppt?.studentMatric }})<br>
+          <strong>Topic:</strong> {{ selectedAppt?.type }} — {{ selectedAppt?.date }} at {{ selectedAppt?.time }}<br>
+          <strong>Consultation Mode:</strong> {{ selectedAppt?.mode }}
+        </div>
+
+        <div class="form-group mt-4">
+          <label>Consultation Room / Venue <span class="text-red">*</span></label>
+          <div class="room-input-container">
+            <input type="text" [(ngModel)]="approvalRoomNumber" class="search-input room-input"
+              placeholder="e.g., Block A, Room BK-34">
+          </div>
+
+          <div class="quick-rooms-wrapper mt-2">
+            <span class="quick-label">Quick Suggestions:</span>
+            <div class="quick-chips">
+              <button type="button" class="chip-btn" *ngFor="let room of quickRooms"
+                [class.active]="approvalRoomNumber === room" (click)="selectQuickRoom(room)">
+                📍 {{ room }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Student Notification Live Preview Card -->
+          <div class="mt-4 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl text-xs text-emerald-950">
+            <div class="font-bold flex items-center gap-1 text-emerald-800 mb-1">
+              <span>🔔 Student Live View Preview:</span>
+            </div>
+            <p class="leading-relaxed">
+              When approved, {{ selectedAppt?.student }} will see:
+              <strong class="block mt-1 text-emerald-900 bg-white/80 p-2 rounded border border-emerald-100">
+                ✅ Appointment Confirmed<br>
+                📍 Venue: {{ approvalRoomNumber || '(Enter room number above)' }}<br>
+                <span *ngIf="actionNotes.trim()">💬 Instructions: "{{ actionNotes.trim() }}"</span>
+              </strong>
+            </p>
+          </div>
+        </div>
+
+        <div class="form-group mt-4">
+          <label>Instructions / Message for Student (Optional)</label>
+          <textarea [(ngModel)]="actionNotes" class="modern-textarea" rows="2"
+            placeholder="e.g., Please bring your printed proposal draft and laptop.">
+          </textarea>
+          <small class="helper-text">An automated confirmation notification with the room number and instructions will be sent to the student.</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-text" (click)="closeApprovalModal()">Cancel</button>
+        <button class="btn-solid-blue bg-green" (click)="confirmApprove()">
+          Confirm & Approve
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </div>
