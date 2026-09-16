@@ -1,4 +1,16 @@
 package com.alcas.backend.exception;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleRuntimeException(
+            RuntimeException exception){
+        return Map.of("message", exception.getMessage());
+    }
 }
