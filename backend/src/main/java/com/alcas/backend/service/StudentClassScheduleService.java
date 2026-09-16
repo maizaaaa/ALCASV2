@@ -31,4 +31,8 @@ public class StudentClassScheduleService {
     public void deleteById(Long id) {
         studentClassScheduleRepository.deleteById(id);
     }
+
+    public List<StudentClassSchedule> findByStudentUserId( Integer userId) {
+        return studentClassScheduleRepository .findByStudentUserId(userId);
+    }
 }

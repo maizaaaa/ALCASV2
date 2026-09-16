@@ -2,18 +2,20 @@ import { Component, OnInit, inject, PLATFORM_ID } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
+import { AuthService } from '../auth-service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.html',
-  styleUrls: ['./login.css']
+  styleUrls: ['./login.css'],
 })
 export class LoginComponent implements OnInit {
   private platformId = inject(PLATFORM_ID);
   private document = inject(DOCUMENT);
   private router = inject(Router);
+  private authService = inject(AuthService);
 
   loginData = {
     email: '',
@@ -32,7 +34,10 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       // Check if the user already has a preference saved in their browser
-      if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      if (
+        localStorage.getItem('theme') === 'dark' ||
+        (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ) {
         this.isDarkMode = true;
         this.document.documentElement.classList.add('dark');
       } else {
@@ -71,15 +76,26 @@ export class LoginComponent implements OnInit {
   }
 
   onLogin() {
-    console.log('Logging in as: ', this.detectedRole);
-    if (this.detectedRole === 'STUDENT') {
-      this.router.navigate(['/student']);
-    } else if (this.detectedRole === 'LECTURER') {
-      this.router.navigate(['/lecturer']);
-    } else if (this.detectedRole === 'ADMIN') {
-      this.router.navigate(['/admin']);
-    } else {
-      alert('Error: Please enter a valid university email.');
+    if (!this.loginData.email || !this.loginData.password) {
+      alert('Please enter your email and password.');
+      return;
     }
+
+    console.log('Logging in...');
+
+    this.authService
+      .login({
+        email: this.loginData.email,
+        password: this.loginData.password,
+      })
+      .subscribe({
+        next: (res) => {
+          console.log('Login successful:', res);
+        },
+        error: (err) => {
+          console.error('Login failed:', err);
+          alert(err?.message || 'Login failed. Please check your email and password.');
+        },
+      });
   }
 }

@@ -39,12 +39,7 @@ export class AuthService {
   login(credentials: any): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
       tap((res) => {
-        // Requirement 1.3: Verify selected role matches authenticated role
-        if (credentials.role !== res.role) {
-          throw new Error('Role mismatch. You do not have permission for this role.');
-        }
 
-        // 4. Safely write to localStorage
         if (isPlatformBrowser(this.platformId)) {
           localStorage.setItem('token', res.token);
           localStorage.setItem('userRole', res.role);
@@ -83,13 +78,13 @@ export class AuthService {
   private redirectUser(role: string) {
     switch (role) {
       case 'STUDENT':
-        this.router.navigate(['/student/dashboard']);
+        this.router.navigate(['/student']);
         break;
       case 'LECTURER':
-        this.router.navigate(['/lecturer/dashboard']);
+        this.router.navigate(['/lecturer']);
         break;
       case 'ADMIN':
-        this.router.navigate(['/admin/dashboard']);
+        this.router.navigate(['/admin']);
         break;
     }
   }
