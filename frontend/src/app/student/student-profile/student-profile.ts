@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -70,6 +70,7 @@ export class StudentProfileComponent implements OnInit {
   constructor(
     private router: Router,
     private studentService: StudentService,
+    private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object,
   ) {}
 
@@ -107,6 +108,8 @@ export class StudentProfileComponent implements OnInit {
 
         this.autoReminder24h = profile.autoReminder24h;
 
+        this.cdr.detectChanges();
+
         console.log('Student profile loaded:', profile);
       },
 
@@ -122,6 +125,8 @@ export class StudentProfileComponent implements OnInit {
     this.studentService.getMySchedule().subscribe({
       next: (schedule: StudentClassSchedule[]) => {
         this.scheduleData = schedule;
+
+        this.cdr.detectChanges();
 
         console.log('Student schedule loaded:', schedule);
       },

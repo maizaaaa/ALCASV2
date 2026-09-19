@@ -24,6 +24,10 @@ public class ProgramService {
         return programRepository.findById(id);
     }
 
+    public List<Program> findBySchoolId(Integer schoolId) {
+        return programRepository.findBySchoolId(schoolId);
+    }
+
     public Program save(Program program) {
         return programRepository.save(program);
     }

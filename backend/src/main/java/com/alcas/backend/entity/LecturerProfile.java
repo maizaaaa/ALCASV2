@@ -15,6 +15,9 @@ public class LecturerProfile {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "school_id", nullable = false)
+    private Integer schoolId;
+
     @Column(name = "staff_number", nullable = false, unique = true, length = 30)
     private String staffNumber;
 
@@ -64,6 +67,14 @@ public class LecturerProfile {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Integer getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(Integer schoolId) {
+        this.schoolId = schoolId;
     }
 
     public String getStaffNumber() {

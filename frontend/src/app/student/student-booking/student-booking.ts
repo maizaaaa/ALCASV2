@@ -1,8 +1,25 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NavbarStudent } from '../../shared/navbar-student/navbar-student';
+
+interface School {
+  id: number;
+  name: string;
+}
+
+interface Program {
+  id: number;
+  name: string;
+}
+
+interface Lecturer {
+  id: number;
+  name: string;
+  school: string;
+}
 
 @Component({
   selector: 'app-student-booking',
@@ -25,15 +42,15 @@ export class StudentBookingComponent implements OnInit {
 
   selectedDate: number | null = null;
   searchQuery = '';
-  selectedSchool = 'All Schools';
-  schools = [
-    'All Schools',
-    'School of Computing (SOC)',
-    'School of Business',
-    'School of Multimedia',
-  ];
 
-  selectedLecturerId = '';
+  selectedSchool = 'All Schools';
+  schools: School[] = [];
+  schoolOptions: string[] = ['All Schools'];
+
+  programs: Program[] = [];
+  selectedProgramId: number | null = null;
+
+  selectedLecturerId: number | null = null;
   selectedTime = '';
   reasonForVisit = '';
   otherReasonText = ''; // NEW: Holds the custom reason text
@@ -46,36 +63,72 @@ export class StudentBookingComponent implements OnInit {
     'Other',
   ];
 
-  // --- MOCK LECTURER DATA ---
-  allLecturers = [
-    {
-      id: 'L1',
-      name: 'Dr. Ahmad Fauzi',
-      school: 'School of Computing (SOC)',
-      slots: ['10:00 AM', '11:30 AM', '02:00 PM'],
-    },
-    {
-      id: 'L2',
-      name: 'Prof. Sarah Tan',
-      school: 'School of Business',
-      slots: ['09:00 AM', '02:30 PM'],
-    },
-    {
-      id: 'L3',
-      name: 'Dr. Ramesh',
-      school: 'School of Computing (SOC)',
-      slots: ['09:00 AM', '10:00 AM', '04:00 PM'],
-    },
-    {
-      id: 'L4',
-      name: 'Mdm. Aisyah',
-      school: 'School of Multimedia',
-      slots: ['10:00 AM', '11:00 AM'],
-    },
-  ];
+  allLecturers: Lecturer[] = [];
 
-  constructor(private router: Router) { }
-  ngOnInit(): void { }
+  constructor(
+    private router: Router,
+    private http: HttpClient,
+  ) {}
+  ngOnInit(): void {
+    this.loadSchools();
+  }
+
+  loadSchools(): void {
+    this.http.get<School[]>('http://localhost:8080/api/schools').subscribe({
+      next: (schools) => {
+        this.schools = schools;
+
+        this.schoolOptions = ['All Schools', ...schools.map((school) => school.name)];
+
+        console.log('Schools loaded:', schools);
+      },
+
+      error: (error) => {
+        console.error('Failed to load schools:', error);
+      },
+    });
+  }
+
+  loadPrograms(schoolId: number): void {
+    this.http.get<Program[]>(`http://localhost:8080/api/programs/school/${schoolId}`).subscribe({
+      next: (programs) => {
+        this.programs = programs;
+
+        console.log('Programs loaded:', programs);
+      },
+
+      error: (error) => {
+        console.error('Failed to load programs:', error);
+      },
+    });
+  }
+
+  onSchoolChange(): void {
+    const selectedSchool = this.schools.find((school) => school.name === this.selectedSchool);
+
+    if (!selectedSchool) {
+      this.allLecturers = [];
+      return;
+    }
+
+    this.loadLecturers(selectedSchool.id);
+  }
+
+  loadLecturers(schoolId: number): void {
+    this.http.get<Lecturer[]>(`http://localhost:8080/api/lecturers/school/${schoolId}`).subscribe({
+      next: (lecturers) => {
+        this.allLecturers = lecturers;
+
+        console.log('Lecturers loaded:', lecturers);
+      },
+
+      error: (error) => {
+        console.error('Failed to load lecturers:', error);
+
+        this.allLecturers = [];
+      },
+    });
+  }
 
   // --- FUNCTIONS ---
 
@@ -94,7 +147,7 @@ export class StudentBookingComponent implements OnInit {
   resetForm() {
     this.searchQuery = '';
     this.selectedSchool = 'All Schools';
-    this.selectedLecturerId = '';
+    this.selectedLecturerId = null;
     this.selectedTime = '';
     this.reasonForVisit = '';
     this.otherReasonText = '';
@@ -110,8 +163,7 @@ export class StudentBookingComponent implements OnInit {
   }
 
   get currentLecturerSlots() {
-    const lecturer = this.allLecturers.find((l) => l.id === this.selectedLecturerId);
-    return lecturer ? lecturer.slots : [];
+    return [];
   }
 
   // Helper to get the name for the Review screen
@@ -125,14 +177,14 @@ export class StudentBookingComponent implements OnInit {
   }
 
   // When a user clicks a lecturer from the search list
-  selectLecturer(id: string) {
+  selectLecturer(id: number) {
     this.selectedLecturerId = id;
     this.selectedTime = ''; // Reset time just in case
   }
 
   // When a user wants to change their selected lecturer
   clearLecturer() {
-    this.selectedLecturerId = '';
+    this.selectedLecturerId = null;
     this.selectedTime = '';
     this.searchQuery = ''; // Clear search so they can start fresh
   }

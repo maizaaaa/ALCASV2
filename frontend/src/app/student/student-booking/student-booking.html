@@ -133,10 +133,20 @@
           <div *ngIf="!selectedLecturerId" class="space-y-4 animate-fade-in-up">
 
             <div class="relative">
-              <select [(ngModel)]="selectedSchool"
+              <select
+                [(ngModel)]="selectedSchool" (ngModelChange) = "onSchoolChange()"
                 class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-teal-900/30 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 transition-all font-medium text-slate-700 dark:text-slate-200 shadow-sm cursor-pointer appearance-none">
-                <option *ngFor="let school of schools" [value]="school">{{ school }}</option>
+
+                <option
+                  *ngFor="let school of schoolOptions"
+                  [value]="school">
+
+                  {{ school }}
+
+                </option>
+
               </select>
+
               <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                 <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
