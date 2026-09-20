@@ -30,17 +30,74 @@ interface Lecturer {
 export class StudentBookingComponent implements OnInit {
   studentName = 'Jason Lee';
 
-  // --- CALENDAR STATE (May 2026) ---
-  currentMonth = 'May 2026';
+  // --- CALENDAR STATE ---
   weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  emptyDays = [0, 1, 2, 3, 4];
-  daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  currentDate = new Date();
+  currentYear = this.currentDate.getFullYear();
+  currentMonthIndex = this.currentDate.getMonth();
+
+  currentMonth = '';
+  emptyDays: number[] = [];
+  daysInMonth: number[] = [];
+
+  today = new Date();
+
+  updateCalendar(): void {
+    const firstDayOfMonth = new Date(this.currentYear, this.currentMonthIndex, 1);
+
+    const lastDayOfMonth = new Date(this.currentYear, this.currentMonthIndex + 1, 0);
+
+    this.currentMonth = firstDayOfMonth.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    });
+
+    const startingDay = firstDayOfMonth.getDay();
+
+    this.emptyDays = Array.from({ length: startingDay }, (_, i) => i);
+
+    this.daysInMonth = Array.from({ length: lastDayOfMonth.getDate() }, (_, i) => i + 1);
+  }
+
+  previousMonth(): void {
+    this.currentMonthIndex--;
+
+    if (this.currentMonthIndex < 0) {
+      this.currentMonthIndex = 11;
+      this.currentYear--;
+    }
+
+    this.updateCalendar();
+  }
+
+  nextMonth(): void {
+    this.currentMonthIndex++;
+
+    if (this.currentMonthIndex > 11) {
+      this.currentMonthIndex = 0;
+      this.currentYear++;
+    }
+
+    this.updateCalendar();
+  }
+
+  isPastDate(day: number): boolean {
+    const date = new Date(this.currentYear, this.currentMonthIndex, day);
+
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+    return date < today;
+  }
 
   // --- BOOKING FORM STATE ---
   isModalOpen = false;
   bookingStep = 1; // 1 = Form, 2 = Review, 3 = Success
 
   selectedDate: number | null = null;
+  selectedDateValue: string | null = null;
   searchQuery = '';
 
   selectedSchool = 'All Schools';
@@ -64,12 +121,14 @@ export class StudentBookingComponent implements OnInit {
   ];
 
   allLecturers: Lecturer[] = [];
+  availableSlots: string[] = [];
 
   constructor(
     private router: Router,
     private http: HttpClient,
   ) {}
   ngOnInit(): void {
+    this.updateCalendar();
     this.loadSchools();
   }
 
@@ -132,8 +191,11 @@ export class StudentBookingComponent implements OnInit {
 
   // --- FUNCTIONS ---
 
-  openDateForm(day: number) {
+  openDateForm(day: number): void {
     this.selectedDate = day;
+
+    this.selectedDateValue = `${this.currentYear}-${String(this.currentMonthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
     this.isModalOpen = true;
     this.bookingStep = 1;
     this.resetForm();
@@ -142,6 +204,7 @@ export class StudentBookingComponent implements OnInit {
   closeModal() {
     this.isModalOpen = false;
     this.selectedDate = null;
+    this.selectedDateValue = null;
   }
 
   resetForm() {
@@ -150,6 +213,7 @@ export class StudentBookingComponent implements OnInit {
     this.selectedLecturerId = null;
     this.selectedTime = '';
     this.reasonForVisit = '';
+    this.otherReasonText = '';
     this.otherReasonText = '';
   }
 
@@ -163,7 +227,21 @@ export class StudentBookingComponent implements OnInit {
   }
 
   get currentLecturerSlots() {
-    return [];
+    return this.availableSlots;
+  }
+
+  get formattedSelectedDate(): string {
+    if (!this.selectedDateValue) {
+      return '';
+    }
+
+    const date = new Date(`${this.selectedDateValue}T00:00:00`);
+
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
   }
 
   // Helper to get the name for the Review screen
@@ -179,7 +257,39 @@ export class StudentBookingComponent implements OnInit {
   // When a user clicks a lecturer from the search list
   selectLecturer(id: number) {
     this.selectedLecturerId = id;
-    this.selectedTime = ''; // Reset time just in case
+    this.selectedTime = '';
+    this.availableSlots = [];
+
+    if (!this.selectedDateValue) {
+      console.error('No date selected.');
+      return;
+    }
+
+    this.loadLecturerAvailability(id, this.selectedDateValue);
+  }
+
+  loadLecturerAvailability(lecturerId: number, date: string): void {
+    this.http
+      .get<{
+        lecturerId: number;
+        date: string;
+        dayOfWeek: string;
+        availableSlots: string[];
+      }>(`http://localhost:8080/api/lecturer-availability?lecturerId=${lecturerId}&date=${date}`)
+      .subscribe({
+        next: (response) => {
+          this.availableSlots = response.availableSlots;
+
+          console.log('Lecturer availability response:', response);
+          console.log('Available slots:', this.availableSlots);
+        },
+
+        error: (error) => {
+          console.error('Failed to load lecturer availability:', error);
+
+          this.availableSlots = [];
+        },
+      });
   }
 
   // When a user wants to change their selected lecturer

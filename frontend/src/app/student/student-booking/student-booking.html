@@ -25,7 +25,7 @@
         class="bg-white/95 dark:bg-[#071317]/85 border border-slate-100 dark:border-teal-900/30 shadow-[0_15px_50px_rgba(15,118,110,0.06)] dark:shadow-none rounded-3xl overflow-hidden p-6">
 
         <div class="flex justify-between items-center mb-8 px-4">
-          <button
+          <button type="button" (click) = "previousMonth()"
             class="p-2.5 rounded-xl border border-slate-100 dark:border-teal-900/35 bg-white/80 dark:bg-slate-900/60 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 hover:border-teal-200 dark:hover:border-teal-800 transition-all shadow-sm"><svg
               class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
@@ -33,48 +33,94 @@
           <h2
             class="text-2xl font-black bg-gradient-to-r from-slate-900 to-teal-800 dark:from-white dark:to-cyan-200 bg-clip-text text-transparent tracking-tight">
             {{ currentMonth }}</h2>
-          <button
+          <button type="button" (click) = "nextMonth()"
             class="p-2.5 rounded-xl border border-slate-100 dark:border-teal-900/35 bg-white/80 dark:bg-slate-900/60 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 hover:border-teal-200 dark:hover:border-teal-800 transition-all shadow-sm"><svg
-              class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" >
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
             </svg></button>
         </div>
 
         <div
           class="grid grid-cols-7 gap-4 mb-6 text-center bg-slate-50/50 dark:bg-teal-950/15 py-3 rounded-2xl border border-slate-100/50 dark:border-teal-900/10">
-          <div *ngFor="let day of weekDays"
-            class="text-xs font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest">{{ day }}</div>
+
+          <div
+            *ngFor="let day of weekDays"
+            class="text-xs font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest">
+            {{ day }}
+          </div>
+
         </div>
 
         <div class="grid grid-cols-7 gap-4">
-          <div *ngFor="let empty of emptyDays"
+
+          <!-- Empty spaces before the first day -->
+          <div
+            *ngFor="let empty of emptyDays"
             class="h-24 bg-slate-50/20 dark:bg-slate-900/10 rounded-2xl border border-dashed border-slate-100 dark:border-teal-900/10 opacity-40">
           </div>
 
-          <div *ngFor="let day of daysInMonth" (click)="openDateForm(day)"
-            class="h-24 bg-white/95 dark:bg-slate-900/60 border border-slate-100 dark:border-teal-900/25 rounded-2xl flex flex-col justify-between p-4 cursor-pointer transition-all duration-300 hover:bg-gradient-to-br hover:from-teal-500 hover:to-emerald-500 hover:text-white hover:-translate-y-1.5 hover:shadow-xl dark:hover:shadow-teal-900/30 group shadow-sm">
+          <!-- Actual calendar dates -->
+          <div
+            *ngFor="let day of daysInMonth"
+            (click)="!isPastDate(day) && openDateForm(day)"
+            [class.opacity-40]="isPastDate(day)"
+            [class.cursor-not-allowed]="isPastDate(day)"
+            [class.cursor-pointer]="!isPastDate(day)"
+            class="h-24 bg-white/95 dark:bg-slate-900/60 border border-slate-100 dark:border-teal-900/25 rounded-2xl flex flex-col justify-between p-4 transition-all duration-300 group shadow-sm"
+            [class.hover:bg-gradient-to-br]="!isPastDate(day)"
+            [class.hover:from-teal-500]="!isPastDate(day)"
+            [class.hover:to-emerald-500]="!isPastDate(day)"
+            [class.hover:text-white]="!isPastDate(day)"
+            [class.hover:-translate-y-1.5]="!isPastDate(day)"
+            [class.hover:shadow-xl]="!isPastDate(day)">
 
             <div class="flex justify-between items-start">
+      <span
+        class="text-xl font-black text-slate-800 dark:text-slate-200 leading-none"
+        [class.group-hover:text-white]="!isPastDate(day)">
+        {{ day }}
+      </span>
+
               <span
-                class="text-xl font-black text-slate-800 dark:text-slate-200 group-hover:text-white transition-colors leading-none">{{
-                day }}</span>
-              <span class="flex h-2.5 w-2.5 relative">
-                <span
-                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 group-hover:bg-white"></span>
-                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 group-hover:bg-white"></span>
-              </span>
+                *ngIf="!isPastDate(day)"
+                class="flex h-2.5 w-2.5 relative">
+
+        <span
+          class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 group-hover:bg-white">
+        </span>
+
+        <span
+          class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 group-hover:bg-white">
+        </span>
+
+      </span>
             </div>
 
             <div
-              class="flex items-center gap-1.5 text-[9px] font-black text-slate-400 dark:text-slate-500 group-hover:text-teal-100 transition-colors uppercase tracking-widest mt-auto">
-              <svg class="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 group-hover:text-white transition-colors"
-                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              *ngIf="!isPastDate(day)"
+              class="flex items-center gap-1.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-auto">
+
+              <svg
+                class="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                </path>
+
               </svg>
+
               <span>Booking Open</span>
+
             </div>
+
           </div>
+
         </div>
 
       </div>
@@ -98,7 +144,7 @@
     <div *ngIf="bookingStep === 1">
       <div class="mb-8">
         <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-1">Book Session</h2>
-        <p class="text-teal-600 dark:text-teal-400 font-bold">For: May {{ selectedDate }}, 2026</p>
+        <p class="text-teal-600 dark:text-teal-400 font-bold">For: {{ formattedSelectedDate }} </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -243,7 +289,7 @@
           <div class="text-right">
             <p class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Date & Time
             </p>
-            <p class="text-lg font-bold text-teal-700 dark:text-teal-400">May {{ selectedDate }} @ {{ selectedTime }}
+            <p class="text-lg font-bold text-teal-700 dark:text-teal-400">{{ formattedSelectedDate }} @ {{ selectedTime }}
             </p>
           </div>
         </div>
@@ -283,8 +329,8 @@
       </div>
       <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white mb-2">Booking Submitted!</h2>
       <p class="text-slate-500 font-medium mb-8">Your request for <span
-          class="text-teal-600 dark:text-teal-400 font-bold">May {{
-          selectedDate }} at {{ selectedTime }}</span> has been sent to {{ selectedLecturerName }}.</p>
+          class="text-teal-600 dark:text-teal-400 font-bold"> {{
+          formattedSelectedDate }} at {{ selectedTime }}</span> has been sent to {{ selectedLecturerName }}.</p>
 
       <button routerLink="/student"
         class="py-4 px-10 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-teal-700 dark:hover:bg-teal-600 text-white font-bold shadow-lg transition-all">Go

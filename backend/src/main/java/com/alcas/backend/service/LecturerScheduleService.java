@@ -24,6 +24,10 @@ public class LecturerScheduleService {
         return lecturerScheduleRepository.findById(id);
     }
 
+    public List<LecturerSchedule> findByLecturerIdAndDay(Integer lecturerId, String dayOfWeek) {
+        return lecturerScheduleRepository
+                .findByLecturerUserIdAndDayOfWeek(lecturerId, dayOfWeek);
+    }
     public LecturerSchedule save(LecturerSchedule schedule) {
         return lecturerScheduleRepository.save(schedule);
     }
