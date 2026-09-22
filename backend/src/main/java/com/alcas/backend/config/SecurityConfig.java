@@ -73,8 +73,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
-                        .requestMatchers("/api/lecturer-availability/***").hasRole("STUDENT")
+                        .requestMatchers("/api/lecturer-availability/**").hasRole("STUDENT")
+                        .requestMatchers("/api/attendance/student/**").hasRole("STUDENT")
                         .requestMatchers("/api/lecturer/**").hasRole("LECTURER")
+                        .requestMatchers("/api/block-out-dates/**").hasRole("LECTURER")
+                        .requestMatchers("/api/attendance/mark").hasRole("LECTURER")
+                        .requestMatchers("/api/attendance/lecturer/**").hasRole("LECTURER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

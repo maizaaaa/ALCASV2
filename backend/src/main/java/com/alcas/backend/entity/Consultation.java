@@ -58,6 +58,12 @@ public class Consultation {
     @Column(name = "reschedule_reason", columnDefinition = "TEXT")
     private String rescheduleReason;
 
+    @Column(name = "proposed_date")
+    private LocalDate proposedDate;
+
+    @Column(name = "proposed_time")
+    private LocalTime proposedTime;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -67,6 +73,7 @@ public class Consultation {
     public enum Status {
         PENDING,
         CONFIRMED,
+        RESCHEDULE_PENDING,
         COMPLETED,
         NO_SHOW,
         REJECTED,
@@ -113,6 +120,22 @@ public class Consultation {
 
     public void setReasonDetails(String reasonDetails) {
         this.reasonDetails = reasonDetails;
+    }
+
+    public LocalDate getProposedDate() {
+        return proposedDate;
+    }
+
+    public void setProposedDate(LocalDate proposedDate) {
+        this.proposedDate = proposedDate;
+    }
+
+    public LocalTime getProposedTime() {
+        return proposedTime;
+    }
+
+    public void setProposedTime(LocalTime proposedTime) {
+        this.proposedTime = proposedTime;
     }
 
     public LocalDate getScheduledDate() {

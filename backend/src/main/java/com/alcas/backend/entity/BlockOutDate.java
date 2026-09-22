@@ -1,6 +1,7 @@
 package com.alcas.backend.entity;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -12,7 +13,14 @@ public class BlockOutDate {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "block_date", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "lecturer_id",
+            nullable = false
+    )
+    private LecturerProfile lecturer;
+
+    @Column(name = "block_date", nullable = false)
     private LocalDate blockDate;
 
     @Column(nullable = false, length = 255)
@@ -24,7 +32,6 @@ public class BlockOutDate {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Getters and Setters
 
     public Integer getId() {
         return id;
@@ -32,6 +39,14 @@ public class BlockOutDate {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public LecturerProfile getLecturer() {
+        return lecturer;
+    }
+
+    public void setLecturer(LecturerProfile lecturer) {
+        this.lecturer = lecturer;
     }
 
     public LocalDate getBlockDate() {

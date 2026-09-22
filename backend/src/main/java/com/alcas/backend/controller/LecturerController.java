@@ -1,5 +1,6 @@
 package com.alcas.backend.controller;
 
+import com.alcas.backend.entity.LecturerSchedule;
 import com.alcas.backend.dto.LecturerResponse;
 import com.alcas.backend.entity.LecturerProfile;
 import com.alcas.backend.service.LecturerProfileService;
@@ -19,8 +20,8 @@ public class LecturerController {
 
     public LecturerController(
             LecturerProfileService lecturerProfileService,
-            SchoolService schoolService) {
-
+            SchoolService schoolService)
+    {
         this.lecturerProfileService = lecturerProfileService;
         this.schoolService = schoolService;
     }

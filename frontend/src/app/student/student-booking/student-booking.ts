@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -122,11 +122,13 @@ export class StudentBookingComponent implements OnInit {
 
   allLecturers: Lecturer[] = [];
   availableSlots: string[] = [];
+  isSubmitting = false;
 
   constructor(
     private router: Router,
     private http: HttpClient,
   ) {}
+
   ngOnInit(): void {
     this.updateCalendar();
     this.loadSchools();
@@ -318,12 +320,73 @@ export class StudentBookingComponent implements OnInit {
     this.bookingStep = 1;
   }
 
-  // Step 2 -> Step 3
   confirmAndSubmit() {
-    // Simulate API loading, then show Success
-    setTimeout(() => {
-      this.bookingStep = 3;
-    }, 600);
+    if (
+      !this.selectedLecturerId ||
+      !this.selectedDateValue ||
+      !this.selectedTime ||
+      !this.reasonForVisit
+    ) {
+      alert('Please complete all required booking details.');
+      return;
+    }
+
+    if (this.isSubmitting) {
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    const time24Hour = this.convertTimeTo24Hour(this.selectedTime);
+
+    const params = new HttpParams()
+      .set('studentId', '2')
+      .set('lecturerId', this.selectedLecturerId.toString())
+      .set('date', this.selectedDateValue)
+      .set('time', time24Hour)
+      .set('reason', this.reasonForVisit)
+      .set('reasonDetails', this.otherReasonText || '');
+
+    this.http.post('http://localhost:8080/api/consultations', {}, { params }).subscribe({
+      next: (response) => {
+        console.log('Consultation created:', response);
+
+        this.bookingStep = 3;
+        this.isSubmitting = false;
+
+        console.log('bookingStep is now:', this.bookingStep);
+      },
+
+      error: (error) => {
+        console.error('Failed to create consultation:', error);
+
+        this.isSubmitting = false;
+
+        if (error.status === 409) {
+          alert('This time slot is already booked. Please choose another time.');
+        } else if (error.status === 403) {
+          alert('Your session has expired. Please log in again.');
+        } else {
+          alert('Failed to create booking. Please try again.');
+        }
+      },
+    });
+  }
+
+  convertTimeTo24Hour(time: string): string {
+    const [timePart, period] = time.split(' ');
+
+    let [hours, minutes] = timePart.split(':').map(Number);
+
+    if (period.toLowerCase() === 'pm' && hours !== 12) {
+      hours += 12;
+    }
+
+    if (period.toLowerCase() === 'am' && hours === 12) {
+      hours = 0;
+    }
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   }
 
   onLogout() {

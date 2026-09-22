@@ -1,7 +1,11 @@
 package com.alcas.backend.controller;
 
 import com.alcas.backend.dto.AvailabilityResponse;
+import com.alcas.backend.entity.Consultation;
+import com.alcas.backend.entity.BlockOutDate;
 import com.alcas.backend.entity.LecturerSchedule;
+import com.alcas.backend.repository.ConsultationRepository;
+import com.alcas.backend.repository.BlockOutDateRepository;
 import com.alcas.backend.service.LecturerScheduleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,10 +22,18 @@ import java.util.Locale;
 public class LecturerAvailabilityController {
 
     private final LecturerScheduleService lecturerScheduleService;
+    private final BlockOutDateRepository blockOutDateRepository;
+    private final ConsultationRepository consultationRepository;
 
     public LecturerAvailabilityController(
-            LecturerScheduleService lecturerScheduleService) {
+            LecturerScheduleService lecturerScheduleService,
+            BlockOutDateRepository blockOutDateRepository,
+            ConsultationRepository consultationRepository)
+    {
+
         this.lecturerScheduleService = lecturerScheduleService;
+        this.blockOutDateRepository = blockOutDateRepository;
+        this.consultationRepository = consultationRepository;
     }
 
     @GetMapping
@@ -29,34 +41,82 @@ public class LecturerAvailabilityController {
             @RequestParam Integer lecturerId,
             @RequestParam String date) {
 
-        LocalDate selectedDate = LocalDate.parse(date);
+        LocalDate selectedDate =
+                LocalDate.parse(date);
 
-        DayOfWeek dayOfWeek = selectedDate.getDayOfWeek();
+        DayOfWeek dayOfWeek =
+                selectedDate.getDayOfWeek();
 
-        String dayName = dayOfWeek.getDisplayName(
-                TextStyle.FULL,
-                Locale.ENGLISH
-        );
-
-        List<LecturerSchedule> schedules =
-                lecturerScheduleService.findByLecturerIdAndDay(
-                        lecturerId,
-                        dayName
+        String dayName =
+                dayOfWeek.getDisplayName(
+                        TextStyle.FULL,
+                        Locale.ENGLISH
                 );
 
-        List<String> availableSlots = schedules.stream()
-                .filter(schedule ->
-                        "AVAILABLE".equalsIgnoreCase(
-                                schedule.getSlotType()
-                        )
-                )
-                .flatMap(schedule ->
-                        generateSlots(
-                                schedule.getStartTime(),
-                                schedule.getEndTime()
-                        ).stream()
-                )
-                .toList();
+        boolean isBlocked =
+                blockOutDateRepository
+                        .existsByLecturerUserIdAndBlockDate(
+                                lecturerId,
+                                selectedDate
+                        );
+
+        List<String> availableSlots;
+
+        if (isBlocked) {
+
+            availableSlots = List.of();
+
+        } else {
+
+            List<LecturerSchedule> schedules =
+                    lecturerScheduleService
+                            .findByLecturerIdAndDay(
+                                    lecturerId,
+                                    dayName
+                            );
+
+            List<Consultation> consultations =
+                    consultationRepository
+                            .findByLecturerUserIdAndScheduledDateAndStatusIn(
+                                    lecturerId,
+                                    selectedDate,
+                                    List.of(
+                                            Consultation.Status.PENDING,
+                                            Consultation.Status.CONFIRMED
+                                    )
+                            );
+
+            List<java.time.LocalTime> bookedTimes =
+                    consultations.stream()
+                            .map(Consultation::getScheduledTime)
+                            .toList();
+
+            availableSlots =
+                    schedules.stream()
+                            .filter(schedule ->
+                                    "AVAILABLE".equalsIgnoreCase(
+                                            schedule.getSlotType()
+                                    )
+                            )
+                            .flatMap(schedule ->
+                                    generateSlots(
+                                            schedule.getStartTime(),
+                                            schedule.getEndTime()
+                                    ).stream()
+                            )
+                            .filter(slot -> {
+
+                                java.time.LocalTime slotTime =
+                                        java.time.LocalTime.parse(
+                                                slot,
+                                                java.time.format.DateTimeFormatter
+                                                        .ofPattern("hh:mm a")
+                                        );
+
+                                return !bookedTimes.contains(slotTime);
+                            })
+                            .toList();
+        }
 
         AvailabilityResponse response =
                 new AvailabilityResponse(
@@ -78,9 +138,13 @@ public class LecturerAvailabilityController {
         java.util.List<String> slots =
                 new java.util.ArrayList<>();
 
-        java.time.LocalTime currentTime = startTime;
+        java.time.LocalTime currentTime =
+                startTime;
 
-        while (currentTime.plusMinutes(30).compareTo(endTime) <= 0) {
+        while (
+                currentTime.plusMinutes(30)
+                        .compareTo(endTime) <= 0
+        ) {
 
             slots.add(
                     currentTime.format(
@@ -89,7 +153,8 @@ public class LecturerAvailabilityController {
                     )
             );
 
-            currentTime = currentTime.plusMinutes(30);
+            currentTime =
+                    currentTime.plusMinutes(30);
         }
 
         return slots;

@@ -313,7 +313,7 @@
         </button>
         <button (click)="confirmAndSubmit()"
           class="flex-1 flex justify-center items-center gap-2 bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white py-4 rounded-xl font-bold shadow-xl shadow-teal-500/20 dark:shadow-teal-950/30 transition-all transform hover:-translate-y-1">
-          Confirm & Submit
+          {{ isSubmitting ? 'Booking...' : 'Confirm Booking' }}
         </button>
       </div>
     </div>

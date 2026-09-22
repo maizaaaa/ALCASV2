@@ -1,9 +1,20 @@
 package com.alcas.backend.service;
 
 import com.alcas.backend.entity.Attendance;
+import com.alcas.backend.entity.Consultation;
+import com.alcas.backend.entity.LecturerProfile;
+import com.alcas.backend.entity.StudentProfile;
+import com.alcas.backend.entity.User;
 import com.alcas.backend.repository.AttendanceRepository;
+import com.alcas.backend.repository.ConsultationRepository;
+import com.alcas.backend.repository.LecturerProfileRepository;
+import com.alcas.backend.repository.StudentProfileRepository;
+import com.alcas.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,9 +22,90 @@ import java.util.Optional;
 public class AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
+    private final ConsultationRepository consultationRepository;
+    private final LecturerProfileRepository lecturerProfileRepository;
+    private final StudentProfileRepository studentProfileRepository;
+    private final UserRepository userRepository;
 
-    public AttendanceService(AttendanceRepository attendanceRepository) {
+    public AttendanceService(AttendanceRepository attendanceRepository,
+                             ConsultationRepository consultationRepository,
+                             LecturerProfileRepository lecturerProfileRepository,
+                             StudentProfileRepository studentProfileRepository,
+                             UserRepository userRepository) {
+
         this.attendanceRepository = attendanceRepository;
+        this.consultationRepository = consultationRepository;
+        this.lecturerProfileRepository = lecturerProfileRepository;
+        this.studentProfileRepository = studentProfileRepository;
+        this.userRepository = userRepository;
+    }
+
+    public Attendance markAttendance (
+            String consultationId,
+            Integer lecturerId,
+            Attendance.Status status,
+            String notes
+    ) {
+        Consultation consultation =
+                consultationRepository.findById(consultationId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Consultation not found"));
+
+        if (!consultation.getLecturer()
+                .getUserId()
+                .equals(lecturerId)) {
+            throw new RuntimeException("You are not allowed to mark attendance for this consultation");
+        }
+
+        if (attendanceRepository.existsByConsultationId(consultationId)) {
+            throw new RuntimeException("Attendance has already been marked for this consultation");
+        }
+
+        if (consultation.getStatus() != Consultation.Status.CONFIRMED) {
+            throw new RuntimeException("Attandance can only be marked for a confirmed consultation");
+        }
+
+        LecturerProfile lecturer =
+                lecturerProfileRepository.findById(lecturerId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Lecturer profile not found."));
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User markedBy =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException("Authenticated user not found."));
+
+        StudentProfile student =
+                studentProfileRepository.findById(
+                        consultation.getStudent()
+                                .getUserId()
+                )
+                        .orElseThrow(() ->
+                                new RuntimeException("Student profile not found"));
+
+        Attendance attendance = new Attendance();
+
+        attendance.setConsultation(consultation);
+        attendance.setLecturer(lecturer);
+        attendance.setStudent(student);
+        attendance.setAttendanceDate(consultation.getScheduledDate());
+        attendance.setStatus(status);
+        attendance.setNotes(notes);
+        attendance.setMarkedBy(markedBy);
+        attendance.setMarkedAt(LocalDateTime.now());
+
+        if(status == Attendance.Status.PRESENT){
+            consultation.setStatus(Consultation.Status.COMPLETED);
+        } else if (status == Attendance.Status.NO_SHOW) {
+            consultation.setStatus(Consultation.Status.NO_SHOW);
+        }
+
+        return attendanceRepository.save(attendance);
     }
 
     public List<Attendance> findAll() {
@@ -22,6 +114,16 @@ public class AttendanceService {
 
     public Optional<Attendance> findById(Long id) {
         return attendanceRepository.findById(id);
+    }
+
+    public List<Attendance> findByLecturerId (Integer lecturerId) {
+        return attendanceRepository
+                .findByLecturerUserIdOrderByAttendanceDateDesc(lecturerId);
+    }
+
+    public List <Attendance> findByStudentId (Integer studentId) {
+        return attendanceRepository
+                .findByStudentUserIdOrderByAttendanceDateDesc(studentId);
     }
 
     public Attendance save(Attendance attendance) {
