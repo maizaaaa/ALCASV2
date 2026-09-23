@@ -12,8 +12,8 @@ import com.alcas.backend.repository.StudentProfileRepository;
 import com.alcas.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +40,7 @@ public class AttendanceService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public Attendance markAttendance (
             String consultationId,
             Integer lecturerId,
@@ -80,6 +81,10 @@ public class AttendanceService {
                         .orElseThrow(() ->
                                 new RuntimeException("Authenticated user not found."));
 
+        if (!markedBy.getId().equals(lecturerId)){
+            throw new RuntimeException("You are not allowed to mark attendance for another lecturer");
+        }
+
         StudentProfile student =
                 studentProfileRepository.findById(
                         consultation.getStudent()
@@ -103,6 +108,8 @@ public class AttendanceService {
             consultation.setStatus(Consultation.Status.COMPLETED);
         } else if (status == Attendance.Status.NO_SHOW) {
             consultation.setStatus(Consultation.Status.NO_SHOW);
+        } else if (status == Attendance.Status.EXCUSED) {
+            consultation.setStatus(Consultation.Status.COMPLETED);
         }
 
         return attendanceRepository.save(attendance);
@@ -117,11 +124,42 @@ public class AttendanceService {
     }
 
     public List<Attendance> findByLecturerId (Integer lecturerId) {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException("Authenticated user not found."));
+
+        if (!authenticatedUser.getId().equals(lecturerId)) {
+            throw new RuntimeException(
+                    "You are not allowed to view another lecturer's attendance"
+            );
+        }
         return attendanceRepository
                 .findByLecturerUserIdOrderByAttendanceDateDesc(lecturerId);
     }
 
     public List <Attendance> findByStudentId (Integer studentId) {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException("Authentication user not found."));
+
+        if (!authenticatedUser.getId().equals(studentId)) {
+            throw new RuntimeException("You are not allowed to view another student's attendance");
+        }
+
         return attendanceRepository
                 .findByStudentUserIdOrderByAttendanceDateDesc(studentId);
     }
