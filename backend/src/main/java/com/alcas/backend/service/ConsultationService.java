@@ -1,9 +1,13 @@
 package com.alcas.backend.service;
 
 import com.alcas.backend.entity.Consultation;
+import com.alcas.backend.entity.User;
+import com.alcas.backend.exception.UnauthorizedException;
 import com.alcas.backend.repository.ConsultationRepository;
+import com.alcas.backend.repository.UserRepository;
 import com.alcas.backend.exception.BookingConflictException;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,10 +19,14 @@ import java.util.UUID;
 public class ConsultationService {
 
     private final ConsultationRepository consultationRepository;
+    private final UserRepository userRepository;
 
     public ConsultationService(
-            ConsultationRepository consultationRepository) {
+            ConsultationRepository consultationRepository,
+            UserRepository userRepository) {
+
         this.consultationRepository = consultationRepository;
+        this.userRepository = userRepository;
     }
 
     public Consultation createConsultation(
@@ -73,6 +81,24 @@ public class ConsultationService {
 
     public List<Consultation> findByStudentId(Integer studentId) {
 
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ));
+
+        if (!authenticatedUser.getId().equals(studentId)) {
+            throw new UnauthorizedException(
+                    "You are not allowed to view another student's consultations"
+            );
+        }
+
         return consultationRepository
                 .findByStudentUserIdOrderByScheduledDateAscScheduledTimeAsc(
                         studentId
@@ -80,6 +106,24 @@ public class ConsultationService {
     }
 
     public List<Consultation> findByLecturerId(Integer lecturerId) {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ));
+
+        if (!authenticatedUser.getId().equals(lecturerId)) {
+            throw new UnauthorizedException(
+                    "You are not allowed to view another lecturer's consultations"
+            );
+        }
 
         return consultationRepository
                 .findByLecturerUserIdOrderByScheduledDateAscScheduledTimeAsc(
@@ -91,6 +135,24 @@ public class ConsultationService {
             String consultationId,
             Integer lecturerId) {
 
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ));
+
+        if (!authenticatedUser.getId().equals(lecturerId)) {
+            throw new UnauthorizedException(
+                    "You are not allowed to approve consultations for another lecturer"
+            );
+        }
+
         Consultation consultation =
                 consultationRepository.findById(consultationId)
                         .orElseThrow(() ->
@@ -100,7 +162,7 @@ public class ConsultationService {
 
         // Make sure this consultation belongs to this lecturer
         if (!consultation.getLecturer().getUserId().equals(lecturerId)) {
-            throw new RuntimeException(
+            throw new UnauthorizedException(
                     "You are not allowed to approve this consultation."
             );
         }
@@ -128,6 +190,24 @@ public class ConsultationService {
             Integer lecturerId,
             String rejectReason) {
 
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ));
+
+        if (!authenticatedUser.getId().equals(lecturerId)) {
+            throw new UnauthorizedException(
+                    "You are not allowed to reject consultations for another lecturer"
+            );
+        }
+
         Consultation consultation =
                 consultationRepository.findById(consultationId)
                         .orElseThrow(() ->
@@ -137,7 +217,7 @@ public class ConsultationService {
 
         // Make sure this consultation belongs to this lecturer
         if (!consultation.getLecturer().getUserId().equals(lecturerId)) {
-            throw new RuntimeException(
+            throw new UnauthorizedException(
                     "You are not allowed to reject this consultation."
             );
         }
@@ -169,6 +249,24 @@ public class ConsultationService {
             LocalTime proposedTime,
             String rescheduleReason) {
 
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ));
+
+        if (!authenticatedUser.getId().equals(lecturerId)) {
+            throw new UnauthorizedException(
+                    "You are not allowed to reschedule consultations for another lecturer"
+            );
+        }
+
         Consultation consultation =
                 consultationRepository.findById(consultationId)
                         .orElseThrow(() ->
@@ -176,12 +274,14 @@ public class ConsultationService {
                                         "Consultation not found"
                                 ));
 
+        // Make sure this consultation belongs to this lecturer
         if (!consultation.getLecturer().getUserId().equals(lecturerId)) {
-            throw new RuntimeException(
+            throw new UnauthorizedException(
                     "You are not allowed to reschedule this consultation."
             );
         }
 
+        // Only CONFIRMED consultations can be rescheduled
         if (consultation.getStatus() != Consultation.Status.CONFIRMED) {
             throw new RuntimeException(
                     "Only confirmed consultations can be rescheduled."
@@ -207,6 +307,24 @@ public class ConsultationService {
             String consultationId,
             Integer studentId) {
 
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ));
+
+        if (!authenticatedUser.getId().equals(studentId)) {
+            throw new UnauthorizedException(
+                    "You are not allowed to accept reschedules for another student"
+            );
+        }
+
         Consultation consultation =
                 consultationRepository.findById(consultationId)
                         .orElseThrow(() ->
@@ -214,12 +332,14 @@ public class ConsultationService {
                                         "Consultation not found"
                                 ));
 
+        // Make sure this consultation belongs to this student
         if (!consultation.getStudent().getUserId().equals(studentId)) {
-            throw new RuntimeException(
+            throw new UnauthorizedException(
                     "You are not allowed to accept this reschedule."
             );
         }
 
+        // Only RESCHEDULE_PENDING consultations can be accepted
         if (consultation.getStatus() !=
                 Consultation.Status.RESCHEDULE_PENDING) {
 
@@ -262,6 +382,24 @@ public class ConsultationService {
             String consultationId,
             Integer studentId) {
 
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ));
+
+        if (!authenticatedUser.getId().equals(studentId)) {
+            throw new UnauthorizedException(
+                    "You are not allowed to reject reschedules for another student"
+            );
+        }
+
         Consultation consultation =
                 consultationRepository.findById(consultationId)
                         .orElseThrow(() ->
@@ -269,12 +407,14 @@ public class ConsultationService {
                                         "Consultation not found"
                                 ));
 
+        // Make sure this consultation belongs to this student
         if (!consultation.getStudent().getUserId().equals(studentId)) {
-            throw new RuntimeException(
+            throw new UnauthorizedException(
                     "You are not allowed to reject this reschedule."
             );
         }
 
+        // Only RESCHEDULE_PENDING consultations can be rejected
         if (consultation.getStatus() !=
                 Consultation.Status.RESCHEDULE_PENDING) {
 
@@ -302,6 +442,24 @@ public class ConsultationService {
             Integer studentId,
             String cancelReason) {
 
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ));
+
+        if (!authenticatedUser.getId().equals(studentId)) {
+            throw new UnauthorizedException(
+                    "You are not allowed to cancel consultations for another student"
+            );
+        }
+
         Consultation consultation =
                 consultationRepository.findById(consultationId)
                         .orElseThrow(() ->
@@ -311,7 +469,7 @@ public class ConsultationService {
 
         // Make sure the consultation belongs to this student
         if (!consultation.getStudent().getUserId().equals(studentId)) {
-            throw new RuntimeException(
+            throw new UnauthorizedException(
                     "You are not allowed to cancel this consultation."
             );
         }

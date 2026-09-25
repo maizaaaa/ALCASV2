@@ -5,6 +5,7 @@ import com.alcas.backend.entity.Consultation;
 import com.alcas.backend.entity.LecturerProfile;
 import com.alcas.backend.entity.StudentProfile;
 import com.alcas.backend.entity.User;
+import com.alcas.backend.exception.UnauthorizedException;
 import com.alcas.backend.repository.AttendanceRepository;
 import com.alcas.backend.repository.ConsultationRepository;
 import com.alcas.backend.repository.LecturerProfileRepository;
@@ -55,7 +56,7 @@ public class AttendanceService {
         if (!consultation.getLecturer()
                 .getUserId()
                 .equals(lecturerId)) {
-            throw new RuntimeException("You are not allowed to mark attendance for this consultation");
+            throw new UnauthorizedException("You are not allowed to mark attendance for this consultation");
         }
 
         if (attendanceRepository.existsByConsultationId(consultationId)) {
@@ -63,7 +64,7 @@ public class AttendanceService {
         }
 
         if (consultation.getStatus() != Consultation.Status.CONFIRMED) {
-            throw new RuntimeException("Attandance can only be marked for a confirmed consultation");
+            throw new RuntimeException("Attendance can only be marked for a confirmed consultation");
         }
 
         LecturerProfile lecturer =
@@ -82,7 +83,7 @@ public class AttendanceService {
                                 new RuntimeException("Authenticated user not found."));
 
         if (!markedBy.getId().equals(lecturerId)){
-            throw new RuntimeException("You are not allowed to mark attendance for another lecturer");
+            throw new UnauthorizedException("You are not allowed to mark attendance for another lecturer");
         }
 
         StudentProfile student =
@@ -136,7 +137,7 @@ public class AttendanceService {
                                 new RuntimeException("Authenticated user not found."));
 
         if (!authenticatedUser.getId().equals(lecturerId)) {
-            throw new RuntimeException(
+            throw new UnauthorizedException(
                     "You are not allowed to view another lecturer's attendance"
             );
         }
@@ -157,7 +158,7 @@ public class AttendanceService {
                                 new RuntimeException("Authentication user not found."));
 
         if (!authenticatedUser.getId().equals(studentId)) {
-            throw new RuntimeException("You are not allowed to view another student's attendance");
+            throw new UnauthorizedException("You are not allowed to view another student's attendance");
         }
 
         return attendanceRepository

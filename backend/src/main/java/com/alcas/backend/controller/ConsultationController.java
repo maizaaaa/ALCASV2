@@ -3,12 +3,16 @@ package com.alcas.backend.controller;
 import com.alcas.backend.entity.Consultation;
 import com.alcas.backend.entity.LecturerProfile;
 import com.alcas.backend.entity.StudentProfile;
+import com.alcas.backend.entity.User;
 import com.alcas.backend.dto.ConsultationResponse;
+import com.alcas.backend.exception.UnauthorizedException;
 import com.alcas.backend.repository.LecturerProfileRepository;
 import com.alcas.backend.repository.StudentProfileRepository;
+import com.alcas.backend.repository.UserRepository;
 import com.alcas.backend.service.ConsultationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.time.LocalDate;
@@ -21,15 +25,18 @@ public class ConsultationController {
     private final ConsultationService consultationService;
     private final StudentProfileRepository studentProfileRepository;
     private final LecturerProfileRepository lecturerProfileRepository;
+    private final UserRepository userRepository;
 
     public ConsultationController(
             ConsultationService consultationService,
             StudentProfileRepository studentProfileRepository,
-            LecturerProfileRepository lecturerProfileRepository) {
+            LecturerProfileRepository lecturerProfileRepository,
+            UserRepository userRepository) {
 
         this.consultationService = consultationService;
         this.studentProfileRepository = studentProfileRepository;
         this.lecturerProfileRepository = lecturerProfileRepository;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
@@ -40,6 +47,20 @@ public class ConsultationController {
             @RequestParam String time,
             @RequestParam String reason,
             @RequestParam(required = false) String reasonDetails) {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException("Authenticated user not found"));
+
+        if (!authenticatedUser.getId().equals(studentId)) {
+            throw new UnauthorizedException("You are not allowed to create a consultation for another student");
+        }
 
         StudentProfile student =
                 studentProfileRepository.findById(studentId)
