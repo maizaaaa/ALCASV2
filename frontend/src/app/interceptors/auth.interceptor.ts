@@ -11,6 +11,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   const token = localStorage.getItem('token');
+  console.log('AUTH INTERCEPTOR TOKEN:', token ? 'TOKEN EXISTS' : 'NO TOKEN');
 
   if (token) {
     const authReq = req.clone({

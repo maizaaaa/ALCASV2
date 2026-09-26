@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../shared/sidebar/sidebar';
+import { AdminUserService, AdminUser } from '../../services/admin-user.service';
 
 @Component({
   selector: 'app-user-management',
@@ -26,40 +27,36 @@ export class UserManagementComponent implements OnInit {
     email: '',
     role: 'STUDENT',
     status: 'ACTIVE',
-    lastLogin: 'Never',
+    lastLogin: null,
   };
 
   // Mock Database
-  users = [
-    {
-      id: 'S12345',
-      name: 'Nur Amirah',
-      email: 'amirah@student.uum.edu.my',
-      role: 'STUDENT',
-      status: 'ACTIVE',
-      lastLogin: 'Today, 10:00 AM',
-    },
-    {
-      id: 'L98765',
-      name: 'Dr. Ahmad Fauzi',
-      email: 'ahmad.fauzi@uum.edu.my',
-      role: 'LECTURER',
-      status: 'ACTIVE',
-      lastLogin: 'Yesterday',
-    },
-    {
-      id: 'S12346',
-      name: 'Jason Lee',
-      email: 'jason@student.uum.edu.my',
-      role: 'STUDENT',
-      status: 'INACTIVE',
-      lastLogin: '2 weeks ago',
-    },
-  ];
+  users: AdminUser[] = [];
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private adminUserService: AdminUserService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.loadUsers();
+  }
+
+  loadUsers(): void {
+    this.adminUserService.getUsers().subscribe({
+      next: (users) => {
+        console.log('USERS FROM BACKEND LENGTH:', users.length, users);
+
+        this.users = users;
+
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load users:', error);
+      },
+    });
+  }
 
   // Filtering Logic
   get filteredUsers() {
@@ -69,7 +66,7 @@ export class UserManagementComponent implements OnInit {
       const matchesSearch =
         user.name.toLowerCase().includes(searchLower) ||
         user.email.toLowerCase().includes(searchLower) ||
-        user.id.toLowerCase().includes(searchLower);
+        user.id.toString().toLowerCase().includes(searchLower);
       return matchesTab && matchesSearch;
     });
   }
