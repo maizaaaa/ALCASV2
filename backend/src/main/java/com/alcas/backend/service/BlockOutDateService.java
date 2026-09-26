@@ -1,8 +1,12 @@
 package com.alcas.backend.service;
 
 import com.alcas.backend.entity.BlockOutDate;
+import com.alcas.backend.entity.User;
+import com.alcas.backend.exception.UnauthorizedException;
+import com.alcas.backend.repository.UserRepository;
 import com.alcas.backend.repository.BlockOutDateRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,15 +16,36 @@ import java.util.List;
 public class BlockOutDateService {
 
     private final BlockOutDateRepository blockOutDateRepository;
+    private final UserRepository userRepository;
 
     public BlockOutDateService(
-            BlockOutDateRepository blockOutDateRepository) {
+            BlockOutDateRepository blockOutDateRepository,
+            UserRepository userRepository) {
 
         this.blockOutDateRepository = blockOutDateRepository;
+        this.userRepository = userRepository;
     }
 
     public List<BlockOutDate> findByLecturerId(
             Integer lecturerId) {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found."
+                                ));
+
+        if (!authenticatedUser.getId().equals(lecturerId)) {
+            throw new UnauthorizedException(
+                    "You are not allowed to view another lecturer's block-out dates"
+            );
+        }
 
         return blockOutDateRepository
                 .findByLecturerUserId(lecturerId);
@@ -29,8 +54,26 @@ public class BlockOutDateService {
     public BlockOutDate createBlockOutDate(
             BlockOutDate blockOutDate) {
 
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found."
+                                ));
+
         Integer lecturerId =
                 blockOutDate.getLecturer().getUserId();
+
+        if (!authenticatedUser.getId().equals(lecturerId)) {
+            throw new UnauthorizedException(
+                    "You are not allowed to create a block-out date for another lecturer"
+            );
+        }
 
         LocalDate blockDate =
                 blockOutDate.getBlockDate();
@@ -72,7 +115,7 @@ public class BlockOutDateService {
                 .getUserId()
                 .equals(lecturerId)) {
 
-            throw new RuntimeException(
+            throw new UnauthorizedException(
                     "You are not allowed to delete this block-out date."
             );
         }
