@@ -67,7 +67,7 @@
               </td>
               <td>
                 <div class="role-text">{{ user.role | titlecase }}</div>
-                <div class="id-text">{{ user.id }}</div>
+                <div class="id-text">{{ user.userId || 'Not assigned' }}</div>
               </td>
               <td class="last-login">{{ user.lastLogin }}</td>
               <td>
@@ -122,6 +122,79 @@
           </div>
         </div>
 
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label>Phone Number <span class="text-teal">*</span></label>
+            <input type="text" [(ngModel)]="userForm.phone" class="modern-input" placeholder="e.g. 0123456789">
+          </div>
+        </div>
+
+        <div class="form-row">
+
+          <!-- School -->
+          <div class="form-group flex-1">
+            <label>School <span class="text-teal">*</span></label>
+
+            <select
+              [(ngModel)]="userForm.schoolId"
+              (ngModelChange)="onSchoolChange()"
+              class="modern-select"
+            >
+              <option [ngValue]="null" disabled>
+                Select School
+              </option>
+
+              <option
+                *ngFor="let school of schools"
+                [ngValue]="school.id"
+              >
+                {{ school.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Program: Student only -->
+          <div
+            class="form-group flex-1"
+            *ngIf="userForm.role === 'STUDENT'"
+          >
+            <label>Program <span class="text-teal">*</span></label>
+
+            <select
+              [(ngModel)]="userForm.programId"
+              class="modern-select"
+              [disabled]="!userForm.schoolId"
+            >
+              <option [ngValue]="null" disabled>
+                Select Program
+              </option>
+
+              <option
+                *ngFor="let program of programs"
+                [ngValue]="program.id"
+              >
+                {{ program.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Office Room: Lecturer only -->
+          <div
+            class="form-group flex-1"
+            *ngIf="userForm.role === 'LECTURER'"
+          >
+            <label>Office Room <span class="text-teal">*</span></label>
+
+            <input
+              type="text"
+              [(ngModel)]="userForm.officeRoom"
+              class="modern-input"
+              placeholder="e.g. E02-01-001"
+            >
+          </div>
+
+        </div>
+
         <div>
           <label class="block text-sm font-medium mb-2">
             Password
@@ -148,7 +221,7 @@
 
           <div class="form-group flex-1">
             <label>ID Number (Matric/Staff) <span class="text-teal">*</span></label>
-            <input type="text" [(ngModel)]="userForm.id" class="modern-input" placeholder="e.g. S12345" [disabled]="isEditing">
+            <input type="text" [(ngModel)]="userForm.userId" class="modern-input" placeholder="e.g. S12345" [disabled]="isEditing">
           </div>
         </div>
       </div>

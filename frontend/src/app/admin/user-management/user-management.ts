@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../shared/sidebar/sidebar';
 import { AdminUserService, AdminUser } from '../../services/admin-user.service';
+import { SchoolService, School } from '../../services/school.service';
+import { ProgramService, Program } from '../../services/program.service';
 
 @Component({
   selector: 'app-user-management',
@@ -32,15 +34,20 @@ export class UserManagementComponent implements OnInit {
 
   // Mock Database
   users: AdminUser[] = [];
+  schools: School[] = [];
+  programs: Program[] = [];
 
   constructor(
     private router: Router,
     private adminUserService: AdminUserService,
+    private schoolService: SchoolService,
+    private programService: ProgramService,
     private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     this.loadUsers();
+    this.loadSchools();
   }
 
   loadUsers(): void {
@@ -58,6 +65,41 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
+  loadSchools(): void {
+    this.schoolService.getSchools().subscribe({
+      next: (schools) => {
+        this.schools = schools;
+        console.log('SCHOOLS FROM BACKEND:', schools);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load schools:', error);
+      },
+    });
+  }
+
+  loadPrograms(schoolId: number): void {
+    this.programService.getProgramsBySchool(schoolId).subscribe({
+      next: (programs) => {
+        this.programs = programs;
+        console.log('PROGRAMS FROM BACKEND:', programs);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load programs:', error);
+      },
+    });
+  }
+
+  onSchoolChange(): void {
+    if (this.userForm.schoolId) {
+      this.userForm.programId = null;
+      this.programs = [];
+
+      this.loadPrograms(this.userForm.schoolId);
+    }
+  }
+
   // Filtering Logic
   get filteredUsers() {
     return this.users.filter((user) => {
@@ -66,7 +108,7 @@ export class UserManagementComponent implements OnInit {
       const matchesSearch =
         user.name.toLowerCase().includes(searchLower) ||
         user.email.toLowerCase().includes(searchLower) ||
-        user.id.toString().toLowerCase().includes(searchLower);
+        (user.userId || '').toLowerCase().includes(searchLower);
       return matchesTab && matchesSearch;
     });
   }
@@ -98,10 +140,15 @@ export class UserManagementComponent implements OnInit {
 
     this.userForm = {
       id: '',
+      userId: '',
       name: '',
       email: '',
       role: 'STUDENT',
       password: '',
+      phone: '',
+      schoolId: null,
+      programId: null,
+      officeRoom: '',
       status: 'ACTIVE',
       lastLogin: 'Never',
     };
@@ -109,9 +156,23 @@ export class UserManagementComponent implements OnInit {
     this.showModal = true;
   }
 
-  editUser(user: any) {
+  editUser(user: AdminUser) {
     this.isEditing = true;
-    this.userForm = { ...user };
+
+    this.userForm = {
+      ...user,
+      schoolId: user.schoolId,
+      programId: user.programId,
+      officeRoom: user.officeRoom,
+      phone: user.phone,
+    };
+
+    this.programs = [];
+
+    if (user.schoolId) {
+      this.loadPrograms(user.schoolId);
+    }
+
     this.showModal = true;
   }
 
@@ -120,31 +181,83 @@ export class UserManagementComponent implements OnInit {
   }
 
   saveUser() {
-    if (!this.userForm.name || !this.userForm.email || !this.userForm.password) {
+    if (!this.userForm.name || !this.userForm.email) {
       alert('Please fill in all required fields.');
       return;
     }
 
     if (this.isEditing) {
-      const index = this.users.findIndex((u) => u.id === this.userForm.id);
+      const updatedUser = {
+        name: this.userForm.name,
+        email: this.userForm.email,
+        role: this.userForm.role,
+        phone: this.userForm.phone,
+        schoolId: this.userForm.schoolId,
+        programId: this.userForm.programId,
+        officeRoom: this.userForm.officeRoom,
+      };
 
-      if (index !== -1) {
-        this.users[index] = {
-          ...this.users[index],
-          name: this.userForm.name,
-          email: this.userForm.email,
-          role: this.userForm.role,
-        };
+      this.adminUserService.updateUser(this.userForm.id, updatedUser).subscribe({
+        next: (user) => {
+          const index = this.users.findIndex((u) => u.id === user.id);
+
+          if (index !== -1) {
+            this.users[index] = user;
+          }
+
+          alert('User updated successfully!');
+
+          this.closeModal();
+
+          this.cdr.detectChanges();
+        },
+
+        error: (error) => {
+          console.error('Failed to update user:', error);
+
+          const message = error?.error?.message || 'Failed to update user.';
+
+          alert(message);
+        },
+      });
+    } else {
+      // Validation for creating a new user
+      if (
+        !this.userForm.password ||
+        !this.userForm.userId ||
+        !this.userForm.phone ||
+        !this.userForm.schoolId
+      ) {
+        alert('Please fill in all required fields.');
+        return;
       }
 
-      alert('User updated successfully!');
-      this.closeModal();
-    } else {
+      if (
+        this.userForm.role === 'STUDENT' &&
+        !this.userForm.programId
+      ) {
+        alert('Please select a program.');
+        return;
+      }
+
+      if (
+        this.userForm.role === 'LECTURER' &&
+        !this.userForm.officeRoom
+      ) {
+        alert('Please enter an office room.');
+        return;
+      }
+
       const newUser = {
         name: this.userForm.name,
         email: this.userForm.email,
         role: this.userForm.role,
         password: this.userForm.password,
+        userId: this.userForm.userId,
+        phone: this.userForm.phone,
+        schoolId: this.userForm.schoolId,
+        programId: this.userForm.programId,
+        officeRoom: this.userForm.officeRoom,
       };
 
       this.adminUserService.createUser(newUser).subscribe({

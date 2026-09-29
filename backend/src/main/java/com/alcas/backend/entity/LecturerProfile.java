@@ -21,8 +21,6 @@ public class LecturerProfile {
     @Column(name = "staff_number", nullable = false, unique = true, length = 30)
     private String staffNumber;
 
-    @Column(nullable = false, length = 100)
-    private String department;
 
     @Column(name = "office_room", nullable = false, length = 100)
     private String officeRoom;
@@ -83,14 +81,6 @@ public class LecturerProfile {
 
     public void setStaffNumber(String staffNumber) {
         this.staffNumber = staffNumber;
-    }
-
-    public String getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(String department) {
-        this.department = department;
     }
 
     public String getOfficeRoom() {

@@ -5,11 +5,16 @@ import { Observable } from 'rxjs';
 
 export interface AdminUser {
   id: number;
+  userId: string | null;
   name: string;
   email: string;
   role: 'STUDENT' | 'LECTURER' | 'ADMIN';
   status: 'ACTIVE' | 'INACTIVE' | 'PENDING';
   lastLogin: string | null;
+  officeRoom: string | null;
+  schoolId: number | null;
+  programId: number | null;
+  phone: string | null;
 }
 
 @Injectable({
@@ -60,6 +65,11 @@ export class AdminUserService {
     email: string;
     role: 'STUDENT' | 'LECTURER';
     password: string;
+    userId: string;
+    phone: string;
+    schoolId: number;
+    programId?: number | null;
+    officeRoom?: string;
   }): Observable<AdminUser> {
     if (isPlatformBrowser(this.platformId)) {
       const token = localStorage.getItem('token');
@@ -72,5 +82,26 @@ export class AdminUserService {
     }
 
     return this.http.post<AdminUser>(this.apiUrl, data);
+  }
+
+  updateUser(
+    id: number,
+    data: {
+      name: string;
+      email: string;
+      role: 'STUDENT' | 'LECTURER';
+    },
+  ): Observable<AdminUser> {
+    if (isPlatformBrowser(this.platformId)) {
+      const token = localStorage.getItem('token');
+
+      const headers = new HttpHeaders({
+        Authorization: `Bearer ${token}`,
+      });
+
+      return this.http.put<AdminUser>(`${this.apiUrl}/${id}`, data, { headers });
+    }
+
+    return this.http.put<AdminUser>(`${this.apiUrl}/${id}`, data);
   }
 }
