@@ -75,23 +75,37 @@ export class UserManagementComponent implements OnInit {
     this.activeTab = tab;
   }
 
-  toggleStatus(user: any) {
-    user.status = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+  toggleStatus(user: AdminUser): void {
+    const newStatus: 'ACTIVE' | 'INACTIVE' = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+
+    this.adminUserService.updateUserStatus(user.id, newStatus).subscribe({
+      next: (updatedUser) => {
+        user.status = updatedUser.status;
+
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to update user status:', error);
+        alert('Failed to update user status.');
+      },
+    });
   }
 
   // --- MODAL ACTIONS ---
 
   addUser() {
     this.isEditing = false;
-    // Reset form for new user
+
     this.userForm = {
       id: '',
       name: '',
       email: '',
       role: 'STUDENT',
+      password: '',
       status: 'ACTIVE',
       lastLogin: 'Never',
     };
+
     this.showModal = true;
   }
 
@@ -106,23 +120,53 @@ export class UserManagementComponent implements OnInit {
   }
 
   saveUser() {
-    if (!this.userForm.name || !this.userForm.email || !this.userForm.id) {
+    if (!this.userForm.name || !this.userForm.email || !this.userForm.password) {
       alert('Please fill in all required fields.');
       return;
     }
 
     if (this.isEditing) {
       const index = this.users.findIndex((u) => u.id === this.userForm.id);
-      if (index !== -1) {
-        this.users[index] = { ...this.userForm };
-      }
-      alert('User updated successfully!');
-    } else {
-      this.users.unshift({ ...this.userForm });
-      alert('New user added successfully!');
-    }
 
-    this.closeModal();
+      if (index !== -1) {
+        this.users[index] = {
+          ...this.users[index],
+          name: this.userForm.name,
+          email: this.userForm.email,
+          role: this.userForm.role,
+        };
+      }
+
+      alert('User updated successfully!');
+      this.closeModal();
+    } else {
+      const newUser = {
+        name: this.userForm.name,
+        email: this.userForm.email,
+        role: this.userForm.role,
+        password: this.userForm.password,
+      };
+
+      this.adminUserService.createUser(newUser).subscribe({
+        next: (createdUser) => {
+          this.users.unshift(createdUser);
+
+          alert('New user added successfully!');
+
+          this.closeModal();
+
+          this.cdr.detectChanges();
+        },
+
+        error: (error) => {
+          console.error('Failed to create user:', error);
+
+          const message = error?.error?.message || 'Failed to create user.';
+
+          alert(message);
+        },
+      });
+    }
   }
 
   onLogout() {

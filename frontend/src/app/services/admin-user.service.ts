@@ -13,30 +13,64 @@ export interface AdminUser {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AdminUserService {
-
   private apiUrl = 'http://localhost:8080/api/admin/users';
 
   constructor(
     private http: HttpClient,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) {}
 
   getUsers(): Observable<AdminUser[]> {
-
     if (isPlatformBrowser(this.platformId)) {
-
       const token = localStorage.getItem('token');
 
       const headers = new HttpHeaders({
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       });
 
       return this.http.get<AdminUser[]>(this.apiUrl, { headers });
     }
 
     return this.http.get<AdminUser[]>(this.apiUrl);
+  }
+
+  updateUserStatus(id: number, status: 'ACTIVE' | 'INACTIVE'): Observable<AdminUser> {
+    if (isPlatformBrowser(this.platformId)) {
+      const token = localStorage.getItem('token');
+
+      const headers = new HttpHeaders({
+        Authorization: `Bearer ${token}`,
+      });
+
+      return this.http.put<AdminUser>(
+        `${this.apiUrl}/${id}/status?status=${status}`,
+        {},
+        { headers },
+      );
+    }
+
+    return this.http.put<AdminUser>(`${this.apiUrl}/${id}/status?status=${status}`, {});
+  }
+
+  createUser(data: {
+    name: string;
+    email: string;
+    role: 'STUDENT' | 'LECTURER';
+    password: string;
+  }): Observable<AdminUser> {
+    if (isPlatformBrowser(this.platformId)) {
+      const token = localStorage.getItem('token');
+
+      const headers = new HttpHeaders({
+        Authorization: `Bearer ${token}`,
+      });
+
+      return this.http.post<AdminUser>(this.apiUrl, data, { headers });
+    }
+
+    return this.http.post<AdminUser>(this.apiUrl, data);
   }
 }
