@@ -66,6 +66,12 @@ public class AuthenticationService {
 
         userService.save(user);
 
+        System.out.println(
+                "LOGIN USER = " + user.getEmail()
+                        + " | ID = " + user.getId()
+                        + " | ROLE = " + user.getRole()
+        );
+
         String token = jwtService.generateToken(
                 user.getEmail(),
                 user.getRole().name()

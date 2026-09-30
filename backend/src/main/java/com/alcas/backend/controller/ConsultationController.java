@@ -12,6 +12,7 @@ import com.alcas.backend.repository.UserRepository;
 import com.alcas.backend.service.ConsultationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
@@ -237,7 +238,15 @@ public class ConsultationController {
     @PutMapping("/{consultationId}/approve")
     public ResponseEntity<ConsultationResponse> approveConsultation(
             @PathVariable String consultationId,
-            @RequestParam Integer lecturerId) {
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Integer lecturerId =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException("Authenticated user not found"))
+                        .getId();
 
         Consultation approved =
                 consultationService.approveConsultation(
@@ -273,8 +282,18 @@ public class ConsultationController {
     @PutMapping("/{consultationId}/reject")
     public ResponseEntity<ConsultationResponse> rejectConsultation(
             @PathVariable String consultationId,
-            @RequestParam Integer lecturerId,
-            @RequestParam String rejectReason) {
+            @RequestParam String rejectReason,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Integer lecturerId =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ))
+                        .getId();
 
         Consultation rejected =
                 consultationService.rejectConsultation(
@@ -311,10 +330,20 @@ public class ConsultationController {
     @PutMapping("/{consultationId}/reschedule")
     public ResponseEntity<ConsultationResponse> requestReschedule(
             @PathVariable String consultationId,
-            @RequestParam Integer lecturerId,
             @RequestParam String proposedDate,
             @RequestParam String proposedTime,
-            @RequestParam String rescheduleReason) {
+            @RequestParam String rescheduleReason,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Integer lecturerId =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ))
+                        .getId();
 
         Consultation rescheduled =
                 consultationService.requestReschedule(

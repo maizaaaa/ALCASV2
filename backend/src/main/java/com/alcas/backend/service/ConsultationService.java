@@ -2,13 +2,18 @@ package com.alcas.backend.service;
 
 import com.alcas.backend.entity.Consultation;
 import com.alcas.backend.entity.User;
+import com.alcas.backend.entity.LecturerSchedule;
 import com.alcas.backend.exception.UnauthorizedException;
 import com.alcas.backend.repository.ConsultationRepository;
 import com.alcas.backend.repository.UserRepository;
+import com.alcas.backend.repository.LecturerScheduleRepository;
 import com.alcas.backend.exception.BookingConflictException;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.time.DayOfWeek;
+import java.time.format.TextStyle;
+import java.util.Locale;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -20,13 +25,16 @@ public class ConsultationService {
 
     private final ConsultationRepository consultationRepository;
     private final UserRepository userRepository;
+    private final LecturerScheduleRepository lecturerScheduleRepository;
 
     public ConsultationService(
             ConsultationRepository consultationRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            LecturerScheduleRepository lecturerScheduleRepository) {
 
         this.consultationRepository = consultationRepository;
         this.userRepository = userRepository;
+        this.lecturerScheduleRepository = lecturerScheduleRepository;
     }
 
     public Consultation createConsultation(
@@ -40,6 +48,86 @@ public class ConsultationService {
 
         LocalTime scheduledTime =
                 consultation.getScheduledTime();
+
+        // Get the day of the requested date
+        DayOfWeek dayOfWeek =
+                scheduledDate.getDayOfWeek();
+
+        String dayName =
+                dayOfWeek.getDisplayName(
+                        TextStyle.FULL,
+                        Locale.ENGLISH
+                );
+
+// Get lecturer's schedule for that day
+        List<LecturerSchedule> schedules =
+                lecturerScheduleRepository
+                        .findByLecturerUserIdAndDayOfWeek(
+                                lecturerId,
+                                dayName
+                        );
+
+// Check whether the requested 30-minute slot
+// is inside an AVAILABLE schedule
+        boolean insideAvailableSchedule =
+                schedules.stream()
+                        .filter(schedule ->
+                                "AVAILABLE".equalsIgnoreCase(
+                                        schedule.getSlotType()
+                                )
+                        )
+                        .anyMatch(schedule -> {
+
+                            LocalTime slotEnd =
+                                    scheduledTime.plusMinutes(30);
+
+                            return !scheduledTime.isBefore(
+                                    schedule.getStartTime()
+                            )
+                                    &&
+                                    !slotEnd.isAfter(
+                                            schedule.getEndTime()
+                                    );
+                        });
+
+        if (!insideAvailableSchedule) {
+            throw new BookingConflictException(
+                    "This time slot is not available for consultation."
+            );
+        }
+
+// Check whether the requested slot overlaps
+// CLASS or BUSY schedules
+        boolean overlapsUnavailableSchedule =
+                schedules.stream()
+                        .filter(schedule ->
+                                "CLASS".equalsIgnoreCase(
+                                        schedule.getSlotType()
+                                )
+                                        ||
+                                        "BUSY".equalsIgnoreCase(
+                                                schedule.getSlotType()
+                                        )
+                        )
+                        .anyMatch(schedule -> {
+
+                            LocalTime slotEnd =
+                                    scheduledTime.plusMinutes(30);
+
+                            return scheduledTime.isBefore(
+                                    schedule.getEndTime()
+                            )
+                                    &&
+                                    slotEnd.isAfter(
+                                            schedule.getStartTime()
+                                    );
+                        });
+
+        if (overlapsUnavailableSchedule) {
+            throw new BookingConflictException(
+                    "This time slot is not available for consultation."
+            );
+        }
 
         boolean alreadyBooked =
                 consultationRepository
@@ -248,6 +336,86 @@ public class ConsultationService {
             LocalDate proposedDate,
             LocalTime proposedTime,
             String rescheduleReason) {
+
+        // Get the day of the proposed date
+        DayOfWeek dayOfWeek =
+                proposedDate.getDayOfWeek();
+
+        String dayName =
+                dayOfWeek.getDisplayName(
+                        TextStyle.FULL,
+                        Locale.ENGLISH
+                );
+
+// Get lecturer's schedule for that day
+        List<LecturerSchedule> schedules =
+                lecturerScheduleRepository
+                        .findByLecturerUserIdAndDayOfWeek(
+                                lecturerId,
+                                dayName
+                        );
+
+// Check whether the proposed 30-minute slot
+// is inside an AVAILABLE schedule
+        boolean insideAvailableSchedule =
+                schedules.stream()
+                        .filter(schedule ->
+                                "AVAILABLE".equalsIgnoreCase(
+                                        schedule.getSlotType()
+                                )
+                        )
+                        .anyMatch(schedule -> {
+
+                            LocalTime proposedEnd =
+                                    proposedTime.plusMinutes(30);
+
+                            return !proposedTime.isBefore(
+                                    schedule.getStartTime()
+                            )
+                                    &&
+                                    !proposedEnd.isAfter(
+                                            schedule.getEndTime()
+                                    );
+                        });
+
+        if (!insideAvailableSchedule) {
+            throw new BookingConflictException(
+                    "The proposed time is not available for consultation."
+            );
+        }
+
+// Check whether the proposed slot overlaps
+// CLASS or BUSY schedules
+        boolean overlapsUnavailableSchedule =
+                schedules.stream()
+                        .filter(schedule ->
+                                "CLASS".equalsIgnoreCase(
+                                        schedule.getSlotType()
+                                )
+                                        ||
+                                        "BUSY".equalsIgnoreCase(
+                                                schedule.getSlotType()
+                                        )
+                        )
+                        .anyMatch(schedule -> {
+
+                            LocalTime proposedEnd =
+                                    proposedTime.plusMinutes(30);
+
+                            return proposedTime.isBefore(
+                                    schedule.getEndTime()
+                            )
+                                    &&
+                                    proposedEnd.isAfter(
+                                            schedule.getStartTime()
+                                    );
+                        });
+
+        if (overlapsUnavailableSchedule) {
+            throw new BookingConflictException(
+                    "The proposed time is not available for consultation."
+            );
+        }
 
         String email = SecurityContextHolder
                 .getContext()

@@ -1,9 +1,13 @@
 package com.alcas.backend.controller;
 
+import com.alcas.backend.entity.User;
 import com.alcas.backend.dto.BlockOutDateResponse;
 import com.alcas.backend.entity.BlockOutDate;
 import com.alcas.backend.entity.LecturerProfile;
 import com.alcas.backend.service.BlockOutDateService;
+import com.alcas.backend.repository.UserRepository;
+import com.alcas.backend.repository.LecturerProfileRepository;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,11 +19,17 @@ import java.util.List;
 public class BlockOutDateController {
 
     private final BlockOutDateService blockOutDateService;
+    private final UserRepository userRepository;
+    private final LecturerProfileRepository lecturerProfileRepository;
 
     public BlockOutDateController(
-            BlockOutDateService blockOutDateService) {
+            BlockOutDateService blockOutDateService,
+            UserRepository userRepository,
+            LecturerProfileRepository lecturerProfileRepository) {
 
         this.blockOutDateService = blockOutDateService;
+        this.userRepository = userRepository;
+        this.lecturerProfileRepository = lecturerProfileRepository;
     }
 
     @GetMapping("/lecturer/{lecturerId}")
@@ -38,14 +48,19 @@ public class BlockOutDateController {
 
     @PostMapping
     public ResponseEntity<BlockOutDateResponse> createBlockOutDate(
-            @RequestParam Integer lecturerId,
             @RequestParam String blockDate,
-            @RequestParam String reason) {
+            @RequestParam String reason,
+            Authentication authentication) {
+
+        User user =
+                userRepository.findByEmail(authentication.getName())
+                        .orElseThrow(() ->
+                                new RuntimeException("User not found"));
 
         LecturerProfile lecturer =
-                new LecturerProfile();
-
-        lecturer.setUserId(lecturerId);
+                lecturerProfileRepository.findById(user.getId())
+                        .orElseThrow(() ->
+                                new RuntimeException("Lecturer profile not found"));
 
         BlockOutDate blockOutDate =
                 new BlockOutDate();
@@ -69,13 +84,9 @@ public class BlockOutDateController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBlockOutDate(
-            @PathVariable Integer id,
-            @RequestParam Integer lecturerId) {
+            @PathVariable Integer id) {
 
-        blockOutDateService.deleteBlockOutDate(
-                id,
-                lecturerId
-        );
+        blockOutDateService.deleteBlockOutDate(id);
 
         return ResponseEntity.noContent().build();
     }

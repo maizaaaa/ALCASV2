@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
 
 @Component({
@@ -19,6 +20,8 @@ export class LecturerScheduleComponent implements OnInit {
   slotForm = { day: 'Monday', startTime: '', endTime: '', type: 'AVAILABLE', title: '' };
 
   weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+  blockOutDates: any[] = [];
 
   scheduleData = [
     {
@@ -63,9 +66,73 @@ export class LecturerScheduleComponent implements OnInit {
     },
   ];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.loadSchedule();
+    this.loadBlockOutDates();
+  }
+
+  loadSchedule(): void {
+    const token = localStorage.getItem('token');
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    this.http
+      .get<any[]>('http://localhost:8080/api/lecturer-availability/schedule/me', {
+        headers,
+      })
+      .subscribe({
+        next: (schedules) => {
+          this.scheduleData = schedules.map((schedule) => ({
+            id: schedule.id,
+            day: schedule.dayOfWeek,
+            startTime: this.formatToAMPM(schedule.startTime),
+            endTime: this.formatToAMPM(schedule.endTime),
+            type: schedule.slotType,
+            title: schedule.title,
+          }));
+
+          console.log('Schedules loaded:', this.scheduleData);
+
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Failed to load schedules:', error);
+        },
+      });
+  }
+
+  loadBlockOutDates(): void {
+    const token = localStorage.getItem('token');
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    this.http
+      .get<any[]>('http://localhost:8080/api/block-out-dates/lecturer/14', {
+        headers,
+      })
+      .subscribe({
+        next: (dates) => {
+          this.blockOutDates = dates;
+
+          console.log('Block out dates loaded:', this.blockOutDates);
+
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Failed to load block out dates:', error);
+        },
+      });
+  }
 
   getSlotsForDay(day: string) {
     return this.scheduleData
@@ -113,24 +180,40 @@ export class LecturerScheduleComponent implements OnInit {
     const formattedEnd = this.formatToAMPM(this.slotForm.endTime);
 
     if (this.isEditing) {
-      const index = this.scheduleData.findIndex((s) => s.id === this.editingSlotId);
-      if (index !== -1) {
-        this.scheduleData[index] = {
-          ...this.scheduleData[index],
-          ...this.slotForm,
-          startTime: formattedStart,
-          endTime: formattedEnd,
-        };
-      }
-      alert('Schedule updated!');
-    } else {
-      this.scheduleData.push({
-        id: Math.random(),
-        ...this.slotForm,
-        startTime: formattedStart,
-        endTime: formattedEnd,
+      const token = localStorage.getItem('token');
+
+      const headers = new HttpHeaders({
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       });
-      alert('New slot added!');
+
+      const requestBody = {
+        dayOfWeek: this.slotForm.day,
+        startTime: this.slotForm.startTime,
+        endTime: this.slotForm.endTime,
+        slotType: this.slotForm.type,
+        title: this.slotForm.title,
+      };
+
+      this.http
+        .put(
+          `http://localhost:8080/api/lecturer-availability/schedule/${this.editingSlotId}`,
+          requestBody,
+          { headers },
+        )
+        .subscribe({
+          next: () => {
+            alert('Schedule updated!');
+            this.closeModal();
+            this.loadSchedule();
+          },
+          error: (error) => {
+            console.error('Failed to update schedule:', error);
+            alert('Failed to update schedule.');
+          },
+        });
+
+      return;
     }
 
     this.closeModal();
@@ -138,7 +221,24 @@ export class LecturerScheduleComponent implements OnInit {
 
   deleteSlot(id: number) {
     if (confirm('Remove this time slot? Any students booked here will be notified.')) {
-      this.scheduleData = this.scheduleData.filter((slot) => slot.id !== id);
+      const token = localStorage.getItem('token');
+
+      const headers = new HttpHeaders({
+        Authorization: `Bearer ${token}`,
+      });
+
+      this.http
+        .delete(`http://localhost:8080/api/lecturer-availability/schedule/${id}`, { headers })
+        .subscribe({
+          next: () => {
+            alert('Schedule deleted!');
+            this.loadSchedule();
+          },
+          error: (error) => {
+            console.error('Failed to delete schedule:', error);
+            alert('Failed to delete schedule.');
+          },
+        });
     }
   }
 

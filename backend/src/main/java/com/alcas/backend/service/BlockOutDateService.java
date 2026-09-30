@@ -100,8 +100,19 @@ public class BlockOutDateService {
     }
 
     public void deleteBlockOutDate(
-            Integer blockOutDateId,
-            Integer lecturerId) {
+            Integer blockOutDateId) {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found."
+                                ));
 
         BlockOutDate blockOutDate =
                 blockOutDateRepository
@@ -111,9 +122,12 @@ public class BlockOutDateService {
                                         "Block-out date not found."
                                 ));
 
+        Integer loggedInLecturerId =
+                authenticatedUser.getId();
+
         if (!blockOutDate.getLecturer()
                 .getUserId()
-                .equals(lecturerId)) {
+                .equals(loggedInLecturerId)) {
 
             throw new UnauthorizedException(
                     "You are not allowed to delete this block-out date."

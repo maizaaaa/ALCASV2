@@ -4,9 +4,15 @@ import com.alcas.backend.dto.AvailabilityResponse;
 import com.alcas.backend.entity.Consultation;
 import com.alcas.backend.entity.BlockOutDate;
 import com.alcas.backend.entity.LecturerSchedule;
+import com.alcas.backend.entity.LecturerProfile;
+import com.alcas.backend.repository.UserRepository;
 import com.alcas.backend.repository.ConsultationRepository;
 import com.alcas.backend.repository.BlockOutDateRepository;
+import com.alcas.backend.repository.LecturerProfileRepository;
+import com.alcas.backend.dto.LecturerScheduleRequest;
+import com.alcas.backend.dto.LecturerScheduleResponse;
 import com.alcas.backend.service.LecturerScheduleService;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +20,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -24,16 +31,149 @@ public class LecturerAvailabilityController {
     private final LecturerScheduleService lecturerScheduleService;
     private final BlockOutDateRepository blockOutDateRepository;
     private final ConsultationRepository consultationRepository;
+    private final LecturerProfileRepository lecturerProfileRepository;
+    private final UserRepository userRepository;
 
     public LecturerAvailabilityController(
             LecturerScheduleService lecturerScheduleService,
             BlockOutDateRepository blockOutDateRepository,
-            ConsultationRepository consultationRepository)
+            ConsultationRepository consultationRepository,
+            LecturerProfileRepository lecturerProfileRepository,
+            UserRepository userRepository)
     {
 
         this.lecturerScheduleService = lecturerScheduleService;
         this.blockOutDateRepository = blockOutDateRepository;
         this.consultationRepository = consultationRepository;
+        this.lecturerProfileRepository = lecturerProfileRepository;
+        this.userRepository = userRepository;
+    }
+
+    @PutMapping("/schedule/{id}")
+    public ResponseEntity<LecturerScheduleResponse> updateSchedule(
+            @PathVariable Long id,
+            @RequestBody LecturerScheduleRequest request,
+            Authentication authentication) {
+
+        LecturerSchedule schedule =
+                lecturerScheduleService.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException("Schedule not found"));
+
+        Integer loggedInLecturerId =
+                userRepository.findByEmail(authentication.getName())
+                        .orElseThrow(() ->
+                                new RuntimeException("User not found"))
+                        .getId();
+
+        if (!schedule.getLecturer()
+                .getUserId()
+                .equals(loggedInLecturerId)) {
+
+            return ResponseEntity.status(403).build();
+        }
+
+        schedule.setDayOfWeek(request.getDayOfWeek());
+
+        schedule.setStartTime(
+                java.time.LocalTime.parse(request.getStartTime())
+        );
+
+        schedule.setEndTime(
+                java.time.LocalTime.parse(request.getEndTime())
+        );
+
+        schedule.setSlotType(request.getSlotType());
+
+        schedule.setTitle(request.getTitle());
+
+        LecturerSchedule updatedSchedule =
+                lecturerScheduleService.save(schedule);
+
+        return ResponseEntity.ok(
+                new LecturerScheduleResponse(updatedSchedule)
+        );
+    }
+
+    @PostMapping("/schedule")
+    public ResponseEntity<LecturerScheduleResponse> createSchedule(
+            @RequestBody LecturerScheduleRequest request,
+            Authentication authentication) {
+
+        Integer loggedInLecturerId =
+                userRepository.findByEmail(authentication.getName())
+                        .orElseThrow(() ->
+                                new RuntimeException("User not found"))
+                        .getId();
+
+        LecturerProfile lecturer =
+                lecturerProfileRepository.findById(loggedInLecturerId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Lecturer profile not found"));
+
+        LecturerSchedule schedule = new LecturerSchedule();
+
+        schedule.setLecturer(lecturer);
+        schedule.setDayOfWeek(request.getDayOfWeek());
+
+        schedule.setStartTime(
+                java.time.LocalTime.parse(request.getStartTime())
+        );
+
+        schedule.setEndTime(
+                java.time.LocalTime.parse(request.getEndTime())
+        );
+
+        schedule.setSlotType(request.getSlotType());
+        schedule.setTitle(request.getTitle());
+
+        LecturerSchedule savedSchedule =
+                lecturerScheduleService.save(schedule);
+
+        return ResponseEntity.ok(
+                new LecturerScheduleResponse(savedSchedule)
+        );
+    }
+
+    @GetMapping("/schedule/me")
+    public ResponseEntity<List<LecturerScheduleResponse>> getMySchedule(
+            Authentication authentication) {
+
+        Integer loggedInLecturerId =
+                userRepository.findByEmail(authentication.getName())
+                        .orElseThrow(() ->
+                                new RuntimeException("User not found"))
+                        .getId();
+
+        List<LecturerScheduleResponse> schedules =
+                lecturerScheduleService
+                        .findAll()
+                        .stream()
+                        .filter(schedule ->
+                                schedule.getLecturer()
+                                        .getUserId()
+                                        .equals(loggedInLecturerId))
+                        .map(LecturerScheduleResponse::new)
+                        .toList();
+
+        return ResponseEntity.ok(schedules);
+    }
+
+    @GetMapping("/schedule/{lecturerId}")
+    public ResponseEntity<List<LecturerScheduleResponse>> getLecturerSchedule(
+            @PathVariable Integer lecturerId) {
+
+        List<LecturerScheduleResponse> schedules =
+                lecturerScheduleService.findAll()
+                        .stream()
+                        .filter(schedule ->
+                                schedule.getLecturer()
+                                        .getUserId()
+                                        .equals(lecturerId))
+                        .map(LecturerScheduleResponse::new)
+                        .toList();
+
+        return ResponseEntity.ok(schedules);
     }
 
     @GetMapping
@@ -53,70 +193,101 @@ public class LecturerAvailabilityController {
                         Locale.ENGLISH
                 );
 
-        boolean isBlocked =
-                blockOutDateRepository
-                        .existsByLecturerUserIdAndBlockDate(
+        List<LecturerSchedule> schedules =
+                lecturerScheduleService
+                        .findByLecturerIdAndDay(
                                 lecturerId,
-                                selectedDate
+                                dayName
                         );
 
-        List<String> availableSlots;
+        List<Consultation> consultations =
+                consultationRepository
+                        .findByLecturerUserIdAndScheduledDateAndStatusIn(
+                                lecturerId,
+                                selectedDate,
+                                List.of(
+                                        Consultation.Status.PENDING,
+                                        Consultation.Status.CONFIRMED
+                                )
+                        );
 
-        if (isBlocked) {
+        List<java.time.LocalTime> bookedTimes =
+                consultations.stream()
+                        .map(Consultation::getScheduledTime)
+                        .toList();
 
-            availableSlots = List.of();
+        List<LecturerSchedule> availableSchedules =
+                schedules.stream()
+                        .filter(schedule ->
+                                "AVAILABLE".equalsIgnoreCase(
+                                        schedule.getSlotType()
+                                )
+                        )
+                        .toList();
 
-        } else {
+        List<LecturerSchedule> unavailableSchedules =
+                schedules.stream()
+                        .filter(schedule ->
+                                "CLASS".equalsIgnoreCase(
+                                        schedule.getSlotType()
+                                )
+                                        ||
+                                        "BUSY".equalsIgnoreCase(
+                                                schedule.getSlotType()
+                                        )
+                        )
+                        .toList();
 
-            List<LecturerSchedule> schedules =
-                    lecturerScheduleService
-                            .findByLecturerIdAndDay(
-                                    lecturerId,
-                                    dayName
-                            );
+        List<String> availableSlots =
+                availableSchedules.stream()
+                        .flatMap(schedule ->
+                                generateSlots(
+                                        schedule.getStartTime(),
+                                        schedule.getEndTime()
+                                ).stream()
+                        )
+                        .filter(slot -> {
 
-            List<Consultation> consultations =
-                    consultationRepository
-                            .findByLecturerUserIdAndScheduledDateAndStatusIn(
-                                    lecturerId,
-                                    selectedDate,
-                                    List.of(
-                                            Consultation.Status.PENDING,
-                                            Consultation.Status.CONFIRMED
-                                    )
-                            );
+                            java.time.LocalTime slotTime =
+                                    java.time.LocalTime.parse(
+                                            slot,
+                                            java.time.format.DateTimeFormatter
+                                                    .ofPattern("hh:mm a")
+                                    );
 
-            List<java.time.LocalTime> bookedTimes =
-                    consultations.stream()
-                            .map(Consultation::getScheduledTime)
-                            .toList();
+                            java.time.LocalTime slotEnd =
+                                    slotTime.plusMinutes(30);
 
-            availableSlots =
-                    schedules.stream()
-                            .filter(schedule ->
-                                    "AVAILABLE".equalsIgnoreCase(
-                                            schedule.getSlotType()
-                                    )
-                            )
-                            .flatMap(schedule ->
-                                    generateSlots(
-                                            schedule.getStartTime(),
-                                            schedule.getEndTime()
-                                    ).stream()
-                            )
-                            .filter(slot -> {
+                            boolean overlapsUnavailable =
+                                    unavailableSchedules.stream()
+                                            .anyMatch(schedule ->
+                                                    slotTime.isBefore(
+                                                            schedule.getEndTime()
+                                                    )
+                                                            &&
+                                                            slotEnd.isAfter(
+                                                                    schedule.getStartTime()
+                                                            )
+                                            );
 
-                                java.time.LocalTime slotTime =
-                                        java.time.LocalTime.parse(
+                            boolean alreadyBooked =
+                                    bookedTimes.contains(slotTime);
+
+                            return !overlapsUnavailable
+                                    && !alreadyBooked;
+                        })
+                        .distinct()
+                        .sorted(
+                                Comparator.comparing(
+                                        slot -> java.time.LocalTime.parse(
                                                 slot,
                                                 java.time.format.DateTimeFormatter
                                                         .ofPattern("hh:mm a")
-                                        );
+                                        )
+                                )
+                        )
 
-                                return !bookedTimes.contains(slotTime);
-                            })
-                            .toList();
-        }
+                        .toList();
 
         AvailabilityResponse response =
                 new AvailabilityResponse(
@@ -158,5 +329,33 @@ public class LecturerAvailabilityController {
         }
 
         return slots;
+    }
+
+    @DeleteMapping("/schedule/{id}")
+    public ResponseEntity<Void> deleteSchedule(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        LecturerSchedule schedule =
+                lecturerScheduleService.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException("Schedule not found"));
+
+        Integer loggedInLecturerId =
+                userRepository.findByEmail(authentication.getName())
+                        .orElseThrow(() ->
+                                new RuntimeException("User not found"))
+                        .getId();
+
+        if (!schedule.getLecturer()
+                .getUserId()
+                .equals(loggedInLecturerId)) {
+
+            return ResponseEntity.status(403).build();
+        }
+
+        lecturerScheduleService.deleteById(id);
+
+        return ResponseEntity.noContent().build();
     }
 }
