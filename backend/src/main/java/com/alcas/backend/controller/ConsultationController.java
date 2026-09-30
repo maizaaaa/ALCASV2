@@ -382,7 +382,17 @@ public class ConsultationController {
     @PutMapping("/{consultationId}/reschedule/accept")
     public ResponseEntity<ConsultationResponse> acceptReschedule(
             @PathVariable String consultationId,
-            @RequestParam Integer studentId) {
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Integer studentId =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ))
+                        .getId();
 
         Consultation accepted =
                 consultationService.acceptReschedule(
@@ -418,7 +428,17 @@ public class ConsultationController {
     @PutMapping("/{consultationId}/reschedule/reject")
     public ResponseEntity<ConsultationResponse> rejectReschedule(
             @PathVariable String consultationId,
-            @RequestParam Integer studentId) {
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Integer studentId =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ))
+                        .getId();
 
         Consultation rejected =
                 consultationService.rejectReschedule(
