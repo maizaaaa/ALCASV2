@@ -4,6 +4,8 @@ public class ConsultationResponse {
 
     private String id;
     private Integer studentId;
+    private String studentName;
+    private String studentMatric;
     private Integer lecturerId;
     private String lecturerName;
     private String scheduledDate;
@@ -23,6 +25,8 @@ public class ConsultationResponse {
     public ConsultationResponse(
             String id,
             Integer studentId,
+            String studentName,
+            String studentMatric,
             Integer lecturerId,
             String lecturerName,
             String scheduledDate,
@@ -38,6 +42,8 @@ public class ConsultationResponse {
 
         this.id = id;
         this.studentId = studentId;
+        this.studentName = studentName;
+        this.studentMatric = studentMatric;
         this.lecturerId = lecturerId;
         this.lecturerName = lecturerName;
         this.scheduledDate = scheduledDate;
@@ -50,6 +56,42 @@ public class ConsultationResponse {
         this.proposedDate = proposedDate;
         this.proposedTime = proposedTime;
         this.rescheduleReason = rescheduleReason;
+    }
+
+    public ConsultationResponse(
+            String id,
+            Integer studentId,
+            Integer lecturerId,
+            String lecturerName,
+            String scheduledDate,
+            String scheduledTime,
+            String reason,
+            String reasonDetails,
+            String consultationMode,
+            String location,
+            String status,
+            String proposedDate,
+            String proposedTime,
+            String rescheduleReason) {
+
+        this(
+                id,
+                studentId,
+                null,
+                null,
+                lecturerId,
+                lecturerName,
+                scheduledDate,
+                scheduledTime,
+                reason,
+                reasonDetails,
+                consultationMode,
+                location,
+                status,
+                proposedDate,
+                proposedTime,
+                rescheduleReason
+        );
     }
 
     public String getId() {
@@ -66,6 +108,22 @@ public class ConsultationResponse {
 
     public void setStudentId(Integer studentId) {
         this.studentId = studentId;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+
+    public String getStudentMatric() {
+        return studentMatric;
+    }
+
+    public void setStudentMatric(String studentMatric) {
+        this.studentMatric = studentMatric;
     }
 
     public Integer getLecturerId() {

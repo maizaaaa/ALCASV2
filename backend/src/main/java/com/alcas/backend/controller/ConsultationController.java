@@ -223,7 +223,7 @@ public class ConsultationController {
 
         Integer lecturerId =
                 userRepository.findByEmail(email)
-                        .orElseThrow(()->
+                        .orElseThrow(() ->
                                 new RuntimeException("Authenticated user not found"))
                         .getId();
 
@@ -236,6 +236,8 @@ public class ConsultationController {
                                 new ConsultationResponse(
                                         consultation.getId(),
                                         consultation.getStudent().getUserId(),
+                                        consultation.getStudent().getUser().getFullName(),
+                                        consultation.getStudent().getMatricNumber(),
                                         consultation.getLecturer().getUserId(),
                                         consultation.getLecturer().getUser().getFullName(),
                                         consultation.getScheduledDate().toString(),
@@ -248,11 +250,9 @@ public class ConsultationController {
                                         consultation.getProposedDate() != null
                                                 ? consultation.getProposedDate().toString()
                                                 : null,
-
                                         consultation.getProposedTime() != null
                                                 ? consultation.getProposedTime().toString()
                                                 : null,
-
                                         consultation.getRescheduleReason()
                                 )
                         )

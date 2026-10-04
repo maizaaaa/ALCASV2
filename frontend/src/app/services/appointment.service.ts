@@ -15,7 +15,7 @@ export interface Appointment {
   reason: string;
   location: string;
   remarks?: string;
-  status: 'PENDING' | 'UPCOMING' | 'CONFIRMED' | 'COMPLETED' | 'NO-SHOW' | 'REJECTED' | 'CANCELLED';
+  status: 'PENDING' | 'UPCOMING' | 'CONFIRMED' | 'RESCHEDULE_PENDING'| 'COMPLETED' | 'NO-SHOW' | 'REJECTED' | 'CANCELLED';
   meetingUrl?: string;
   updatedAt?: string;
 }

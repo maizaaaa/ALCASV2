@@ -1,10 +1,12 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
 import { AppointmentService, Appointment } from '../../services/appointment.service';
+import { ConsultationService } from '../../services/consultation.service';
+import { AttendanceService} from '../../services/attendance.service';
 
 @Component({
   selector: 'app-lecturer-appointments',
@@ -28,7 +30,7 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
     'Lecturer Office BK-02',
     'Lab 2 (Software Lab)',
     'Seminar Room 1',
-    'Webex Virtual Room'
+    'Webex Virtual Room',
   ];
 
   // Student Info Modal State
@@ -99,12 +101,94 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private appointmentService: AppointmentService
-  ) { }
+    private appointmentService: AppointmentService,
+    private consultationService: ConsultationService,
+    private attendanceService: AttendanceService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
-    this.apptSub = this.appointmentService.appointments$.subscribe((data) => {
-      this.appointments = data;
+    this.consultationService.getLecturerConsultations().subscribe({
+      next: (consultations) => {
+        console.log('REAL LECTURER CONSULTATIONS:', consultations);
+
+        this.appointments = consultations.map((consultation) => ({
+          id: consultation.id,
+          student: consultation.studentName,
+          studentMatric: consultation.studentMatric.toString(),
+          lecturer: consultation.lecturerName,
+          school: '',
+          type: consultation.reason,
+          date: consultation.scheduledDate,
+          time: consultation.scheduledTime,
+          mode: consultation.consultationMode,
+          location: consultation.location || 'To be assigned upon approval',
+          reason: consultation.reasonDetails || '',
+          remarks: consultation.rescheduleReason || '',
+          status:
+            consultation.status === 'CONFIRMED'
+              ? 'UPCOMING'
+              : consultation.status === 'NO_SHOW'
+                ? 'NO-SHOW'
+                : (consultation.status as
+                    | 'PENDING'
+                    | 'UPCOMING'
+                    | 'RESCHEDULE_PENDING'
+                    | 'COMPLETED'
+                    | 'NO-SHOW'
+                    | 'REJECTED'
+                    | 'CANCELLED'),
+        }));
+        this.cdr.detectChanges();
+      },
+
+      error: (error) => {
+        console.error('FAILED TO LOAD LECTURER CONSULTATIONS:', error);
+      },
+    });
+  }
+
+  loadLecturerConsultations(): void {
+    this.consultationService.getLecturerConsultations().subscribe({
+      next: (consultations) => {
+        console.log('REAL LECTURER CONSULTATIONS:', consultations);
+
+        this.appointments = consultations.map((consultation) => ({
+          id: consultation.id,
+          student: consultation.studentName,
+          studentMatric: consultation.studentMatric.toString(),
+          lecturer: consultation.lecturerName,
+          school: '',
+          type: consultation.reason,
+          date: consultation.scheduledDate,
+          time: consultation.scheduledTime,
+          mode: consultation.consultationMode,
+          location: consultation.location || 'To be assigned upon approval',
+          reason: consultation.reasonDetails || '',
+          remarks: consultation.rescheduleReason || '',
+
+          status:
+            consultation.status === 'CONFIRMED'
+              ? 'UPCOMING'
+              : consultation.status === 'NO_SHOW'
+                ? 'NO-SHOW'
+                : (consultation.status as
+                    | 'PENDING'
+                    | 'UPCOMING'
+                    | 'CONFIRMED'
+                    | 'RESCHEDULE_PENDING'
+                    | 'COMPLETED'
+                    | 'NO-SHOW'
+                    | 'REJECTED'
+                    | 'CANCELLED'),
+        }));
+
+        this.cdr.detectChanges();
+      },
+
+      error: (error) => {
+        console.error('FAILED TO LOAD LECTURER CONSULTATIONS:', error);
+      },
     });
   }
 
@@ -213,30 +297,85 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
         alert('Please specify a room number or venue for the appointment.');
         return;
       }
-      this.appointmentService.approveAppointment(
-        this.selectedAppt.id,
-        this.approvalRoomNumber,
-        this.actionNotes
-      );
-      alert(
-        `Appointment approved! Room "${this.approvalRoomNumber.trim()}" assigned and live notification updated for ${this.selectedAppt.student}.`
-      );
+
+      this.consultationService.approveConsultation(this.selectedAppt.id).subscribe({
+        next: (response) => {
+          console.log('APPROVE RESPONSE:', response);
+
+          alert(`Appointment approved successfully for ${this.selectedAppt.student}.`);
+
+          this.closeActionModal();
+
+          // Reload the consultation list
+          this.loadLecturerConsultations();
+        },
+
+        error: (error) => {
+          console.error('APPROVE FAILED:', error);
+
+          alert(error?.error?.message || 'Failed to approve the appointment.');
+        },
+      });
     } else if (this.actionType === 'REJECT') {
       if (!this.actionNotes || !this.actionNotes.trim()) {
         alert('Please provide a reason for declining the request.');
         return;
       }
-      this.appointmentService.rejectAppointment(this.selectedAppt.id, this.actionNotes);
-      alert(`Request declined. Student notified with reason: "${this.actionNotes}"`);
-    } else if (this.actionType === 'COMPLETE') {
-      this.appointmentService.completeAppointment(this.selectedAppt.id, this.actionNotes);
-      alert('Session marked as completed and saved to Consultation History!');
-    } else if (this.actionType === 'NO_SHOW') {
-      this.appointmentService.markNoShow(this.selectedAppt.id, this.actionNotes);
-      alert(`Recorded as No-Show with notes: "${this.actionNotes || 'None'}"`);
-    }
 
-    this.closeActionModal();
+      this.consultationService
+        .rejectConsultation(this.selectedAppt.id, this.actionNotes.trim())
+        .subscribe({
+          next: (response) => {
+            console.log('REJECT RESPONSE:', response);
+
+            alert(`Request declined successfully for ${this.selectedAppt.student}.`);
+
+            this.closeActionModal();
+
+            // Reload the consultation list
+            this.loadLecturerConsultations();
+          },
+
+          error: (error) => {
+            console.error('REJECT FAILED:', error);
+
+            alert(error?.error?.message || 'Failed to decline the request.');
+          },
+        });
+    } else if (this.actionType === 'COMPLETE') {
+      this.attendanceService
+        .markAttendance(this.selectedAppt.id, 'PRESENT', this.actionNotes || '')
+        .subscribe({
+          next: (response) => {
+            console.log('COMPLETE SESSION RESPONSE:', response);
+            alert(`Session with ${this.selectedAppt.student} marked as completed successfully.`);
+            this.closeActionModal();
+            this.loadLecturerConsultations();
+          },
+          error: (error) => {
+            console.error('COMPLETE SESSION FAILED:', error);
+            alert(error?.error?.message || 'Failed to mark the session as completed.');
+          },
+        });
+    } else if (this.actionType === 'NO_SHOW') {
+      this.attendanceService
+        .markAttendance(this.selectedAppt.id, 'NO_SHOW', this.actionNotes || '')
+        .subscribe({
+          next: (response) => {
+            console.log('NO-SHOW SESSION RESPONSE:', response);
+
+            alert(`Session with ${this.selectedAppt.student} marked as no-show successfully.`);
+
+            this.closeActionModal();
+            this.loadLecturerConsultations();
+          },
+          error: (error) => {
+            console.error('NO-SHOW SESSION FAILED:', error);
+
+            alert(error?.error?.message || 'Failed to mark the session as no-show.');
+          },
+        });
+    }
   }
 
   onLogout() {
