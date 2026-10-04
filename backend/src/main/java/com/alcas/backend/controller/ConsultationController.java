@@ -121,9 +121,17 @@ public class ConsultationController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/student/{studentId}")
+    @GetMapping("/student")
     public ResponseEntity<List<ConsultationResponse>> getStudentConsultations(
-            @PathVariable Integer studentId) {
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Integer studentId =
+                userRepository.findByEmail(email)
+                    .orElseThrow(() ->
+                        new RuntimeException("Authenticated user not found"))
+                    .getId();
 
         List<Consultation> consultations =
                 consultationService.findByStudentId(studentId);
@@ -162,8 +170,18 @@ public class ConsultationController {
     @PutMapping("/{consultationId}/cancel")
     public ResponseEntity<ConsultationResponse> cancelConsultation(
             @PathVariable String consultationId,
-            @RequestParam Integer studentId,
-            @RequestParam String cancelReason) {
+            @RequestParam String cancelReason,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Integer studentId =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ))
+                        .getId();
 
         Consultation cancelled =
                 consultationService.cancelConsultation(
@@ -197,9 +215,17 @@ public class ConsultationController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/lecturer/{lecturerId}")
+    @GetMapping("/lecturer")
     public ResponseEntity<List<ConsultationResponse>> getLecturerConsultations(
-            @PathVariable Integer lecturerId) {
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Integer lecturerId =
+                userRepository.findByEmail(email)
+                        .orElseThrow(()->
+                                new RuntimeException("Authenticated user not found"))
+                        .getId();
 
         List<Consultation> consultations =
                 consultationService.findByLecturerId(lecturerId);

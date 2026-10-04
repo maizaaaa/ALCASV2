@@ -3,7 +3,9 @@ package com.alcas.backend.controller;
 import com.alcas.backend.dto.AttendanceResponse;
 import com.alcas.backend.entity.Attendance;
 import com.alcas.backend.service.AttendanceService;
+import com.alcas.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,19 +15,32 @@ import java.util.List;
 public class AttendanceController {
 
     private final AttendanceService attendanceService;
+    private final UserRepository userRepository;
 
     public AttendanceController(
-            AttendanceService attendanceService) {
+            AttendanceService attendanceService,
+            UserRepository userRepository) {
 
         this.attendanceService = attendanceService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/mark")
     public ResponseEntity<AttendanceResponse> markAttendance(
             @RequestParam String consultationId,
-            @RequestParam Integer lecturerId,
             @RequestParam Attendance.Status status,
-            @RequestParam(required = false) String notes) {
+            @RequestParam(required = false) String notes,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Integer lecturerId =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ))
+                        .getId();
 
         Attendance attendance =
                 attendanceService.markAttendance(
@@ -40,9 +55,19 @@ public class AttendanceController {
         );
     }
 
-    @GetMapping("/lecturer/{lecturerId}")
+    @GetMapping("/lecturer")
     public ResponseEntity<List<AttendanceResponse>> getLecturerAttendance(
-            @PathVariable Integer lecturerId) {
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Integer lecturerId =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ))
+                        .getId();
 
         List<AttendanceResponse> response =
                 attendanceService
@@ -54,9 +79,19 @@ public class AttendanceController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/student/{studentId}")
+    @GetMapping("/student")
     public ResponseEntity<List<AttendanceResponse>> getStudentAttendance(
-            @PathVariable Integer studentId) {
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Integer studentId =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Authenticated user not found"
+                                ))
+                        .getId();
 
         List<AttendanceResponse> response =
                 attendanceService
