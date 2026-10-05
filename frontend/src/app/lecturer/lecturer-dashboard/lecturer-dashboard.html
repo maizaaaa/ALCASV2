@@ -102,8 +102,8 @@
           <div class="request-list">
             <div class="request-card" *ngFor="let req of pendingRequests">
               <div class="req-header">
-                <div class="req-student">{{ req.student }}</div>
-                <div class="req-datetime">{{ req.date }} • {{ req.time }}</div>
+                <div class="req-student">{{ req.studentName }}</div>
+                <div class="req-datetime">{{ req.scheduledDate }} • {{ req.scheduledTime }}</div>
               </div>
               <div class="req-reason">"{{ req.reason }}"</div>
               <div class="req-actions">
@@ -139,9 +139,9 @@
 
       <div class="modal-body">
         <div class="summary-box pending-summary">
-          <strong>Student:</strong> {{ selectedAppt?.student }} ({{ selectedAppt?.studentMatric }})<br>
-          <strong>Topic:</strong> {{ selectedAppt?.type }} — {{ selectedAppt?.date }} at {{ selectedAppt?.time }}<br>
-          <strong>Consultation Mode:</strong> {{ selectedAppt?.mode }}
+          <strong>Student:</strong> {{ selectedAppt?.studentName }} ({{ selectedAppt?.studentMatric }})<br>
+          <strong>Topic:</strong> {{ selectedAppt?.reason }} — {{ selectedAppt?.scheduledDate }} at {{ selectedAppt?.scheduledTime }}<br>
+          <strong>Consultation Mode:</strong> {{ selectedAppt?.consultationMode }}
         </div>
 
         <div class="form-group mt-4">
@@ -167,7 +167,7 @@
               <span>🔔 Student Live View Preview:</span>
             </div>
             <p class="leading-relaxed">
-              When approved, {{ selectedAppt?.student }} will see:
+              When approved, {{ selectedAppt?.studentName }} will see:
               <strong class="block mt-1 text-emerald-900 bg-white/80 p-2 rounded border border-emerald-100">
                 ✅ Appointment Confirmed<br>
                 📍 Venue: {{ approvalRoomNumber || '(Enter room number above)' }}<br>

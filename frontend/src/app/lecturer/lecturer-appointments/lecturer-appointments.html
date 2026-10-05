@@ -91,7 +91,8 @@
                 <svg class="badge-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
                 {{ appt.location || 'To be assigned upon approval' }}
               </span>
@@ -113,6 +114,7 @@
             </ng-container>
 
             <ng-container *ngIf="activeTab === 'UPCOMING'">
+              <button class="btn-outline-yellow" (click)="requestReschedule(appt)">Request Reschedule </button>
               <button class="btn-outline-red" (click)="openActionModal(appt, 'NO_SHOW')">Mark No-Show</button>
               <button class="btn-solid-blue" (click)="openActionModal(appt, 'COMPLETE')">Complete Session</button>
             </ng-container>
@@ -133,6 +135,7 @@
         <h2 *ngIf="actionType === 'REJECT'">Decline Appointment</h2>
         <h2 *ngIf="actionType === 'COMPLETE'">Complete Session</h2>
         <h2 *ngIf="actionType === 'NO_SHOW'">Mark No-Show</h2>
+        <h2 *ngIf="actionType === 'RESCHEDULE'">Request Reschedule</h2>
         <button class="close-btn" (click)="closeActionModal()">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -142,7 +145,8 @@
 
       <div class="modal-body">
         <div class="summary-box" [ngClass]="{'pending-summary': selectedAppt?.status === 'PENDING'}">
-          <strong>Student:</strong> {{ selectedAppt?.student }} ({{ selectedAppt?.studentMatric || selectedAppt?.matric }})<br>
+          <strong>Student:</strong> {{ selectedAppt?.student }} ({{ selectedAppt?.studentMatric || selectedAppt?.matric
+          }})<br>
           <strong>Topic:</strong> {{ selectedAppt?.type }} — {{ selectedAppt?.date }} at {{ selectedAppt?.time }}<br>
           <strong>Consultation Mode:</strong> {{ selectedAppt?.mode }}
         </div>
@@ -181,28 +185,82 @@
           </div>
         </div>
 
-        <div class="form-group mt-4">
-          <label *ngIf="actionType === 'APPROVE'">Instructions / Message for Student (Optional)</label>
-          <label *ngIf="actionType === 'REJECT'">Reason for Declining <span class="text-red">*</span></label>
-          <label *ngIf="actionType === 'COMPLETE'">Lecturer Remarks / Notes (Optional)</label>
-          <label *ngIf="actionType === 'NO_SHOW'">Reason / Notes for No-Show (Optional)</label>
+        <div class="form-group mt-4" *ngIf="actionType === 'RESCHEDULE'">
 
-          <textarea [(ngModel)]="actionNotes" class="modern-textarea" rows="2"
-            [placeholder]="actionType === 'APPROVE' ? 'e.g., Please bring your printed proposal draft and laptop.' : (actionType === 'REJECT' ? 'e.g., I am busy during this time, please book next week.' : (actionType === 'COMPLETE' ? 'e.g., Discussed Chapter 2, student needs to revise methodology.' : 'e.g., Waited 15 minutes. Student did not show up.'))">
+          <label>
+            Proposed Date <span class="text-red">*</span>
+          </label>
+
+          <input type="date" [(ngModel)]="proposedDate" class="search-input" />
+
+          <label class="mt-3">
+            Proposed Time <span class="text-red">*</span>
+          </label>
+
+          <input type="time" [(ngModel)]="proposedTime" class="search-input" />
+
+        </div>
+
+        <div class="form-group mt-4">
+          <label *ngIf="actionType === 'APPROVE'">
+            Instructions / Message for Student (Optional)
+          </label>
+
+          <label *ngIf="actionType === 'REJECT'">
+            Reason for Declining <span class="text-red">*</span>
+          </label>
+
+          <label *ngIf="actionType === 'RESCHEDULE'">
+            Reason for Rescheduling <span class="text-red">*</span>
+          </label>
+
+          <label *ngIf="actionType === 'COMPLETE'">
+            Lecturer Remarks / Notes (Optional)
+          </label>
+
+          <label *ngIf="actionType === 'NO_SHOW'">
+            Reason / Notes for No-Show (Optional)
+          </label>
+
+          <textarea [(ngModel)]="actionNotes" class="modern-textarea" rows="2" [placeholder]="
+                                    actionType === 'APPROVE'
+                                      ? 'e.g., Please bring your printed proposal draft and laptop.'
+                                    : actionType === 'REJECT'
+                                      ? 'e.g., I am busy during this time, please book next week.'
+                                    : actionType === 'RESCHEDULE'
+                                      ? 'e.g., I have a meeting during the original time. Please attend at the proposed time.'
+                                    : actionType === 'COMPLETE'
+                                      ? 'e.g., Discussed Chapter 2, student needs to revise methodology.'
+                                      : 'e.g., Waited 15 minutes. Student did not show up.'
+                                    ">
           </textarea>
 
-          <small class="helper-text" *ngIf="actionType === 'APPROVE'">An automated confirmation notification with the room number and instructions will be sent to the student.</small>
+          <small class="helper-text" *ngIf="actionType === 'APPROVE'">An automated confirmation notification with the
+            room number and instructions will be sent to the student.</small>
           <small class="helper-text" *ngIf="actionType === 'REJECT'">This reason will be emailed to the student.</small>
-          <small class="helper-text" *ngIf="actionType === 'COMPLETE' || actionType === 'NO_SHOW'">These notes will be saved to the Consultation History logs.</small>
+          <small class="helper-text" *ngIf="actionType === 'COMPLETE' || actionType === 'NO_SHOW'">These notes will be
+            saved to the Consultation History logs.</small>
         </div>
       </div>
 
       <div class="modal-footer">
         <button class="btn-text" (click)="closeActionModal()">Cancel</button>
-        <button class="btn-solid-blue"
-          [ngClass]="{'bg-green': actionType === 'APPROVE' || actionType === 'COMPLETE', 'bg-red': actionType === 'REJECT' || actionType === 'NO_SHOW'}"
-          (click)="submitAction()">
-          {{ actionType === 'APPROVE' ? 'Confirm & Approve' : (actionType === 'REJECT' ? 'Confirm Decline' : (actionType === 'NO_SHOW' ? 'Confirm No-Show' : 'Save & Complete')) }}
+        <button class="btn-solid-blue" [ngClass]="{
+                            'bg-green': actionType === 'APPROVE' || actionType === 'COMPLETE',
+                            'bg-red': actionType === 'REJECT' || actionType === 'NO_SHOW',
+                            'bg-yellow': actionType === 'RESCHEDULE'
+                            }" (click)="submitAction()">
+          {{
+          actionType === 'APPROVE'
+          ? 'Confirm & Approve'
+          : actionType === 'REJECT'
+          ? 'Confirm Decline'
+          : actionType === 'RESCHEDULE'
+          ? 'Send Reschedule Request'
+          : actionType === 'NO_SHOW'
+          ? 'Confirm No-Show'
+          : 'Save & Complete'
+          }}
         </button>
       </div>
 

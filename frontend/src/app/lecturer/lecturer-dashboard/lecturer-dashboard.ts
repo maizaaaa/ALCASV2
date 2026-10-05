@@ -2,9 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
-import { AppointmentService, Appointment } from '../../services/appointment.service';
+import { ConsultationService, Consultation} from '../../services/consultation.service';
 
 @Component({
   selector: 'app-lecturer-dashboard',
@@ -13,7 +12,7 @@ import { AppointmentService, Appointment } from '../../services/appointment.serv
   templateUrl: './lecturer-dashboard.html',
   styleUrls: ['./lecturer-dashboard.css'],
 })
-export class LecturerDashboardComponent implements OnInit, OnDestroy {
+export class LecturerDashboardComponent implements OnInit {
   // Quick Stats
   stats = {
     todayMeetings: 4,
@@ -47,13 +46,12 @@ export class LecturerDashboardComponent implements OnInit, OnDestroy {
   ];
 
   // Pending Requests needing immediate action
-  allAppointments: Appointment[] = [];
-  pendingRequests: Appointment[] = [];
-  private apptSub!: Subscription;
+  allAppointments: Consultation[] = [];
+  pendingRequests: Consultation[] = [];
 
   // Modal State for Dashboard Approval
   showActionModal = false;
-  selectedAppt: Appointment | null = null;
+  selectedAppt: Consultation | null = null;
   approvalRoomNumber: string = 'Block A, Room BK-34';
   actionNotes: string = '';
   quickRooms: string[] = [
@@ -66,27 +64,37 @@ export class LecturerDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private appointmentService: AppointmentService
-  ) { }
+    private consultationService: ConsultationService,
+  ) {}
 
   ngOnInit(): void {
-    this.apptSub = this.appointmentService.appointments$.subscribe((appts) => {
-      this.allAppointments = appts;
-      this.pendingRequests = appts.filter((a) => a.status === 'PENDING');
-      this.stats.pendingRequests = this.pendingRequests.length;
+    this.loadDashboardData();
+  }
+
+  loadDashboardData(): void {
+    this.consultationService.getLecturerConsultations().subscribe({
+      next: (consultations: Consultation[]) => {
+        console.log('REAL DASHBOARD CONSULTATIONS:', consultations);
+
+        this.allAppointments = consultations;
+
+        this.pendingRequests = consultations.filter(
+          (consultation) => consultation.status === 'PENDING',
+        );
+
+        this.stats.pendingRequests = this.pendingRequests.length;
+      },
+
+      error: (error) => {
+        console.error('FAILED TO LOAD DASHBOARD CONSULTATIONS:', error);
+      },
     });
   }
 
-  ngOnDestroy(): void {
-    if (this.apptSub) {
-      this.apptSub.unsubscribe();
-    }
-  }
-
-  openApprovalModal(req: Appointment) {
+  openApprovalModal(req: Consultation) {
     this.selectedAppt = req;
     this.actionNotes = '';
-    if (req.mode?.includes('Online')) {
+    if (req.consultationMode?.includes('Online')) {
       this.approvalRoomNumber = 'Webex Virtual Room';
     } else {
       this.approvalRoomNumber = 'Block A, Room BK-34';
@@ -103,33 +111,53 @@ export class LecturerDashboardComponent implements OnInit, OnDestroy {
     this.approvalRoomNumber = room;
   }
 
-  confirmApprove() {
+  confirmApprove(): void {
     if (!this.selectedAppt) return;
+
     if (!this.approvalRoomNumber || !this.approvalRoomNumber.trim()) {
       alert('Please specify a room number or venue for the appointment.');
       return;
     }
 
-    this.appointmentService.approveAppointment(
-      this.selectedAppt.id,
-      this.approvalRoomNumber,
-      this.actionNotes
-    );
+    this.consultationService.approveConsultation(this.selectedAppt.id).subscribe({
+      next: (response) => {
+        console.log('DASHBOARD APPROVE RESPONSE:', response);
 
-    alert(
-      `Appointment approved! Room "${this.approvalRoomNumber.trim()}" assigned and live notification sent to ${this.selectedAppt.student}.`
-    );
+        alert(`Appointment approved successfully for ${this.selectedAppt?.studentName}.`);
 
-    this.closeApprovalModal();
+        this.closeApprovalModal();
+        this.loadDashboardData();
+      },
+
+      error: (error) => {
+        console.error('DASHBOARD APPROVE FAILED:', error);
+
+        alert(error?.error?.message || 'Failed to approve the appointment.');
+      },
+    });
   }
 
-  rejectRequest(req: Appointment) {
+  rejectRequest(req: Consultation): void {
     const reason = prompt(
-      `Please provide a reason for declining ${req.student}'s request (Required):`
+      `Please provide a reason for declining ${req.studentName}'s request (Required):`,
     );
+
     if (reason && reason.trim()) {
-      this.appointmentService.rejectAppointment(req.id, reason.trim());
-      alert(`Appointment declined. Student notified with reason: "${reason.trim()}"`);
+      this.consultationService.rejectConsultation(req.id, reason.trim()).subscribe({
+        next: (response) => {
+          console.log('DASHBOARD REJECT RESPONSE:', response);
+
+          alert(`Appointment declined. Student notified with reason: "${reason.trim()}"`);
+
+          this.loadDashboardData();
+        },
+
+        error: (error) => {
+          console.error('DASHBOARD REJECT FAILED:', error);
+
+          alert(error?.error?.message || 'Failed to decline the appointment.');
+        },
+      });
     } else if (reason !== null) {
       alert('Decline cancelled. Reason is required.');
     }

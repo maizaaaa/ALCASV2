@@ -81,7 +81,8 @@
                 <div class="reason-truncate">"{{ log.reason }}"</div>
               </td>
               <td>
-                <span class="status-badge" [ngClass]="log.status.toLowerCase()">
+                <span class="status-badge" [ngClass]="log.status.toLowerCase().replace('_', '-')">
+                  <span class="badge-dot"></span>
                   {{ log.status }}
                 </span>
               </td>
@@ -112,7 +113,13 @@
 
       <div class="modal-body">
 
-        <div class="status-banner" [ngClass]="selectedLog.status.toLowerCase() + '-bg'">
+        <div class="status-banner" [ngClass]="selectedLog.status.toLowerCase().replace('_', '-') + '-bg'">
+          <span class="banner-status-icon">
+            <svg *ngIf="selectedLog.status === 'COMPLETED'" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+            <svg *ngIf="selectedLog.status === 'REJECTED'" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <svg *ngIf="selectedLog.status === 'NO-SHOW' || selectedLog.status === 'NO_SHOW'" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <svg *ngIf="selectedLog.status === 'CANCELLED'" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+          </span>
           Final Status: <strong>{{ selectedLog.status }}</strong>
         </div>
 

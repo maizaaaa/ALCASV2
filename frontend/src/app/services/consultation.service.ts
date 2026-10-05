@@ -67,4 +67,30 @@ export class ConsultationService {
       },
     );
   }
+
+  requestReschedule(
+    consultationId: string,
+    proposedDate: string,
+    proposedTime: string,
+    rescheduleReason: string,
+  ): Observable<Consultation> {
+    const token = localStorage.getItem('token');
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.http.put<Consultation>(
+      `${this.apiUrl}/${consultationId}/reschedule`,
+      {},
+      {
+        headers,
+        params: {
+          proposedDate,
+          proposedTime,
+          rescheduleReason,
+        },
+      },
+    );
+  }
 }

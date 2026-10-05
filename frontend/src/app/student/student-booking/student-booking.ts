@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
@@ -127,6 +127,7 @@ export class StudentBookingComponent implements OnInit {
   constructor(
     private router: Router,
     private http: HttpClient,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -271,13 +272,22 @@ export class StudentBookingComponent implements OnInit {
   }
 
   loadLecturerAvailability(lecturerId: number, date: string): void {
+    const token = localStorage.getItem('token');
+
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+
     this.http
       .get<{
         lecturerId: number;
         date: string;
         dayOfWeek: string;
         availableSlots: string[];
-      }>(`http://localhost:8080/api/lecturer-availability?lecturerId=${lecturerId}&date=${date}`)
+      }>(
+        `http://localhost:8080/api/lecturer-availability?lecturerId=${lecturerId}&date=${date}`,
+        { headers }
+      )
       .subscribe({
         next: (response) => {
           this.availableSlots = response.availableSlots;
@@ -353,6 +363,8 @@ export class StudentBookingComponent implements OnInit {
 
         this.bookingStep = 3;
         this.isSubmitting = false;
+
+        this.cdr.detectChanges();
 
         console.log('bookingStep is now:', this.bookingStep);
       },

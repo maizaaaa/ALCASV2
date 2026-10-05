@@ -1,10 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
-import { AppointmentService, Appointment } from '../../services/appointment.service';
+import { ConsultationService, Consultation } from '../../services/consultation.service';
 
 @Component({
   selector: 'app-lecturer-history',
@@ -13,7 +12,7 @@ import { AppointmentService, Appointment } from '../../services/appointment.serv
   templateUrl: './lecturer-history.html',
   styleUrls: ['./lecturer-history.css'],
 })
-export class LecturerHistoryComponent implements OnInit, OnDestroy {
+export class LecturerHistoryComponent implements OnInit {
   // Filters
   searchQuery: string = '';
   statusFilter: string = 'ALL';
@@ -23,40 +22,70 @@ export class LecturerHistoryComponent implements OnInit, OnDestroy {
   showModal = false;
   selectedLog: any = null;
 
-  appointments: Appointment[] = [];
-  private apptSub!: Subscription;
+  appointments: any[] = [];
 
   constructor(
     private router: Router,
-    private appointmentService: AppointmentService
-  ) { }
+    private consultationService: ConsultationService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
-    this.apptSub = this.appointmentService.appointments$.subscribe((data) => {
-      this.appointments = data;
+    this.loadHistory();
+    this.cdr.detectChanges();
+  }
+
+  loadHistory(): void {
+    this.consultationService.getLecturerConsultations().subscribe({
+      next: (consultations: Consultation[]) => {
+        console.log('REAL LECTURER HISTORY:', consultations);
+
+        this.appointments = consultations.map((consultation) => ({
+          id: consultation.id,
+          student: consultation.studentName || 'Unknown Student',
+          studentMatric: consultation.studentMatric ? consultation.studentMatric.toString() : '',
+          lecturer: consultation.lecturerName,
+          type: consultation.reason,
+          date: consultation.scheduledDate,
+          time: consultation.scheduledTime,
+          location: consultation.location || '',
+          reason: consultation.reasonDetails || '',
+          remarks: consultation.rescheduleReason || '',
+          notes: '',
+          status: consultation.status,
+        }));
+
+        this.cdr.detectChanges();
+      },
+
+      error: (error) => {
+        console.error('FAILED TO LOAD LECTURER HISTORY:', error);
+      },
     });
   }
 
-  ngOnDestroy(): void {
-    if (this.apptSub) {
-      this.apptSub.unsubscribe();
-    }
-  }
-
-  // History logs derived from appointments stream (COMPLETED, NO-SHOW, REJECTED, CANCELLED)
-  get historyLogs(): Appointment[] {
-    return this.appointments.filter((a) =>
-      a.status === 'COMPLETED' || a.status === 'NO-SHOW' || a.status === 'REJECTED' || a.status === 'CANCELLED'
+  // History logs derived from real backend consultations
+  get historyLogs(): any[] {
+    return this.appointments.filter(
+      (a) =>
+        a.status === 'COMPLETED' ||
+        a.status === 'NO_SHOW' ||
+        a.status === 'REJECTED' ||
+        a.status === 'CANCELLED',
     );
   }
 
   // Filter Logic
-  get filteredLogs() {
+  get filteredLogs(): any[] {
     return this.historyLogs.filter((log) => {
       const matchesStatus = this.statusFilter === 'ALL' || log.status === this.statusFilter;
+
       const matchesDate = !this.dateFilter || log.date === this.dateFilter;
+
       const searchLower = this.searchQuery.toLowerCase();
-      const studentMatric = log.studentMatric || log.matric || '';
+
+      const studentMatric = log.studentMatric || '';
+
       const matchesSearch =
         log.student.toLowerCase().includes(searchLower) ||
         studentMatric.toLowerCase().includes(searchLower) ||
@@ -66,28 +95,29 @@ export class LecturerHistoryComponent implements OnInit, OnDestroy {
     });
   }
 
-  clearFilters() {
+  clearFilters(): void {
     this.searchQuery = '';
     this.statusFilter = 'ALL';
     this.dateFilter = '';
   }
 
   // Modal Actions
-  viewDetails(log: any) {
+  viewDetails(log: any): void {
     this.selectedLog = log;
     this.showModal = true;
   }
 
-  closeModal() {
+  closeModal(): void {
     this.showModal = false;
     this.selectedLog = null;
   }
 
-  exportHistory() {
+  exportHistory(): void {
     alert(`Successfully generated a CSV report of ${this.filteredLogs.length} past consultations.`);
   }
 
-  onLogout() {
+  onLogout(): void {
     this.router.navigate(['/login']);
   }
 }
+

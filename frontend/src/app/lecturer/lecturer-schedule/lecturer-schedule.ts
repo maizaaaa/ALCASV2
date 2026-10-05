@@ -175,10 +175,6 @@ export class LecturerScheduleComponent implements OnInit {
       return;
     }
 
-    // Convert the 24h input (e.g., "14:30") to 12h AM/PM (e.g., "02:30 PM") before saving
-    const formattedStart = this.formatToAMPM(this.slotForm.startTime);
-    const formattedEnd = this.formatToAMPM(this.slotForm.endTime);
-
     if (this.isEditing) {
       const token = localStorage.getItem('token');
 
@@ -216,7 +212,44 @@ export class LecturerScheduleComponent implements OnInit {
       return;
     }
 
-    this.closeModal();
+    // CREATE NEW SCHEDULE
+    const token = localStorage.getItem('token');
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    });
+
+    const requestBody = {
+      dayOfWeek: this.slotForm.day,
+      startTime: this.slotForm.startTime,
+      endTime: this.slotForm.endTime,
+      slotType: this.slotForm.type,
+      title: this.slotForm.title,
+    };
+
+    this.http
+      .post(
+        'http://localhost:8080/api/lecturer-availability/schedule',
+        requestBody,
+        { headers },
+      )
+      .subscribe({
+        next: () => {
+          alert('Schedule added successfully!');
+          this.closeModal();
+          this.loadSchedule();
+        },
+        error: (error) => {
+          console.error('Failed to create schedule:', error);
+          console.error('Backend response:', error.error);
+
+          alert(
+            error?.error?.message ||
+            'Failed to create schedule.'
+          );
+        },
+      });
   }
 
   deleteSlot(id: number) {

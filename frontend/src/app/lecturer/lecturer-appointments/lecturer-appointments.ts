@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
 import { AppointmentService, Appointment } from '../../services/appointment.service';
 import { ConsultationService } from '../../services/consultation.service';
-import { AttendanceService} from '../../services/attendance.service';
+import { AttendanceService } from '../../services/attendance.service';
 
 @Component({
   selector: 'app-lecturer-appointments',
@@ -22,8 +22,10 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
   // Modal State for Actions (Approving, Rejecting, Completing, or No-Show)
   showActionModal = false;
   selectedAppt: any = null;
-  actionType: 'APPROVE' | 'REJECT' | 'COMPLETE' | 'NO_SHOW' = 'APPROVE';
+  actionType: 'APPROVE' | 'REJECT' | 'RESCHEDULE' | 'COMPLETE' | 'NO_SHOW' = 'APPROVE';
   actionNotes: string = '';
+  proposedDate: string = '';
+  proposedTime: string = '';
   approvalRoomNumber: string = 'Block A, Room BK-34';
   quickRooms: string[] = [
     'Block A, Room BK-34',
@@ -267,11 +269,17 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
     this.openActionModal(appt, 'APPROVE');
   }
 
+  requestReschedule(appt: any) {
+    this.openActionModal(appt, 'RESCHEDULE');
+  }
+
   // --- Modal Actions ---
-  openActionModal(appt: any, type: 'APPROVE' | 'REJECT' | 'COMPLETE' | 'NO_SHOW') {
+  openActionModal(appt: any, type: 'APPROVE' | 'REJECT' | 'RESCHEDULE' | 'COMPLETE' | 'NO_SHOW') {
     this.selectedAppt = appt;
     this.actionType = type;
     this.actionNotes = '';
+    this.proposedDate = '';
+    this.proposedTime = '';
     if (type === 'APPROVE') {
       if (appt.mode?.includes('Online')) {
         this.approvalRoomNumber = 'Webex Virtual Room';
@@ -340,6 +348,45 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
             console.error('REJECT FAILED:', error);
 
             alert(error?.error?.message || 'Failed to decline the request.');
+          },
+        });
+    } else if (this.actionType === 'RESCHEDULE') {
+      if (!this.proposedDate) {
+        alert('Please select a proposed date.');
+        return;
+      }
+
+      if (!this.proposedTime) {
+        alert('Please select a proposed time.');
+        return;
+      }
+
+      if (!this.actionNotes || !this.actionNotes.trim()) {
+        alert('Please provide a reason for rescheduling.');
+        return;
+      }
+
+      this.consultationService
+        .requestReschedule(
+          this.selectedAppt.id,
+          this.proposedDate,
+          this.proposedTime,
+          this.actionNotes.trim(),
+        )
+        .subscribe({
+          next: (response) => {
+            console.log('RESCHEDULE RESPONSE:', response);
+
+            alert(`Reschedule request sent successfully for ${this.selectedAppt.student}.`);
+
+            this.closeActionModal();
+            this.loadLecturerConsultations();
+          },
+
+          error: (error) => {
+            console.error('RESCHEDULE FAILED:', error);
+
+            alert(error?.error?.message || 'Failed to request reschedule.');
           },
         });
     } else if (this.actionType === 'COMPLETE') {

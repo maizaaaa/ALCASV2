@@ -668,6 +668,45 @@
   background-color: #059669 !important;
 }
 
+.bg-yellow {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.bg-yellow:hover {
+  background-color: #d97706;
+}
+
+.btn-outline-yellow {
+  background: rgba(245, 158, 11, 0.06);
+  border: 1.5px solid #f59e0b;
+  color: #d97706;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.05);
+}
+
+.btn-outline-yellow:hover {
+  background-color: #fef3c7;
+  border-color: #d97706;
+  color: #b45309;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.btn-outline-yellow:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
 /* Empty State */
 .empty-state {
   grid-column: 1 / -1;
@@ -958,6 +997,19 @@ html.dark .btn-solid-yellow {
 
 html.dark .btn-solid-yellow:hover {
   background-color: #d97706 !important;
+}
+
+html.dark .btn-outline-yellow {
+  border-color: rgba(245, 158, 11, 0.6) !important;
+  color: #fbbf24 !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+html.dark .btn-outline-yellow:hover {
+  background: rgba(245, 158, 11, 0.25) !important;
+  color: #ffffff !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3) !important;
 }
 
 html.dark .btn-outline-gray {
