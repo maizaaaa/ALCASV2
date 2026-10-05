@@ -1,24 +1,25 @@
 package com.alcas.backend.service;
 
-import com.alcas.backend.entity.Consultation;
-import com.alcas.backend.entity.User;
-import com.alcas.backend.entity.LecturerSchedule;
-import com.alcas.backend.exception.UnauthorizedException;
-import com.alcas.backend.repository.ConsultationRepository;
-import com.alcas.backend.repository.UserRepository;
-import com.alcas.backend.repository.LecturerScheduleRepository;
-import com.alcas.backend.exception.BookingConflictException;
-import org.springframework.stereotype.Service;
-import org.springframework.security.core.context.SecurityContextHolder;
-
 import java.time.DayOfWeek;
-import java.time.format.TextStyle;
-import java.util.Locale;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.TextStyle;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import com.alcas.backend.entity.Consultation;
+import com.alcas.backend.entity.LecturerSchedule;
+import com.alcas.backend.entity.User;
+import com.alcas.backend.exception.BookingConflictException;
+import com.alcas.backend.exception.UnauthorizedException;
+import com.alcas.backend.repository.ConsultationRepository;
+import com.alcas.backend.repository.LecturerScheduleRepository;
+import com.alcas.backend.repository.UserRepository;
 
 @Service
 public class ConsultationService {
@@ -40,28 +41,28 @@ public class ConsultationService {
     public Consultation createConsultation(
             Consultation consultation) {
 
-        Integer lecturerId =
-                consultation.getLecturer().getUserId();
+        Integer lecturerId
+                = consultation.getLecturer().getUserId();
 
-        LocalDate scheduledDate =
-                consultation.getScheduledDate();
+        LocalDate scheduledDate
+                = consultation.getScheduledDate();
 
-        LocalTime scheduledTime =
-                consultation.getScheduledTime();
+        LocalTime scheduledTime
+                = consultation.getScheduledTime();
 
         // Get the day of the requested date
-        DayOfWeek dayOfWeek =
-                scheduledDate.getDayOfWeek();
+        DayOfWeek dayOfWeek
+                = scheduledDate.getDayOfWeek();
 
-        String dayName =
-                dayOfWeek.getDisplayName(
+        String dayName
+                = dayOfWeek.getDisplayName(
                         TextStyle.FULL,
                         Locale.ENGLISH
                 );
 
 // Get lecturer's schedule for that day
-        List<LecturerSchedule> schedules =
-                lecturerScheduleRepository
+        List<LecturerSchedule> schedules
+                = lecturerScheduleRepository
                         .findByLecturerUserIdAndDayOfWeek(
                                 lecturerId,
                                 dayName
@@ -69,23 +70,22 @@ public class ConsultationService {
 
 // Check whether the requested 30-minute slot
 // is inside an AVAILABLE schedule
-        boolean insideAvailableSchedule =
-                schedules.stream()
-                        .filter(schedule ->
-                                "AVAILABLE".equalsIgnoreCase(
-                                        schedule.getSlotType()
-                                )
+        boolean insideAvailableSchedule
+                = schedules.stream()
+                        .filter(schedule
+                                -> "AVAILABLE".equalsIgnoreCase(
+                                schedule.getSlotType()
+                        )
                         )
                         .anyMatch(schedule -> {
 
-                            LocalTime slotEnd =
-                                    scheduledTime.plusMinutes(30);
+                            LocalTime slotEnd
+                                    = scheduledTime.plusMinutes(30);
 
                             return !scheduledTime.isBefore(
                                     schedule.getStartTime()
                             )
-                                    &&
-                                    !slotEnd.isAfter(
+                                    && !slotEnd.isAfter(
                                             schedule.getEndTime()
                                     );
                         });
@@ -98,27 +98,25 @@ public class ConsultationService {
 
 // Check whether the requested slot overlaps
 // CLASS or BUSY schedules
-        boolean overlapsUnavailableSchedule =
-                schedules.stream()
-                        .filter(schedule ->
-                                "CLASS".equalsIgnoreCase(
-                                        schedule.getSlotType()
-                                )
-                                        ||
-                                        "BUSY".equalsIgnoreCase(
-                                                schedule.getSlotType()
-                                        )
+        boolean overlapsUnavailableSchedule
+                = schedules.stream()
+                        .filter(schedule
+                                -> "CLASS".equalsIgnoreCase(
+                                schedule.getSlotType()
+                        )
+                        || "BUSY".equalsIgnoreCase(
+                                schedule.getSlotType()
+                        )
                         )
                         .anyMatch(schedule -> {
 
-                            LocalTime slotEnd =
-                                    scheduledTime.plusMinutes(30);
+                            LocalTime slotEnd
+                                    = scheduledTime.plusMinutes(30);
 
                             return scheduledTime.isBefore(
                                     schedule.getEndTime()
                             )
-                                    &&
-                                    slotEnd.isAfter(
+                                    && slotEnd.isAfter(
                                             schedule.getStartTime()
                                     );
                         });
@@ -129,8 +127,8 @@ public class ConsultationService {
             );
         }
 
-        boolean alreadyBooked =
-                consultationRepository
+        boolean alreadyBooked
+                = consultationRepository
                         .existsByLecturerUserIdAndScheduledDateAndScheduledTimeAndStatusIn(
                                 lecturerId,
                                 scheduledDate,
@@ -147,8 +145,8 @@ public class ConsultationService {
             );
         }
 
-        if (consultation.getId() == null ||
-                consultation.getId().isBlank()) {
+        if (consultation.getId() == null
+                || consultation.getId().isBlank()) {
 
             consultation.setId(
                     UUID.randomUUID().toString()
@@ -174,12 +172,12 @@ public class ConsultationService {
                 .getAuthentication()
                 .getName();
 
-        User authenticatedUser =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Authenticated user not found"
-                                ));
+        User authenticatedUser
+                = userRepository.findByEmail(email)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Authenticated user not found"
+                        ));
 
         if (!authenticatedUser.getId().equals(studentId)) {
             throw new UnauthorizedException(
@@ -200,12 +198,12 @@ public class ConsultationService {
                 .getAuthentication()
                 .getName();
 
-        User authenticatedUser =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Authenticated user not found"
-                                ));
+        User authenticatedUser
+                = userRepository.findByEmail(email)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Authenticated user not found"
+                        ));
 
         if (!authenticatedUser.getId().equals(lecturerId)) {
             throw new UnauthorizedException(
@@ -228,12 +226,12 @@ public class ConsultationService {
                 .getAuthentication()
                 .getName();
 
-        User authenticatedUser =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Authenticated user not found"
-                                ));
+        User authenticatedUser
+                = userRepository.findByEmail(email)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Authenticated user not found"
+                        ));
 
         if (!authenticatedUser.getId().equals(lecturerId)) {
             throw new UnauthorizedException(
@@ -241,12 +239,12 @@ public class ConsultationService {
             );
         }
 
-        Consultation consultation =
-                consultationRepository.findById(consultationId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Consultation not found"
-                                ));
+        Consultation consultation
+                = consultationRepository.findById(consultationId)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Consultation not found"
+                        ));
 
         // Make sure this consultation belongs to this lecturer
         if (!consultation.getLecturer().getUserId().equals(lecturerId)) {
@@ -283,12 +281,12 @@ public class ConsultationService {
                 .getAuthentication()
                 .getName();
 
-        User authenticatedUser =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Authenticated user not found"
-                                ));
+        User authenticatedUser
+                = userRepository.findByEmail(email)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Authenticated user not found"
+                        ));
 
         if (!authenticatedUser.getId().equals(lecturerId)) {
             throw new UnauthorizedException(
@@ -296,12 +294,12 @@ public class ConsultationService {
             );
         }
 
-        Consultation consultation =
-                consultationRepository.findById(consultationId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Consultation not found"
-                                ));
+        Consultation consultation
+                = consultationRepository.findById(consultationId)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Consultation not found"
+                        ));
 
         // Make sure this consultation belongs to this lecturer
         if (!consultation.getLecturer().getUserId().equals(lecturerId)) {
@@ -338,18 +336,18 @@ public class ConsultationService {
             String rescheduleReason) {
 
         // Get the day of the proposed date
-        DayOfWeek dayOfWeek =
-                proposedDate.getDayOfWeek();
+        DayOfWeek dayOfWeek
+                = proposedDate.getDayOfWeek();
 
-        String dayName =
-                dayOfWeek.getDisplayName(
+        String dayName
+                = dayOfWeek.getDisplayName(
                         TextStyle.FULL,
                         Locale.ENGLISH
                 );
 
 // Get lecturer's schedule for that day
-        List<LecturerSchedule> schedules =
-                lecturerScheduleRepository
+        List<LecturerSchedule> schedules
+                = lecturerScheduleRepository
                         .findByLecturerUserIdAndDayOfWeek(
                                 lecturerId,
                                 dayName
@@ -357,23 +355,22 @@ public class ConsultationService {
 
 // Check whether the proposed 30-minute slot
 // is inside an AVAILABLE schedule
-        boolean insideAvailableSchedule =
-                schedules.stream()
-                        .filter(schedule ->
-                                "AVAILABLE".equalsIgnoreCase(
-                                        schedule.getSlotType()
-                                )
+        boolean insideAvailableSchedule
+                = schedules.stream()
+                        .filter(schedule
+                                -> "AVAILABLE".equalsIgnoreCase(
+                                schedule.getSlotType()
+                        )
                         )
                         .anyMatch(schedule -> {
 
-                            LocalTime proposedEnd =
-                                    proposedTime.plusMinutes(30);
+                            LocalTime proposedEnd
+                                    = proposedTime.plusMinutes(30);
 
                             return !proposedTime.isBefore(
                                     schedule.getStartTime()
                             )
-                                    &&
-                                    !proposedEnd.isAfter(
+                                    && !proposedEnd.isAfter(
                                             schedule.getEndTime()
                                     );
                         });
@@ -386,27 +383,25 @@ public class ConsultationService {
 
 // Check whether the proposed slot overlaps
 // CLASS or BUSY schedules
-        boolean overlapsUnavailableSchedule =
-                schedules.stream()
-                        .filter(schedule ->
-                                "CLASS".equalsIgnoreCase(
-                                        schedule.getSlotType()
-                                )
-                                        ||
-                                        "BUSY".equalsIgnoreCase(
-                                                schedule.getSlotType()
-                                        )
+        boolean overlapsUnavailableSchedule
+                = schedules.stream()
+                        .filter(schedule
+                                -> "CLASS".equalsIgnoreCase(
+                                schedule.getSlotType()
+                        )
+                        || "BUSY".equalsIgnoreCase(
+                                schedule.getSlotType()
+                        )
                         )
                         .anyMatch(schedule -> {
 
-                            LocalTime proposedEnd =
-                                    proposedTime.plusMinutes(30);
+                            LocalTime proposedEnd
+                                    = proposedTime.plusMinutes(30);
 
                             return proposedTime.isBefore(
                                     schedule.getEndTime()
                             )
-                                    &&
-                                    proposedEnd.isAfter(
+                                    && proposedEnd.isAfter(
                                             schedule.getStartTime()
                                     );
                         });
@@ -422,12 +417,12 @@ public class ConsultationService {
                 .getAuthentication()
                 .getName();
 
-        User authenticatedUser =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Authenticated user not found"
-                                ));
+        User authenticatedUser
+                = userRepository.findByEmail(email)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Authenticated user not found"
+                        ));
 
         if (!authenticatedUser.getId().equals(lecturerId)) {
             throw new UnauthorizedException(
@@ -435,12 +430,12 @@ public class ConsultationService {
             );
         }
 
-        Consultation consultation =
-                consultationRepository.findById(consultationId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Consultation not found"
-                                ));
+        Consultation consultation
+                = consultationRepository.findById(consultationId)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Consultation not found"
+                        ));
 
         // Make sure this consultation belongs to this lecturer
         if (!consultation.getLecturer().getUserId().equals(lecturerId)) {
@@ -480,12 +475,12 @@ public class ConsultationService {
                 .getAuthentication()
                 .getName();
 
-        User authenticatedUser =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Authenticated user not found"
-                                ));
+        User authenticatedUser
+                = userRepository.findByEmail(email)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Authenticated user not found"
+                        ));
 
         if (!authenticatedUser.getId().equals(studentId)) {
             throw new UnauthorizedException(
@@ -493,12 +488,12 @@ public class ConsultationService {
             );
         }
 
-        Consultation consultation =
-                consultationRepository.findById(consultationId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Consultation not found"
-                                ));
+        Consultation consultation
+                = consultationRepository.findById(consultationId)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Consultation not found"
+                        ));
 
         // Make sure this consultation belongs to this student
         if (!consultation.getStudent().getUserId().equals(studentId)) {
@@ -508,16 +503,16 @@ public class ConsultationService {
         }
 
         // Only RESCHEDULE_PENDING consultations can be accepted
-        if (consultation.getStatus() !=
-                Consultation.Status.RESCHEDULE_PENDING) {
+        if (consultation.getStatus()
+                != Consultation.Status.RESCHEDULE_PENDING) {
 
             throw new RuntimeException(
                     "This consultation does not have a pending reschedule."
             );
         }
 
-        if (consultation.getProposedDate() == null ||
-                consultation.getProposedTime() == null) {
+        if (consultation.getProposedDate() == null
+                || consultation.getProposedTime() == null) {
 
             throw new RuntimeException(
                     "No proposed date and time found."
@@ -555,12 +550,12 @@ public class ConsultationService {
                 .getAuthentication()
                 .getName();
 
-        User authenticatedUser =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Authenticated user not found"
-                                ));
+        User authenticatedUser
+                = userRepository.findByEmail(email)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Authenticated user not found"
+                        ));
 
         if (!authenticatedUser.getId().equals(studentId)) {
             throw new UnauthorizedException(
@@ -568,12 +563,12 @@ public class ConsultationService {
             );
         }
 
-        Consultation consultation =
-                consultationRepository.findById(consultationId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Consultation not found"
-                                ));
+        Consultation consultation
+                = consultationRepository.findById(consultationId)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Consultation not found"
+                        ));
 
         // Make sure this consultation belongs to this student
         if (!consultation.getStudent().getUserId().equals(studentId)) {
@@ -583,8 +578,8 @@ public class ConsultationService {
         }
 
         // Only RESCHEDULE_PENDING consultations can be rejected
-        if (consultation.getStatus() !=
-                Consultation.Status.RESCHEDULE_PENDING) {
+        if (consultation.getStatus()
+                != Consultation.Status.RESCHEDULE_PENDING) {
 
             throw new RuntimeException(
                     "This consultation does not have a pending reschedule."
@@ -615,12 +610,12 @@ public class ConsultationService {
                 .getAuthentication()
                 .getName();
 
-        User authenticatedUser =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Authenticated user not found"
-                                ));
+        User authenticatedUser
+                = userRepository.findByEmail(email)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Authenticated user not found"
+                        ));
 
         if (!authenticatedUser.getId().equals(studentId)) {
             throw new UnauthorizedException(
@@ -628,12 +623,12 @@ public class ConsultationService {
             );
         }
 
-        Consultation consultation =
-                consultationRepository.findById(consultationId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Consultation not found"
-                                ));
+        Consultation consultation
+                = consultationRepository.findById(consultationId)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                "Consultation not found"
+                        ));
 
         // Make sure the consultation belongs to this student
         if (!consultation.getStudent().getUserId().equals(studentId)) {
@@ -643,8 +638,8 @@ public class ConsultationService {
         }
 
         // Only PENDING or CONFIRMED consultations can be cancelled
-        if (consultation.getStatus() != Consultation.Status.PENDING &&
-                consultation.getStatus() != Consultation.Status.CONFIRMED) {
+        if (consultation.getStatus() != Consultation.Status.PENDING
+                && consultation.getStatus() != Consultation.Status.CONFIRMED) {
 
             throw new RuntimeException(
                     "This consultation cannot be cancelled."
