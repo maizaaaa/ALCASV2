@@ -378,21 +378,97 @@
 /* Empty State */
 .empty-state {
   text-align: center;
-  padding: 48px 20px !important;
+  padding: 56px 24px !important;
 }
 
-.empty-state svg {
-  width: 48px;
-  height: 48px;
+.empty-state-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.empty-icon-ring {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(20, 184, 166, 0.2) 100%);
+  border: 1.5px solid rgba(15, 118, 110, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px auto;
+  box-shadow: 0 12px 24px -6px rgba(15, 118, 110, 0.15), 0 0 20px rgba(15, 118, 110, 0.08);
+}
+
+.empty-icon-ring svg,
+.empty-icon {
+  width: 40px;
+  height: 40px;
   color: #0F766E;
-  margin-bottom: 12px;
+  margin: 0 !important;
+  filter: drop-shadow(0 2px 4px rgba(15, 118, 110, 0.2));
 }
 
-.empty-state p {
+.empty-title {
+  font-size: 19px;
+  color: #0B191E;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.3px;
+}
+
+.empty-subtitle {
   color: #64748b;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   margin: 0;
+  line-height: 1.5;
+}
+
+html.dark .empty-state,
+:host-context(.dark) .empty-state,
+:host-context(html.dark) .empty-state,
+body.dark .empty-state {
+  background: rgba(5, 20, 25, 0.75) !important;
+}
+
+html.dark .empty-state-content .empty-title,
+html.dark .empty-title,
+:host-context(.dark) .empty-title,
+:host-context(html.dark) .empty-title,
+body.dark .empty-title {
+  color: #ffffff !important;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.2) !important;
+}
+
+html.dark .empty-icon-ring,
+:host-context(.dark) .empty-icon-ring,
+:host-context(html.dark) .empty-icon-ring,
+body.dark .empty-icon-ring {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.2) 0%, rgba(20, 184, 166, 0.3) 100%) !important;
+  border-color: rgba(45, 212, 191, 0.45) !important;
+  box-shadow: 0 12px 24px -6px rgba(45, 212, 191, 0.3) !important;
+}
+
+html.dark .empty-icon-ring svg,
+html.dark .empty-icon,
+:host-context(.dark) .empty-icon-ring svg,
+:host-context(.dark) .empty-icon,
+:host-context(html.dark) .empty-icon,
+body.dark .empty-icon {
+  color: #2dd4bf !important;
+}
+
+html.dark .empty-subtitle,
+:host-context(.dark) .empty-subtitle,
+:host-context(html.dark) .empty-subtitle,
+body.dark .empty-subtitle {
+  color: #5eead4 !important;
+  font-weight: 600 !important;
 }
 
 /* Modal Popup Styles */

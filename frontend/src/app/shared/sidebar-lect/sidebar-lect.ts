@@ -9,6 +9,9 @@ export interface LecturerNotification {
   time: string;
   read: boolean;
   type: 'booking' | 'reminder' | 'cancellation';
+  group: 'Today' | 'Yesterday' | 'Earlier';
+  studentName?: string;
+  actionRequired?: boolean;
 }
 
 @Component({
@@ -31,29 +34,65 @@ export class SidebarLect implements OnInit {
   notifications: LecturerNotification[] = [
     {
       id: '1',
-      title: 'New Booking Request',
-      message: 'Ahmad Razak requested a consultation session for tomorrow at 10:00 AM.',
-      time: '5m ago',
+      title: 'New Consultation Request',
+      message: 'Ahmad Razak requested a consultation session on 2026-10-08 at 10:00 AM.',
+      time: '10m ago',
       read: false,
       type: 'booking',
+      group: 'Today',
+      studentName: 'Ahmad Razak',
+      actionRequired: true,
     },
     {
       id: '2',
-      title: 'Session Starting Soon',
-      message: 'Upcoming consultation with Siti Aminah in 30 minutes (Room 302).',
-      time: '25m ago',
+      title: 'Session Reminder',
+      message: 'Upcoming consultation with Siti Aminah in 30 minutes (Room BK-34).',
+      time: '45m ago',
       read: false,
       type: 'reminder',
+      group: 'Today',
+      studentName: 'Siti Aminah',
     },
     {
       id: '3',
+      title: 'New Consultation Request',
+      message: 'Jason Lee requested an online Webex consultation on 2026-10-09 at 02:30 PM.',
+      time: '2h ago',
+      read: false,
+      type: 'booking',
+      group: 'Today',
+      studentName: 'Jason Lee',
+      actionRequired: true,
+    },
+    {
+      id: '4',
       title: 'Booking Cancelled',
       message: 'Muhammad Lee cancelled consultation request #1042.',
-      time: '2h ago',
+      time: 'Yesterday at 04:15 PM',
       read: true,
       type: 'cancellation',
+      group: 'Yesterday',
+      studentName: 'Muhammad Lee',
+    },
+    {
+      id: '5',
+      title: 'Session Log Completed',
+      message: 'Consultation notes saved for Farhan Zulkifli (Matric A21EC0099).',
+      time: 'Yesterday at 11:30 AM',
+      read: true,
+      type: 'reminder',
+      group: 'Yesterday',
+      studentName: 'Farhan Zulkifli',
     },
   ];
+
+  get todayNotifications(): LecturerNotification[] {
+    return this.notifications.filter((n) => n.group === 'Today');
+  }
+
+  get yesterdayNotifications(): LecturerNotification[] {
+    return this.notifications.filter((n) => n.group === 'Yesterday' || n.group === 'Earlier');
+  }
 
   get unreadCount(): number {
     return this.notifications.filter((n) => !n.read).length;
@@ -77,9 +116,9 @@ export class SidebarLect implements OnInit {
     }
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent) {
-    if (!this.elementRef.nativeElement.contains(event.target)) {
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapePress(event?: Event) {
+    if (this.isNotificationOpen) {
       this.isNotificationOpen = false;
     }
   }
@@ -102,6 +141,10 @@ export class SidebarLect implements OnInit {
       event.stopPropagation();
     }
     this.isNotificationOpen = !this.isNotificationOpen;
+  }
+
+  closeDrawer() {
+    this.isNotificationOpen = false;
   }
 
   toggleNotificationEnabled(event?: Event) {
@@ -133,6 +176,26 @@ export class SidebarLect implements OnInit {
       event.stopPropagation();
     }
     this.notifications = this.notifications.filter((n) => n.id !== id);
+  }
+
+  approveNotificationBooking(notif: LecturerNotification, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    notif.read = true;
+    notif.actionRequired = false;
+    alert(`Approved booking request for ${notif.studentName || 'student'}. Navigating to appointments page.`);
+    this.router.navigate(['/lecturer/appointments']);
+    this.closeDrawer();
+  }
+
+  viewNotificationDetails(notif: LecturerNotification, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    notif.read = true;
+    this.router.navigate(['/lecturer/appointments']);
+    this.closeDrawer();
   }
 
   onLogout() {
