@@ -3,6 +3,7 @@ package com.alcas.backend.config;
 import com.alcas.backend.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -83,6 +84,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/attendance/mark").hasRole("LECTURER")
                         .requestMatchers("/api/attendance/lecturer/**").hasRole("LECTURER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/system-settings/**").authenticated()
+                        .requestMatchers("/api/system-settings/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
 

@@ -62,27 +62,27 @@
           <!-- Actual calendar dates -->
           <div
             *ngFor="let day of daysInMonth"
-            (click)="!isPastDate(day) && openDateForm(day)"
-            [class.opacity-40]="isPastDate(day)"
-            [class.cursor-not-allowed]="isPastDate(day)"
-            [class.cursor-pointer]="!isPastDate(day)"
+            (click)="!isPastDate(day) && isWorkingDay(day) && openDateForm(day)"
+            [class.opacity-40]="isPastDate(day) || !isWorkingDay(day)"
+            [class.cursor-not-allowed]="isPastDate(day) || !isWorkingDay(day)"
+            [class.cursor-pointer]="!isPastDate(day) && isWorkingDay(day)"
             class="h-24 bg-white/95 dark:bg-slate-900/60 border border-slate-100 dark:border-teal-900/25 rounded-2xl flex flex-col justify-between p-4 transition-all duration-300 group shadow-sm"
-            [class.hover:bg-gradient-to-br]="!isPastDate(day)"
-            [class.hover:from-teal-500]="!isPastDate(day)"
-            [class.hover:to-emerald-500]="!isPastDate(day)"
-            [class.hover:text-white]="!isPastDate(day)"
-            [class.hover:-translate-y-1.5]="!isPastDate(day)"
-            [class.hover:shadow-xl]="!isPastDate(day)">
+            [class.hover:bg-gradient-to-br]="!isPastDate(day) && isWorkingDay(day)"
+            [class.hover:from-teal-500]="!isPastDate(day) && isWorkingDay(day)"
+            [class.hover:to-emerald-500]="!isPastDate(day) && isWorkingDay(day)"
+            [class.hover:text-white]="!isPastDate(day) && isWorkingDay(day)"
+            [class.hover:-translate-y-1.5]="!isPastDate(day) && isWorkingDay(day)"
+            [class.hover:shadow-xl]="!isPastDate(day) && isWorkingDay(day)">
 
             <div class="flex justify-between items-start">
-      <span
-        class="text-xl font-black text-slate-800 dark:text-slate-200 leading-none"
-        [class.group-hover:text-white]="!isPastDate(day)">
-        {{ day }}
-      </span>
+                <span
+                    class="text-xl font-black text-slate-800 dark:text-slate-200 leading-none"
+                    [class.group-hover:text-white]="!isPastDate(day)">
+                    {{ day }}
+                </span>
 
               <span
-                *ngIf="!isPastDate(day)"
+                *ngIf="!isPastDate(day) && isWorkingDay(day)"
                 class="flex h-2.5 w-2.5 relative">
 
         <span
@@ -97,7 +97,7 @@
             </div>
 
             <div
-              *ngIf="!isPastDate(day)"
+              *ngIf="!isPastDate(day) && isWorkingDay(day)"
               class="flex items-center gap-1.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-auto">
 
               <svg
@@ -116,6 +116,29 @@
               </svg>
 
               <span>Booking Open</span>
+
+            </div>
+
+            <div
+              *ngIf="!isPastDate(day) && !isWorkingDay(day)"
+              class="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest mt-auto">
+
+              <svg
+                class="w-3.5 h-3.5 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12">
+                </path>
+
+              </svg>
+
+              <span>Not Available</span>
 
             </div>
 

@@ -18,7 +18,10 @@
         <div class="glass-card stat-card">
           <div class="stat-title">Meetings Today</div>
           <div class="stat-value text-blue">{{ stats.todayMeetings }}</div>
-          <div class="stat-trend neutral">2 Classes, 2 Consultations</div>
+          <div class="stat-trend neutral">{{ todayClassCount }}
+            {{ todayClassCount === 1 ? 'Class' : 'Classes' }},
+            {{ todayConsultationCount }}
+            {{ todayConsultationCount === 1 ? 'Consultation' : 'Consultations' }}</div>
         </div>
         <div class="glass-card stat-card border-orange">
           <div class="stat-title">Pending Approvals</div>

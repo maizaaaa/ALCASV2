@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -15,35 +15,15 @@ import { ConsultationService, Consultation} from '../../services/consultation.se
 export class LecturerDashboardComponent implements OnInit {
   // Quick Stats
   stats = {
-    todayMeetings: 4,
+    todayMeetings: 0,
     pendingRequests: 0,
-    upcomingThisWeek: 12,
+    upcomingThisWeek: 0,
   };
 
   // Today's Schedule (Mix of classes and consultations)
-  todaySchedule = [
-    {
-      time: '09:00 AM',
-      type: 'CLASS',
-      title: 'Software Engineering (Lecture)',
-      location: 'DKG 1/1',
-    },
-    {
-      time: '11:00 AM',
-      type: 'CONSULTATION',
-      title: 'Nur Amirah',
-      location: 'Office BK-34',
-      status: 'UPCOMING',
-    },
-    { time: '01:00 PM', type: 'BUSY', title: 'Lunch / Rest', location: '-' },
-    {
-      time: '02:30 PM',
-      type: 'CONSULTATION',
-      title: 'Jason Lee',
-      location: 'Webex',
-      status: 'UPCOMING',
-    },
-  ];
+  todaySchedule: any[] = [];
+  todayClassCount = 0;
+  todayConsultationCount = 0;
 
   // Pending Requests needing immediate action
   allAppointments: Consultation[] = [];
@@ -65,6 +45,7 @@ export class LecturerDashboardComponent implements OnInit {
   constructor(
     private router: Router,
     private consultationService: ConsultationService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -83,12 +64,81 @@ export class LecturerDashboardComponent implements OnInit {
         );
 
         this.stats.pendingRequests = this.pendingRequests.length;
+
+        console.log('PENDING REQUESTS:', this.pendingRequests);
+        console.log('PENDING COUNT:', this.stats.pendingRequests);
+
+        this.calculateDashboardStats(consultations);
+
+        this.buildTodaySchedule(consultations);
+
+        this.cdr.detectChanges();
+
+        console.log('TODAY SCHEDULE:', this.todaySchedule);
       },
 
       error: (error) => {
         console.error('FAILED TO LOAD DASHBOARD CONSULTATIONS:', error);
       },
     });
+  }
+
+  calculateDashboardStats(consultations: Consultation[]): void {
+    const today = new Date();
+
+    const todayString = today.toISOString().split('T')[0];
+
+    const startOfWeek = new Date(today);
+    const day = startOfWeek.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+
+    startOfWeek.setDate(startOfWeek.getDate() + diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    this.stats.todayMeetings = consultations.filter(
+      (consultation) =>
+        consultation.scheduledDate === todayString && ['CONFIRMED'].includes(consultation.status),
+    ).length;
+
+    this.stats.upcomingThisWeek = consultations.filter((consultation) => {
+      if (consultation.status !== 'CONFIRMED') {
+        return false;
+      }
+
+      const consultationDate = new Date(
+        `${consultation.scheduledDate}T${consultation.scheduledTime}`,
+      );
+
+      return consultationDate >= startOfWeek && consultationDate <= endOfWeek;
+    }).length;
+  }
+
+  buildTodaySchedule(consultations: Consultation[]): void {
+    const today = new Date();
+
+    const todayString = today.toLocaleDateString('en-CA');
+
+    this.todaySchedule = consultations
+      .filter(
+        (consultation) =>
+          consultation.scheduledDate === todayString && consultation.status === 'CONFIRMED',
+      )
+      .map((consultation) => ({
+        time: consultation.scheduledTime,
+        type: 'CONSULTATION',
+        title: consultation.studentName,
+        location: consultation.location || 'Location not assigned',
+        status: consultation.status,
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time));
+
+    this.todayConsultationCount = this.todaySchedule.filter(
+      (item) => item.type === 'CONSULTATION',
+    ).length;
   }
 
   openApprovalModal(req: Consultation) {

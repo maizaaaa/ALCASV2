@@ -271,14 +271,203 @@ input:checked + .slider:before { transform: translateX(20px); }
 :host-context(.dark) .icon-btn:hover {
   background: rgba(239, 68, 68, 0.2);
 }
-:host-context(.dark) .modern-input {
+:host-context(.dark) .modern-input,
+html.dark .modern-input {
   background: #091d24;
   border-color: #1e3e46;
   color: #f1f5f9;
 }
-:host-context(.dark) .modern-input:focus {
+:host-context(.dark) .modern-input:focus,
+html.dark .modern-input:focus {
   border-color: #2dd4bf;
   box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
+}
+
+/* ==========================================================================
+   WORKING DAYS SECTION STYLING & DARK MODE OVERRIDES
+   ========================================================================== */
+.working-days-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sr-only-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.day-checkbox {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  user-select: none;
+}
+
+.day-pill-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.day-check-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  background: white;
+  flex-shrink: 0;
+}
+
+.check-svg {
+  width: 11px;
+  height: 11px;
+  color: white;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s ease;
+}
+
+.day-checkbox-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #475569;
+  transition: color 0.2s ease;
+}
+
+/* Hover state */
+.day-checkbox:hover .day-pill-content {
+  border-color: #14b8a6;
+  background: #f0fdfa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.12);
+}
+
+.day-checkbox:hover .day-checkbox-label {
+  color: #0f766e;
+}
+
+/* Selected state (via class or checked input) */
+.day-checkbox.is-selected .day-pill-content,
+.day-checkbox:has(input:checked) .day-pill-content {
+  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+  border-color: #0f766e;
+  box-shadow: 0 4px 14px rgba(15, 118, 110, 0.18);
+}
+
+.day-checkbox.is-selected .day-checkbox-label,
+.day-checkbox:has(input:checked) .day-checkbox-label {
+  color: #0f766e;
+  font-weight: 800;
+}
+
+.day-checkbox.is-selected .day-check-badge,
+.day-checkbox:has(input:checked) .day-check-badge {
+  background: #0f766e;
+  border-color: #0f766e;
+  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.3);
+}
+
+.day-checkbox.is-selected .check-svg,
+.day-checkbox:has(input:checked) .check-svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Working Days Dark Mode Overrides - Soft & Non-Glare */
+:host-context(.dark) .day-pill-content,
+html.dark .day-pill-content,
+body.dark .day-pill-content {
+  background: #091d24 !important;
+  border-color: rgba(45, 212, 191, 0.15) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+}
+
+:host-context(.dark) .day-checkbox-label,
+html.dark .day-checkbox-label,
+body.dark .day-checkbox-label {
+  color: #94a3b8 !important;
+}
+
+:host-context(.dark) .day-check-badge,
+html.dark .day-check-badge,
+body.dark .day-check-badge {
+  background: #051419 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:host-context(.dark) .day-checkbox:hover .day-pill-content,
+html.dark .day-checkbox:hover .day-pill-content,
+body.dark .day-checkbox:hover .day-pill-content {
+  background: #0e2730 !important;
+  border-color: rgba(45, 212, 191, 0.3) !important;
+  box-shadow: none !important;
+}
+
+:host-context(.dark) .day-checkbox:hover .day-checkbox-label,
+html.dark .day-checkbox:hover .day-checkbox-label,
+body.dark .day-checkbox:hover .day-checkbox-label {
+  color: #e2e8f0 !important;
+}
+
+/* Selected State - Toned Down Matte Teal */
+:host-context(.dark) .day-checkbox.is-selected .day-pill-content,
+:host-context(.dark) .day-checkbox:has(input:checked) .day-pill-content,
+html.dark .day-checkbox.is-selected .day-pill-content,
+html.dark .day-checkbox:has(input:checked) .day-pill-content,
+body.dark .day-checkbox.is-selected .day-pill-content,
+body.dark .day-checkbox:has(input:checked) .day-pill-content {
+  background: rgba(15, 118, 110, 0.25) !important;
+  border-color: rgba(45, 212, 191, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+:host-context(.dark) .day-checkbox.is-selected .day-checkbox-label,
+:host-context(.dark) .day-checkbox:has(input:checked) .day-checkbox-label,
+html.dark .day-checkbox.is-selected .day-checkbox-label,
+html.dark .day-checkbox:has(input:checked) .day-checkbox-label,
+body.dark .day-checkbox.is-selected .day-checkbox-label,
+body.dark .day-checkbox:has(input:checked) .day-checkbox-label {
+  color: #2dd4bf !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+:host-context(.dark) .day-checkbox.is-selected .day-check-badge,
+:host-context(.dark) .day-checkbox:has(input:checked) .day-check-badge,
+html.dark .day-checkbox.is-selected .day-check-badge,
+html.dark .day-checkbox:has(input:checked) .day-check-badge,
+body.dark .day-checkbox.is-selected .day-check-badge,
+body.dark .day-checkbox:has(input:checked) .day-check-badge {
+  background: #0f766e !important;
+  border-color: #0f766e !important;
+  box-shadow: none !important;
+}
+
+:host-context(.dark) .day-checkbox.is-selected .check-svg,
+:host-context(.dark) .day-checkbox:has(input:checked) .check-svg,
+html.dark .day-checkbox.is-selected .check-svg,
+html.dark .day-checkbox:has(input:checked) .check-svg,
+body.dark .day-checkbox.is-selected .check-svg,
+body.dark .day-checkbox:has(input:checked) .check-svg {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  transform: scale(1) !important;
 }
 
 /* --- RESPONSIVE MEDIA QUERIES --- */

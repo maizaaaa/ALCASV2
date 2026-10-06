@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NavbarStudent } from '../../shared/navbar-student/navbar-student';
+import { SystemSettingsService } from '../../services/system-settings.service';
 
 interface School {
   id: number;
@@ -21,6 +22,13 @@ interface Lecturer {
   school: string;
 }
 
+interface BlockOutDate {
+  id: number;
+  lecturerId: number;
+  blockDate: string;
+  reason: string;
+}
+
 @Component({
   selector: 'app-student-booking',
   standalone: true,
@@ -32,6 +40,8 @@ export class StudentBookingComponent implements OnInit {
 
   // --- CALENDAR STATE ---
   weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  workingDays: string[] = [];
+  blockOutDates: BlockOutDate[] = [];
 
   currentDate = new Date();
   currentYear = this.currentDate.getFullYear();
@@ -128,11 +138,48 @@ export class StudentBookingComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
+    private systemSettingsService: SystemSettingsService,
   ) {}
 
   ngOnInit(): void {
     this.updateCalendar();
     this.loadSchools();
+    this.loadWorkingDays();
+  }
+
+  loadWorkingDays(): void {
+    this.systemSettingsService.getWorkingDays().subscribe({
+      next: (workingDays) => {
+        this.workingDays = workingDays;
+
+        console.log('Working Days loaded for Student Booking:', this.workingDays);
+
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load working days for Student Booking:', error);
+      },
+    });
+  }
+
+  isWorkingDay(day: number): boolean {
+    const date = new Date(this.currentYear, this.currentMonthIndex, day);
+
+    const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+
+    const dayName = dayNames[date.getDay()];
+
+    return this.workingDays.includes(dayName);
+  }
+
+  isBlockOutDate(day: number): boolean {
+    if (!this.selectedLecturerId) {
+      return false;
+    }
+
+    const date = `${this.currentYear}-${String(this.currentMonthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    return this.blockOutDates.some((blockOutDate) => blockOutDate.blockDate === date);
   }
 
   loadSchools(): void {
@@ -149,6 +196,33 @@ export class StudentBookingComponent implements OnInit {
         console.error('Failed to load schools:', error);
       },
     });
+  }
+
+  loadBlockOutDates(lecturerId: number): void {
+    const token = localStorage.getItem('token');
+
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+
+    this.http
+      .get<
+        BlockOutDate[]
+      >(`http://localhost:8080/api/block-out-dates/lecturer/${lecturerId}`, { headers })
+      .subscribe({
+        next: (blockOutDates) => {
+          this.blockOutDates = blockOutDates;
+
+          console.log('Block-out dates loaded for lecturer:', lecturerId, this.blockOutDates);
+
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Failed to load block-out dates:', error);
+
+          this.blockOutDates = [];
+        },
+      });
   }
 
   loadPrograms(schoolId: number): void {
@@ -195,6 +269,10 @@ export class StudentBookingComponent implements OnInit {
   // --- FUNCTIONS ---
 
   openDateForm(day: number): void {
+    if (!this.isWorkingDay(day)) {
+      return;
+    }
+
     this.selectedDate = day;
 
     this.selectedDateValue = `${this.currentYear}-${String(this.currentMonthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -263,6 +341,9 @@ export class StudentBookingComponent implements OnInit {
     this.selectedTime = '';
     this.availableSlots = [];
 
+    // Load block-out dates for the selected lecturer
+    this.loadBlockOutDates(id);
+
     if (!this.selectedDateValue) {
       console.error('No date selected.');
       return;
@@ -284,10 +365,9 @@ export class StudentBookingComponent implements OnInit {
         date: string;
         dayOfWeek: string;
         availableSlots: string[];
-      }>(
-        `http://localhost:8080/api/lecturer-availability?lecturerId=${lecturerId}&date=${date}`,
-        { headers }
-      )
+      }>(`http://localhost:8080/api/lecturer-availability?lecturerId=${lecturerId}&date=${date}`, {
+        headers,
+      })
       .subscribe({
         next: (response) => {
           this.availableSlots = response.availableSlots;

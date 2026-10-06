@@ -15,7 +15,10 @@
           <p class="page-subtitle">Configure global rules, academic dates, and booking constraints.</p>
         </div>
         <button class="btn-primary btn-large" (click)="saveSettings()" [disabled]="isSaving">
-          <svg *ngIf="!isSaving" class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+          <svg *ngIf="!isSaving" class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+          </svg>
           {{ isSaving ? 'Saving Changes...' : 'Save Configuration' }}
         </button>
       </div>
@@ -34,7 +37,8 @@
             <div class="card-body">
               <div class="form-group">
                 <label>Semester Name</label>
-                <input type="text" [(ngModel)]="config.semesterName" class="modern-input" placeholder="e.g., Semester A232">
+                <input type="text" [(ngModel)]="config.semesterName" class="modern-input"
+                  placeholder="e.g., Semester A232">
               </div>
               <div class="form-row">
                 <div class="form-group half-width">
@@ -46,6 +50,43 @@
                   <input type="date" [(ngModel)]="config.semesterEnd" class="modern-input">
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Working Days Card -->
+          <div class="content-card glass-card">
+            <div class="card-header border-bottom">
+              <h2 class="h2-text">Working Days</h2>
+              <p class="sub-text">
+                Select the days when the institution operates and consultations can be scheduled.
+              </p>
+            </div>
+
+            <div class="card-body">
+
+              <div class="working-days-grid">
+
+                <label *ngFor="let day of availableDays" class="day-checkbox"
+                  [class.is-selected]="config.workingDays.includes(day.value)">
+                  <input type="checkbox" [value]="day.value" [checked]="config.workingDays.includes(day.value)"
+                    (change)="toggleWorkingDay(day.value)" class="sr-only-checkbox">
+
+                  <div class="day-pill-content">
+                    <span class="day-check-badge">
+                      <svg class="check-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                    </span>
+                    <span class="day-checkbox-label">{{ day.label }}</span>
+                  </div>
+                </label>
+
+              </div>
+
+              <small class="helper-text block mt-2">
+                Non-working days will not be available for consultation booking.
+              </small>
+
             </div>
           </div>
 
@@ -67,19 +108,9 @@
               </div>
               <div class="form-group">
                 <label>Max Active Bookings Per Student</label>
-                <input type="number" [(ngModel)]="config.maxActiveBookingsPerStudent" min="1" max="10" class="modern-input">
+                <input type="number" [(ngModel)]="config.maxActiveBookingsPerStudent" min="1" max="10"
+                  class="modern-input">
                 <small class="helper-text">Prevents students from hoarding available slots.</small>
-              </div>
-
-              <div class="toggle-group">
-                <div>
-                  <label class="toggle-label">Allow Weekend Bookings</label>
-                  <small class="helper-text block">Lecturers can open slots on Sat/Sun.</small>
-                </div>
-                <label class="switch">
-                  <input type="checkbox" [(ngModel)]="config.allowWeekendBookings">
-                  <span class="slider round"></span>
-                </label>
               </div>
 
               <div class="toggle-group">
@@ -112,7 +143,8 @@
                 <h4>Add Holiday or Break</h4>
                 <div class="form-row">
                   <input type="date" [(ngModel)]="newBlockDate" class="modern-input half-width">
-                  <input type="text" [(ngModel)]="newBlockReason" placeholder="Reason (e.g., Public Holiday)" class="modern-input full-width">
+                  <input type="text" [(ngModel)]="newBlockReason" placeholder="Reason (e.g., Public Holiday)"
+                    class="modern-input full-width">
                 </div>
                 <button class="btn-outline btn-full mt-2" (click)="addBlockOutDate()">+ Add Date</button>
               </div>
@@ -131,7 +163,11 @@
                 <li *ngFor="let item of blockOutDates; let i = index" class="date-item">
                   <div class="date-info">
                     <div class="date-calendar">
-                      <svg class="calendar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                      <svg class="calendar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                        </path>
+                      </svg>
                     </div>
                     <div>
                       <div class="date-text">{{ item.date | date:'mediumDate' }}</div>
@@ -139,7 +175,11 @@
                     </div>
                   </div>
                   <button class="icon-btn text-red" (click)="removeBlockDate(i)" title="Remove">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                      </path>
+                    </svg>
                   </button>
                 </li>
               </ul>

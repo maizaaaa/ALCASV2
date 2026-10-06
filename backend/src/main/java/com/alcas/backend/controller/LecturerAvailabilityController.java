@@ -12,6 +12,7 @@ import com.alcas.backend.repository.LecturerProfileRepository;
 import com.alcas.backend.dto.LecturerScheduleRequest;
 import com.alcas.backend.dto.LecturerScheduleResponse;
 import com.alcas.backend.service.LecturerScheduleService;
+import com.alcas.backend.service.SystemSettingService;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +30,7 @@ import java.util.Locale;
 public class LecturerAvailabilityController {
 
     private final LecturerScheduleService lecturerScheduleService;
+    private final SystemSettingService systemSettingService;
     private final BlockOutDateRepository blockOutDateRepository;
     private final ConsultationRepository consultationRepository;
     private final LecturerProfileRepository lecturerProfileRepository;
@@ -36,6 +38,7 @@ public class LecturerAvailabilityController {
 
     public LecturerAvailabilityController(
             LecturerScheduleService lecturerScheduleService,
+            SystemSettingService systemSettingService,
             BlockOutDateRepository blockOutDateRepository,
             ConsultationRepository consultationRepository,
             LecturerProfileRepository lecturerProfileRepository,
@@ -43,6 +46,7 @@ public class LecturerAvailabilityController {
     {
 
         this.lecturerScheduleService = lecturerScheduleService;
+        this.systemSettingService = systemSettingService;
         this.blockOutDateRepository = blockOutDateRepository;
         this.consultationRepository = consultationRepository;
         this.lecturerProfileRepository = lecturerProfileRepository;
@@ -192,6 +196,56 @@ public class LecturerAvailabilityController {
                         TextStyle.FULL,
                         Locale.ENGLISH
                 );
+
+        String workingDaysValue =
+                systemSettingService
+                        .findById("WORKING_DAYS")
+                        .map(setting -> setting.getSettingValue())
+                        .orElse("");
+
+        List<String> workingDays =
+                java.util.Arrays.stream(workingDaysValue.split(","))
+                        .map(String::trim)
+                        .map(String::toUpperCase)
+                        .filter(day -> !day.isEmpty())
+                        .toList();
+
+        if (!workingDays.contains(dayName.toUpperCase())) {
+
+            AvailabilityResponse response =
+                    new AvailabilityResponse(
+                            lecturerId,
+                            selectedDate.format(
+                                    DateTimeFormatter.ISO_LOCAL_DATE
+                            ),
+                            dayName,
+                            List.of()
+                    );
+
+            return ResponseEntity.ok(response);
+        }
+
+        boolean isBlocked =
+                blockOutDateRepository
+                        .existsByLecturerUserIdAndBlockDate(
+                                lecturerId,
+                                selectedDate
+                        );
+
+        if (isBlocked) {
+
+            AvailabilityResponse response =
+                    new AvailabilityResponse(
+                            lecturerId,
+                            selectedDate.format(
+                                    DateTimeFormatter.ISO_LOCAL_DATE
+                            ),
+                            dayName,
+                            List.of()
+                    );
+
+            return ResponseEntity.ok(response);
+        }
 
         List<LecturerSchedule> schedules =
                 lecturerScheduleService

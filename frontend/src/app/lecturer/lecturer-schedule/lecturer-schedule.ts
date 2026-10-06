@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
+import { SystemSettingsService} from "../../services/system-settings.service";
 
 @Component({
   selector: 'app-lecturer-schedule',
@@ -19,7 +20,7 @@ export class LecturerScheduleComponent implements OnInit {
 
   slotForm = { day: 'Monday', startTime: '', endTime: '', type: 'AVAILABLE', title: '' };
 
-  weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  weekDays: string[] = [];
 
   blockOutDates: any[] = [];
 
@@ -70,11 +71,32 @@ export class LecturerScheduleComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
+    private systemSettingsService: SystemSettingsService,
   ) {}
 
   ngOnInit(): void {
+    this.loadWorkingDays();
     this.loadSchedule();
     this.loadBlockOutDates();
+  }
+
+  loadWorkingDays(): void {
+    this.systemSettingsService.getWorkingDays().subscribe({
+      next: (workingDays) => {
+        this.weekDays = workingDays.map((day) => day.charAt(0) + day.slice(1).toLowerCase());
+
+        if (this.weekDays.length > 0) {
+          this.slotForm.day = this.weekDays[0];
+        }
+
+        console.log('Working Days loaded for Lecturer Schedule:', this.weekDays);
+
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load working days:', error);
+      },
+    });
   }
 
   loadSchedule(): void {
@@ -144,10 +166,18 @@ export class LecturerScheduleComponent implements OnInit {
 
   // --- MODAL & EDIT LOGIC ---
 
-  openAddSlotModal() {
+  openAddSlotModal(): void {
     this.isEditing = false;
     this.editingSlotId = null;
-    this.slotForm = { day: 'Monday', startTime: '', endTime: '', type: 'AVAILABLE', title: '' };
+
+    this.slotForm = {
+      day: this.weekDays[0] || '',
+      startTime: '',
+      endTime: '',
+      type: 'AVAILABLE',
+      title: '',
+    };
+
     this.showModal = true;
   }
 
@@ -229,11 +259,7 @@ export class LecturerScheduleComponent implements OnInit {
     };
 
     this.http
-      .post(
-        'http://localhost:8080/api/lecturer-availability/schedule',
-        requestBody,
-        { headers },
-      )
+      .post('http://localhost:8080/api/lecturer-availability/schedule', requestBody, { headers })
       .subscribe({
         next: () => {
           alert('Schedule added successfully!');
@@ -244,10 +270,7 @@ export class LecturerScheduleComponent implements OnInit {
           console.error('Failed to create schedule:', error);
           console.error('Backend response:', error.error);
 
-          alert(
-            error?.error?.message ||
-            'Failed to create schedule.'
-          );
+          alert(error?.error?.message || 'Failed to create schedule.');
         },
       });
   }
