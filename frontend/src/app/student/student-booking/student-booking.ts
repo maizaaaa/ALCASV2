@@ -132,6 +132,7 @@ export class StudentBookingComponent implements OnInit {
 
   allLecturers: Lecturer[] = [];
   availableSlots: string[] = [];
+  isLoadingAvailability = false;
   isSubmitting = false;
 
   constructor(
@@ -340,12 +341,14 @@ export class StudentBookingComponent implements OnInit {
     this.selectedLecturerId = id;
     this.selectedTime = '';
     this.availableSlots = [];
+    this.isLoadingAvailability = true;
 
     // Load block-out dates for the selected lecturer
     this.loadBlockOutDates(id);
 
     if (!this.selectedDateValue) {
       console.error('No date selected.');
+      this.isLoadingAvailability = false;
       return;
     }
 
@@ -370,16 +373,30 @@ export class StudentBookingComponent implements OnInit {
       })
       .subscribe({
         next: (response) => {
+          console.log('Lecturer availability response:', response);
+
           this.availableSlots = response.availableSlots;
 
-          console.log('Lecturer availability response:', response);
+          // Request has finished
+          this.isLoadingAvailability = false;
+
           console.log('Available slots:', this.availableSlots);
+          console.log('isLoadingAvailability:', this.isLoadingAvailability);
+
+          // Force Angular to update the interface
+          this.cdr.detectChanges();
         },
 
         error: (error) => {
           console.error('Failed to load lecturer availability:', error);
 
           this.availableSlots = [];
+
+          // Stop loading even if request fails
+          this.isLoadingAvailability = false;
+
+          // Force Angular to update the interface
+          this.cdr.detectChanges();
         },
       });
   }

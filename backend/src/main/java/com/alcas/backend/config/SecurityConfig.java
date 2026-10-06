@@ -80,6 +80,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/attendance/student/**").hasRole("STUDENT")
                         .requestMatchers("/api/lecturer/**").hasRole("LECTURER")
                         .requestMatchers("/api/consultations/lecturer").hasRole("LECTURER")
+                        .requestMatchers(HttpMethod.GET, "/api/block-out-dates/lecturer/**").authenticated()
                         .requestMatchers("/api/block-out-dates/**").hasRole("LECTURER")
                         .requestMatchers("/api/attendance/mark").hasRole("LECTURER")
                         .requestMatchers("/api/attendance/lecturer/**").hasRole("LECTURER")

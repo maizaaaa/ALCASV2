@@ -259,31 +259,141 @@
         </div>
 
         <div class="space-y-4">
-          <h3 class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">2. Session Details
+          <h3 class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            2. Session Details
           </h3>
 
-          <select [(ngModel)]="selectedTime" [disabled]="!selectedLecturerId"
-            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-teal-900/30 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 transition-all font-medium text-slate-700 dark:text-slate-200 shadow-sm cursor-pointer appearance-none disabled:opacity-50 disabled:cursor-not-allowed">
-            <option value="" disabled selected>Select Available Time...</option>
-            <option *ngFor="let slot of currentLecturerSlots" [value]="slot">{{ slot }}</option>
-          </select>
+          <!-- Checking Availability -->
+          <div *ngIf="isLoadingAvailability">
+            <div
+              class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-teal-900/30 rounded-xl">
 
-          <div class="relative">
-            <select [(ngModel)]="reasonForVisit"
-              class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-teal-900/30 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 transition-all font-medium text-slate-700 dark:text-slate-200 shadow-sm cursor-pointer appearance-none">
-              <option value="" disabled selected>Select Reason...</option>
-              <option *ngFor="let reason of visitReasons" [value]="reason">{{ reason }}</option>
+              <div class="flex items-center gap-3">
+
+                <div
+                  class="w-5 h-5 border-2 border-teal-200 border-t-teal-600 rounded-full animate-spin">
+                </div>
+
+                <p class="text-sm font-bold text-slate-400 dark:text-slate-500">
+                  Checking available times...
+                </p>
+
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Available Time -->
+          <div *ngIf="!isLoadingAvailability && currentLecturerSlots.length > 0">
+
+            <select
+              [(ngModel)]="selectedTime"
+              [disabled]="!selectedLecturerId"
+              class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-teal-900/30 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 transition-all font-medium text-slate-700 dark:text-slate-200 shadow-sm cursor-pointer appearance-none disabled:opacity-50 disabled:cursor-not-allowed">
+
+              <option value="" disabled>
+                Select Available Time...
+              </option>
+
+              <option
+                *ngFor="let slot of currentLecturerSlots"
+                [value]="slot">
+                {{ slot }}
+              </option>
+
             </select>
+
+          </div>
+
+          <!-- No Available Time -->
+          <div
+            *ngIf="selectedLecturerId && !isLoadingAvailability && currentLecturerSlots.length === 0"
+            class="w-full px-4 py-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-xl">
+
+            <div class="flex items-center gap-3">
+
+              <div
+                class="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-950/50 flex items-center justify-center flex-shrink-0">
+
+                <svg
+                  class="w-5 h-5 text-rose-500 dark:text-rose-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12">
+                  </path>
+
+                </svg>
+
+              </div>
+
+              <div>
+                <p class="text-sm font-extrabold text-rose-600 dark:text-rose-400">
+                  NOT AVAILABLE
+                </p>
+
+                <p class="text-[11px] font-medium text-rose-500/80 dark:text-rose-400/70">
+                  No consultation time is available for this date.
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Reason for Visit -->
+          <div class="relative">
+            <select
+              [(ngModel)]="reasonForVisit"
+              class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-teal-900/30 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 transition-all font-medium text-slate-700 dark:text-slate-200 shadow-sm cursor-pointer appearance-none">
+
+              <option value="" disabled>
+                Select Reason...
+              </option>
+
+              <option
+                *ngFor="let reason of visitReasons"
+                [value]="reason">
+                {{ reason }}
+              </option>
+
+            </select>
+
             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-              <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              <svg
+                class="h-4 w-4 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7">
+                </path>
+
               </svg>
             </div>
           </div>
 
-          <div *ngIf="reasonForVisit === 'Other'" class="animate-fade-in-up">
-            <textarea [(ngModel)]="otherReasonText" rows="2" placeholder="Please specify your reason here..."
-              class="w-full p-4 bg-white dark:bg-slate-900/50 border border-teal-200 dark:border-teal-900/40 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 transition-all font-medium text-slate-700 dark:text-slate-200 placeholder-slate-400 shadow-inner resize-none"></textarea>
+          <!-- Other Reason -->
+          <div
+            *ngIf="reasonForVisit === 'Other'"
+            class="animate-fade-in-up">
+
+    <textarea
+      [(ngModel)]="otherReasonText"
+      rows="2"
+      placeholder="Please specify your reason here..."
+      class="w-full p-4 bg-white dark:bg-slate-900/50 border border-teal-200 dark:border-teal-900/40 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 transition-all font-medium text-slate-700 dark:text-slate-200 placeholder-slate-400 shadow-inner resize-none">
+    </textarea>
+
           </div>
 
         </div>

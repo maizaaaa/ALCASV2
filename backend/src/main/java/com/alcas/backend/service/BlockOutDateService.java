@@ -29,24 +29,6 @@ public class BlockOutDateService {
     public List<BlockOutDate> findByLecturerId(
             Integer lecturerId) {
 
-        String email = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
-
-        User authenticatedUser =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Authenticated user not found."
-                                ));
-
-        if (!authenticatedUser.getId().equals(lecturerId)) {
-            throw new UnauthorizedException(
-                    "You are not allowed to view another lecturer's block-out dates"
-            );
-        }
-
         return blockOutDateRepository
                 .findByLecturerUserId(lecturerId);
     }
