@@ -13,9 +13,18 @@ export interface Appointment {
   type: string;
   mode: 'In-Person' | 'Online (Webex)' | string;
   reason: string;
+  reasonDetails?: string;
   location: string;
   remarks?: string;
-  status: 'PENDING' | 'UPCOMING' | 'CONFIRMED' | 'RESCHEDULE_PENDING'| 'COMPLETED' | 'NO-SHOW' | 'REJECTED' | 'CANCELLED';
+  status:
+    | 'PENDING'
+    | 'UPCOMING'
+    | 'CONFIRMED'
+    | 'RESCHEDULE_PENDING'
+    | 'COMPLETED'
+    | 'NO-SHOW'
+    | 'REJECTED'
+    | 'CANCELLED';
   meetingUrl?: string;
   updatedAt?: string;
 }

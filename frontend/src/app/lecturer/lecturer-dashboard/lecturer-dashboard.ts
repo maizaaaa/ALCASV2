@@ -90,7 +90,7 @@ export class LecturerDashboardComponent implements OnInit {
 
     const startOfWeek = new Date(today);
     const day = startOfWeek.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
 
     startOfWeek.setDate(startOfWeek.getDate() + diff);
     startOfWeek.setHours(0, 0, 0, 0);
@@ -169,22 +169,25 @@ export class LecturerDashboardComponent implements OnInit {
       return;
     }
 
-    this.consultationService.approveConsultation(this.selectedAppt.id).subscribe({
-      next: (response) => {
-        console.log('DASHBOARD APPROVE RESPONSE:', response);
-
-        alert(`Appointment approved successfully for ${this.selectedAppt?.studentName}.`);
-
-        this.closeApprovalModal();
-        this.loadDashboardData();
-      },
-
-      error: (error) => {
-        console.error('DASHBOARD APPROVE FAILED:', error);
-
-        alert(error?.error?.message || 'Failed to approve the appointment.');
-      },
-    });
+    // UPDATE THIS: Pass the 3 required arguments (id, location, remarks)
+    this.consultationService
+      .approveConsultation(
+        this.selectedAppt.id,
+        this.approvalRoomNumber.trim(),
+        this.actionNotes ? this.actionNotes.trim() : '',
+      )
+      .subscribe({
+        next: (response) => {
+          console.log('DASHBOARD APPROVE RESPONSE:', response);
+          alert(`Appointment approved successfully for ${this.selectedAppt?.studentName}.`);
+          this.closeApprovalModal();
+          this.loadDashboardData();
+        },
+        error: (error) => {
+          console.error('DASHBOARD APPROVE FAILED:', error);
+          alert(error?.error?.message || 'Failed to approve the appointment.');
+        },
+      });
   }
 
   rejectRequest(req: Consultation): void {

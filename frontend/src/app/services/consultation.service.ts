@@ -39,14 +39,25 @@ export class ConsultationService {
     return this.http.get<Consultation[]>(`${this.apiUrl}/lecturer`, { headers });
   }
 
-  approveConsultation(consultationId: string): Observable<Consultation> {
+  approveConsultation(consultationId: string, location: string, remarks: string,): Observable<Consultation> {
     const token = localStorage.getItem('token');
 
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`,
     });
 
-    return this.http.put<Consultation>(`${this.apiUrl}/${consultationId}/approve`, {}, { headers });
+    // We pass location and remarks as query params, matching your reject/reschedule methods
+    return this.http.put<Consultation>(
+      `${this.apiUrl}/${consultationId}/approve`,
+      {},
+      {
+        headers,
+        params: {
+          location: location,
+          remarks: remarks,
+        },
+      },
+    );
   }
 
   rejectConsultation(consultationId: string, rejectReason: string): Observable<Consultation> {

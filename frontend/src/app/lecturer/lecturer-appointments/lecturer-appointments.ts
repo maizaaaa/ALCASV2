@@ -110,44 +110,8 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.consultationService.getLecturerConsultations().subscribe({
-      next: (consultations) => {
-        console.log('REAL LECTURER CONSULTATIONS:', consultations);
-
-        this.appointments = consultations.map((consultation) => ({
-          id: consultation.id,
-          student: consultation.studentName,
-          studentMatric: consultation.studentMatric.toString(),
-          lecturer: consultation.lecturerName,
-          school: '',
-          type: consultation.reason,
-          date: consultation.scheduledDate,
-          time: consultation.scheduledTime,
-          mode: consultation.consultationMode,
-          location: consultation.location || 'To be assigned upon approval',
-          reason: consultation.reasonDetails || '',
-          remarks: consultation.rescheduleReason || '',
-          status:
-            consultation.status === 'CONFIRMED'
-              ? 'UPCOMING'
-              : consultation.status === 'NO_SHOW'
-                ? 'NO-SHOW'
-                : (consultation.status as
-                    | 'PENDING'
-                    | 'UPCOMING'
-                    | 'RESCHEDULE_PENDING'
-                    | 'COMPLETED'
-                    | 'NO-SHOW'
-                    | 'REJECTED'
-                    | 'CANCELLED'),
-        }));
-        this.cdr.detectChanges();
-      },
-
-      error: (error) => {
-        console.error('FAILED TO LOAD LECTURER CONSULTATIONS:', error);
-      },
-    });
+    // Just call the load method here instead of duplicating the API call
+    this.loadLecturerConsultations();
   }
 
   loadLecturerConsultations(): void {
@@ -155,39 +119,39 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
       next: (consultations) => {
         console.log('REAL LECTURER CONSULTATIONS:', consultations);
 
-        this.appointments = consultations.map((consultation) => ({
-          id: consultation.id,
-          student: consultation.studentName,
-          studentMatric: consultation.studentMatric.toString(),
-          lecturer: consultation.lecturerName,
-          school: '',
-          type: consultation.reason,
-          date: consultation.scheduledDate,
-          time: consultation.scheduledTime,
-          mode: consultation.consultationMode,
-          location: consultation.location || 'To be assigned upon approval',
-          reason: consultation.reasonDetails || '',
-          remarks: consultation.rescheduleReason || '',
+        this.appointments = consultations.map((consultation) => {
+          const rawStatus = (consultation.status || '').trim().toUpperCase();
 
-          status:
-            consultation.status === 'CONFIRMED'
-              ? 'UPCOMING'
-              : consultation.status === 'NO_SHOW'
-                ? 'NO-SHOW'
-                : (consultation.status as
-                    | 'PENDING'
-                    | 'UPCOMING'
-                    | 'CONFIRMED'
-                    | 'RESCHEDULE_PENDING'
-                    | 'COMPLETED'
-                    | 'NO-SHOW'
-                    | 'REJECTED'
-                    | 'CANCELLED'),
-        }));
+          let mappedStatus = 'PENDING';
+          if (rawStatus === 'CONFIRMED' || rawStatus === 'UPCOMING') {
+            mappedStatus = 'UPCOMING';
+          } else if (rawStatus === 'PENDING') {
+            mappedStatus = 'PENDING';
+          } else {
+            mappedStatus = rawStatus; // handles COMPLETED, NO-SHOW, REJECTED, etc.
+          }
+
+          return {
+            id: consultation.id,
+            student: consultation.studentName,
+            // Safely handle both matric fields just in case
+            studentMatric: consultation.studentMatric?.toString() || '',
+            lecturer: consultation.lecturerName,
+            school: '',
+            type: consultation.reason,
+            date: consultation.scheduledDate,
+            time: consultation.scheduledTime,
+            mode: consultation.consultationMode,
+            location: consultation.location || 'To be assigned upon approval',
+            reason: consultation.reason || '',
+            reasonDetails: consultation.reasonDetails || '',
+            remarks: consultation.rescheduleReason || '',
+            status: mappedStatus as any,
+          };
+        });
 
         this.cdr.detectChanges();
       },
-
       error: (error) => {
         console.error('FAILED TO LOAD LECTURER CONSULTATIONS:', error);
       },
@@ -250,12 +214,20 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
 
   get filteredAppointments() {
     return this.appointments.filter((appt) => {
-      const matchesTab = appt.status === this.activeTab;
-      const searchLower = this.searchQuery.toLowerCase();
-      const studentMatric = appt.studentMatric || '';
+      // Safely compare statuses case-insensitively
+      const apptStatus = (appt.status || '').trim().toUpperCase();
+      const currentTab = (this.activeTab || '').trim().toUpperCase();
+
+      const matchesTab = apptStatus === currentTab;
+
+      const searchLower = (this.searchQuery || '').toLowerCase();
+      // Safely handle student matric and name
+      const studentMatric = (appt.studentMatric || '').toLowerCase();
+      const studentName = (appt.student || '').toLowerCase();
+
       const matchesSearch =
-        appt.student.toLowerCase().includes(searchLower) ||
-        studentMatric.toLowerCase().includes(searchLower);
+        studentName.includes(searchLower) || studentMatric.includes(searchLower);
+
       return matchesTab && matchesSearch;
     });
   }
@@ -306,21 +278,19 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.consultationService.approveConsultation(this.selectedAppt.id).subscribe({
+      this.consultationService.approveConsultation(
+        this.selectedAppt.id,
+        this.approvalRoomNumber.trim(),
+        this.actionNotes.trim()
+      ).subscribe({
         next: (response) => {
           console.log('APPROVE RESPONSE:', response);
-
           alert(`Appointment approved successfully for ${this.selectedAppt.student}.`);
-
           this.closeActionModal();
-
-          // Reload the consultation list
           this.loadLecturerConsultations();
         },
-
         error: (error) => {
           console.error('APPROVE FAILED:', error);
-
           alert(error?.error?.message || 'Failed to approve the appointment.');
         },
       });

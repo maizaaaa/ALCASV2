@@ -103,7 +103,7 @@
               <span class="confirmed-pill" *ngIf="appt.status === 'UPCOMING'">Confirmed</span>
             </div>
             <label>Reason for Consultation:</label>
-            <p class="reason-text">"{{ appt.reason }}"</p>
+            <p class="reason-text">{{ appt.reasonDetails }}</p>
             <div class="remarks-box" *ngIf="appt.remarks">
               <small class="remarks-label">Lecturer Instruction:</small>
               <p class="remarks-text">"{{ appt.remarks }}"</p>
@@ -151,7 +151,8 @@
         <div class="summary-box" [ngClass]="{'pending-summary': selectedAppt?.status === 'PENDING'}">
           <strong>Student:</strong> {{ selectedAppt?.student }} ({{ selectedAppt?.studentMatric || selectedAppt?.matric
           }})<br>
-          <strong>Topic:</strong> {{ selectedAppt?.type }} — {{ selectedAppt?.date }} at {{ selectedAppt?.time }}<br>
+          <strong>Topic:</strong> {{ selectedAppt?.type }}<br>
+          <strong>Date & Time:</strong> {{ selectedAppt?.date }} at {{ selectedAppt?.time }}<br>
           <strong>Consultation Mode:</strong> {{ selectedAppt?.mode }}
         </div>
 
