@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/student/student-dashboard/student-dashboard.css"],
+  "sourcesContent": [".fade-in-up {\r\n  animation: fadeInUp 0.4s ease-out forwards;\r\n}\r\n\r\n@keyframes fadeInUp {\r\n  from {\r\n    opacity: 0;\r\n    transform: translateY(10px);\r\n  }\r\n\r\n  to {\r\n    opacity: 1;\r\n    transform: translateY(0);\r\n  }\r\n}"],
+  "mappings": ";AAAA,CAAC;AACC,aAAW,SAAS,KAAK,SAAS;AACpC;AAEA,WAHa;AAIX;AACE,aAAS;AACT,eAAW,WAAW;AACxB;AAEA;AACE,aAAS;AACT,eAAW,WAAW;AACxB;AACF;",
+  "names": []
+}

@@ -14,16 +14,16 @@
         </div>
       </div>
 
+      @if (true) {
       <div class="profile-layout">
 
         <div class="profile-sidebar">
           <div class="glass-card content-card text-center">
-            <div class="avatar-container" (click)="fileInput.click()" title="Change Profile Picture">
+            <div class="avatar-container" (click)="showPhotoOptions = true" title="Profile Picture">
+              <img *ngIf="profile?.avatarUrl" [src]="profile.avatarUrl" class="avatar-large image" alt="Profile Picture">
 
-              <img *ngIf="profile.avatarUrl" [src]="profile.avatarUrl" class="avatar-large image">
-
-              <div *ngIf="!profile.avatarUrl" class="avatar-large initials">
-                {{ profile.name.charAt(0) }}
+              <div *ngIf="!profile?.avatarUrl" class="avatar-large initials">
+                {{ profile?.user?.fullName ? profile.user.fullName.charAt(0) : 'L' }}
               </div>
 
               <div class="avatar-overlay">
@@ -37,22 +37,84 @@
               </div>
             </div>
 
+            <div
+              *ngIf="showPhotoOptions"
+              class="photo-options-backdrop"
+              (click)="showPhotoOptions = false">
+
+              <div
+                class="photo-options"
+                (click)="$event.stopPropagation()">
+
+                <button type="button" class="modal-close-btn" (click)="showPhotoOptions = false" title="Close">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+
+                <div class="photo-modal-header">
+                  <div class="photo-preview-mini">
+                    <img *ngIf="profile?.avatarUrl" [src]="profile.avatarUrl" class="mini-avatar-img" alt="Preview">
+                    <div *ngIf="!profile?.avatarUrl" class="mini-avatar-initials">
+                      {{ profile?.user?.fullName ? profile.user.fullName.charAt(0) : 'L' }}
+                    </div>
+                  </div>
+                  <h3>Profile Picture</h3>
+                  <p class="photo-modal-sub">Update or manage your profile avatar photo</p>
+                </div>
+
+                <div class="photo-modal-actions">
+                  <button
+                    type="button"
+                    class="btn-photo-action btn-upload-photo"
+                    (click)="changeProfilePicture()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    <span>Upload New Photo</span>
+                  </button>
+
+                  <button
+                    *ngIf="profile.avatarUrl"
+                    type="button"
+                    class="btn-photo-action btn-remove-photo"
+                    (click)="removeProfilePicture()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    <span>Remove Photo</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn-photo-action btn-cancel-photo"
+                    (click)="showPhotoOptions = false">
+                    Cancel
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+
             <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none;">
 
-            <h2 class="profile-name">{{ profile.name }}</h2>
-            <div class="profile-id">{{ profile.id }}</div>
-            <span class="dept-badge">{{ profile.department }}</span>
+            <h2 class="profile-name">{{ profile.user.fullName }}</h2>
+            <div class="profile-id">{{ profile.staffNumber }}</div>
+            <span class="dept-badge">{{ profile.schoolId }}</span>
 
             <div class="divider"></div>
 
             <div class="quick-stats">
               <div class="q-stat">
                 <span class="q-label">Office Location</span>
-                <span class="q-value">{{ profile.office }}</span>
+                <span class="q-value">{{ profile.officeRoom || 'Not provided' }}</span>
               </div>
               <div class="q-stat">
                 <span class="q-label">Office Consultation Hours</span>
-                <span class="q-value">{{ profile.officeHours }}</span>
+                <span class="q-value">{{ profile.officeHours || 'Not provided'}}</span>
               </div>
               <div class="q-stat">
                 <span class="q-label">Platform Role</span>
@@ -124,18 +186,18 @@
             <div class="form-row gap-4">
               <div class="form-group flex-1">
                 <label>Full Name</label>
-                <input type="text" [(ngModel)]="profile.name" class="modern-input">
+                <input type="text" [(ngModel)]="profile.user.fullName" class="modern-input">
               </div>
               <div class="form-group flex-1">
                 <label>Lecturer ID (Read-Only)</label>
-                <input type="text" [(ngModel)]="profile.id" class="modern-input bg-gray" disabled>
+                <input type="text" [(ngModel)]="profile.staffNumber" class="modern-input bg-gray" disabled>
               </div>
             </div>
 
             <div class="form-row gap-4">
               <div class="form-group flex-1">
                 <label>Email Address</label>
-                <input type="email" [(ngModel)]="profile.email" class="modern-input">
+                <input type="email" [(ngModel)]="profile.user.email" class="modern-input">
               </div>
               <div class="form-group flex-1">
                 <label>Phone Number</label>
@@ -146,7 +208,7 @@
             <div class="form-row gap-4">
               <div class="form-group flex-1">
                 <label>Office Location</label>
-                <input type="text" [(ngModel)]="profile.office" class="modern-input"
+                <input type="text" [(ngModel)]="profile.officeRoom" class="modern-input"
                   placeholder="e.g. Block A, Room BK-34">
               </div>
               <div class="form-group flex-1">
@@ -209,7 +271,7 @@
             </div>
 
             <div class="form-actions right mt-24">
-              <button class="btn-solid-blue" (click)="saveProfile()">Save Preferences</button>
+              <button class="btn-solid-blue" (click)="savePreferences()">Save Preferences</button>
             </div>
           </div>
 
@@ -249,6 +311,14 @@
         </div>
 
       </div>
+
+      } @else {
+      <ng-template #loading>
+        <div class="glass-card content-card text-center">
+          <p>Loading profile...</p>
+        </div>
+      </ng-template>
+      }
 
     </div>
   </main>

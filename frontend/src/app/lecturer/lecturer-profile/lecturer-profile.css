@@ -95,6 +95,7 @@
   border: 4px solid white;
   box-shadow: 0 8px 20px rgba(15, 118, 110, 0.15);
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .avatar-large.image {
@@ -120,11 +121,12 @@
   bottom: 0;
   background: rgba(11, 25, 30, 0.7);
   backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: rgb(148, 54, 54);
   opacity: 0;
   transition: all 0.25s ease;
 }
@@ -773,5 +775,321 @@ html.dark .profile-tab-btn.active {
   .form-row {
     flex-direction: column;
     gap: 0;
+  }
+}
+
+/* ========================================
+   Profile Picture Options Modal
+   ======================================== */
+
+.photo-options-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 25, 30, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 16px;
+  animation: photoBackdropFade 0.2s ease-out;
+}
+
+.photo-options {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 32px 24px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 25px 50px -12px rgba(15, 23, 42, 0.22),
+    0 0 30px rgba(15, 118, 110, 0.12);
+  animation: photoOptionsAppear 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(241, 245, 249, 0.8);
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.modal-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  transform: rotate(90deg);
+}
+
+.modal-close-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.photo-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.photo-preview-mini {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin-bottom: 14px;
+}
+
+.mini-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #ffffff;
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.15);
+  box-sizing: border-box;
+}
+
+.mini-avatar-initials {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.15), rgba(20, 184, 166, 0.25));
+  color: #0F766E;
+  font-size: 28px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(15, 118, 110, 0.3);
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.15);
+  box-sizing: border-box;
+}
+
+.photo-modal-header h3 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0B191E;
+  letter-spacing: -0.3px;
+}
+
+.photo-modal-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.photo-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-photo-action {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.btn-photo-action svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s ease;
+}
+
+/* Primary Upload Button */
+.btn-upload-photo {
+  background: linear-gradient(135deg, #0F766E 0%, #2dd4bf 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.3);
+}
+
+.btn-upload-photo:hover {
+  background: linear-gradient(135deg, #115e59 0%, #0f766e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(15, 118, 110, 0.42);
+}
+
+.btn-upload-photo:hover svg {
+  transform: translateY(-2px);
+}
+
+.btn-upload-photo:active {
+  transform: translateY(0);
+}
+
+/* Secondary Danger Remove Button */
+.btn-remove-photo {
+  background: rgba(225, 29, 72, 0.08);
+  border: 1.5px solid rgba(225, 29, 72, 0.2);
+  color: #e11d48;
+}
+
+.btn-remove-photo:hover {
+  background: rgba(225, 29, 72, 0.15);
+  border-color: rgba(225, 29, 72, 0.35);
+  transform: translateY(-1px);
+  color: #be123c;
+}
+
+.btn-remove-photo:hover svg {
+  transform: rotate(-10deg) scale(1.1);
+}
+
+/* Cancel Button */
+.btn-cancel-photo {
+  background: transparent;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.btn-cancel-photo:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+/* ==========================================================================
+   DARK MODE OVERRIDES FOR PHOTO MODAL & AVATAR
+   ========================================================================== */
+
+html.dark .avatar-large {
+  border-color: #051419;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(45, 212, 191, 0.3);
+}
+
+html.dark .avatar-large.initials {
+  background: rgba(45, 212, 191, 0.15) !important;
+  border-color: rgba(45, 212, 191, 0.3) !important;
+  color: #2dd4bf !important;
+}
+
+html.dark .photo-options-backdrop {
+  background: rgba(2, 8, 11, 0.75);
+}
+
+html.dark .photo-options {
+  background: rgba(5, 20, 25, 0.92);
+  border-color: rgba(45, 212, 191, 0.22);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.7),
+    0 0 35px rgba(45, 212, 191, 0.15);
+}
+
+html.dark .modal-close-btn {
+  background: rgba(15, 30, 36, 0.8);
+  color: #94a3b8;
+}
+
+html.dark .modal-close-btn:hover {
+  background: rgba(45, 212, 191, 0.2);
+  color: #ffffff;
+}
+
+html.dark .photo-modal-header h3 {
+  color: #ffffff;
+}
+
+html.dark .photo-modal-sub {
+  color: #94a3b8;
+}
+
+html.dark .mini-avatar-img {
+  border-color: #051419;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+html.dark .mini-avatar-initials {
+  background: rgba(45, 212, 191, 0.15) !important;
+  border-color: rgba(45, 212, 191, 0.3) !important;
+  color: #2dd4bf !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+html.dark .btn-upload-photo {
+  background: linear-gradient(135deg, #0F766E 0%, #115e59 100%);
+  border: 1px solid #2dd4bf;
+  box-shadow: 0 6px 18px rgba(15, 118, 110, 0.45);
+}
+
+html.dark .btn-upload-photo:hover {
+  background: linear-gradient(135deg, #115e59 0%, #042f2e 100%);
+  box-shadow: 0 8px 24px rgba(45, 212, 191, 0.4);
+}
+
+html.dark .btn-remove-photo {
+  background: rgba(225, 29, 72, 0.15);
+  border-color: rgba(225, 29, 72, 0.35);
+  color: #f43f5e;
+}
+
+html.dark .btn-remove-photo:hover {
+  background: rgba(225, 29, 72, 0.25);
+  border-color: rgba(225, 29, 72, 0.5);
+  color: #fda4af;
+}
+
+html.dark .btn-cancel-photo {
+  border-color: rgba(45, 212, 191, 0.2);
+  color: #cbd5e1;
+}
+
+html.dark .btn-cancel-photo:hover {
+  background: rgba(45, 212, 191, 0.1);
+  color: #ffffff;
+  border-color: rgba(45, 212, 191, 0.35);
+}
+
+/* Animations */
+@keyframes photoBackdropFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes photoOptionsAppear {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
