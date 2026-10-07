@@ -37,7 +37,7 @@ public class LecturerProfile {
     @Column(columnDefinition = "TEXT")
     private String bio;
 
-    @Column(name = "avatar_url", length = 255)
+    @Column(name = "avatar_url", columnDefinition = "MEDIUMTEXT")
     private String avatarUrl;
 
     @Column(name = "email_notifications")
