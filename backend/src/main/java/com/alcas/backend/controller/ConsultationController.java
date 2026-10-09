@@ -380,6 +380,7 @@ public class ConsultationController {
         return ResponseEntity.ok(response);
     }
 
+
     @PutMapping("/{consultationId}/reschedule")
     public ResponseEntity<ConsultationResponse> requestReschedule(
             @PathVariable String consultationId,
@@ -390,47 +391,47 @@ public class ConsultationController {
 
         String email = authentication.getName();
 
-        Integer lecturerId
-                = userRepository.findByEmail(email)
-                        .orElseThrow(()
-                                -> new RuntimeException(
-                                "Authenticated user not found"
-                        ))
-                        .getId();
+        User authenticatedUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException(
+                        "Authenticated user not found"));
 
-        Consultation rescheduled
-                = consultationService.requestReschedule(
-                        consultationId,
-                        lecturerId,
-                        LocalDate.parse(proposedDate),
-                        LocalTime.parse(proposedTime),
-                        rescheduleReason
-                );
+        // Verify that the authenticated user is a lecturer.
+        LecturerProfile lecturer = lecturerProfileRepository
+                .findById(authenticatedUser.getId())
+                .orElseThrow(() -> new UnauthorizedException(
+                        "Only lecturers can propose a new consultation time"));
 
-        ConsultationResponse response
-                = new ConsultationResponse(
-                        rescheduled.getId(),
-                        rescheduled.getStudent().getUserId(),
-                        rescheduled.getLecturer().getUserId(),
-                        rescheduled.getLecturer().getUser().getFullName(),
-                        rescheduled.getLecturerRemarks(),
-                        rescheduled.getScheduledDate().toString(),
-                        rescheduled.getScheduledTime().toString(),
-                        rescheduled.getReason(),
-                        rescheduled.getReasonDetails(),
-                        rescheduled.getConsultationMode(),
-                        rescheduled.getLocation(),
-                        rescheduled.getStatus().name(),
-                        rescheduled.getProposedDate() != null
+        Consultation rescheduled = consultationService.requestReschedule(
+                consultationId,
+                lecturer.getUserId(),
+                LocalDate.parse(proposedDate),
+                LocalTime.parse(proposedTime),
+                rescheduleReason
+        );
+
+        ConsultationResponse response = new ConsultationResponse(
+                rescheduled.getId(),
+                rescheduled.getStudent().getUserId(),
+                rescheduled.getLecturer().getUserId(),
+                rescheduled.getLecturer().getUser().getFullName(),
+                rescheduled.getLecturerRemarks(),
+                rescheduled.getScheduledDate().toString(),
+                rescheduled.getScheduledTime().toString(),
+                rescheduled.getReason(),
+                rescheduled.getReasonDetails(),
+                rescheduled.getConsultationMode(),
+                rescheduled.getLocation(),
+                rescheduled.getStatus().name(),
+                rescheduled.getProposedDate() != null
                         ? rescheduled.getProposedDate().toString()
                         : null,
-                        rescheduled.getProposedTime() != null
+                rescheduled.getProposedTime() != null
                         ? rescheduled.getProposedTime().toString()
                         : null,
-                        rescheduled.getRescheduleReason(),
-                        rescheduled.getRejectReason(),
-                        rescheduled.getCancelReason()
-                );
+                rescheduled.getRescheduleReason(),
+                rescheduled.getRejectReason(),
+                rescheduled.getCancelReason()
+        );
 
         return ResponseEntity.ok(response);
     }
