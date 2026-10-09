@@ -13,12 +13,15 @@ export interface Consultation {
   scheduledTime: string;
   reason: string;
   reasonDetails?: string;
+  lecturerRemarks?: string | null;
   consultationMode: string;
   location: string;
   status: string;
   proposedDate?: string | null;
   proposedTime?: string | null;
   rescheduleReason?: string | null;
+  rejectReason?: string | null;
+  cancelReason?: string | null;
 }
 
 @Injectable({

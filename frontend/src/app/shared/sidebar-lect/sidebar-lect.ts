@@ -1,6 +1,8 @@
-import { Component, OnInit, inject, PLATFORM_ID, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, PLATFORM_ID, ElementRef, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
 import { RouterLink, Router, RouterLinkActive } from '@angular/router';
+import { Subscription, interval } from 'rxjs';
+import { ConsultationService, Consultation } from '../../services/consultation.service';
 
 export interface LecturerNotification {
   id: string;
@@ -21,70 +23,21 @@ export interface LecturerNotification {
   templateUrl: './sidebar-lect.html',
   styleUrl: './sidebar-lect.css',
 })
-export class SidebarLect implements OnInit {
+export class SidebarLect implements OnInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
   private document = inject(DOCUMENT);
   private router = inject(Router);
   private elementRef = inject(ElementRef);
+  private consultationService = inject(ConsultationService); // Injected Service
 
   isDarkMode: boolean = false;
   isNotificationOpen: boolean = false;
   notificationsEnabled: boolean = true;
 
-  notifications: LecturerNotification[] = [
-    {
-      id: '1',
-      title: 'New Consultation Request',
-      message: 'Ahmad Razak requested a consultation session on 2026-10-08 at 10:00 AM.',
-      time: '10m ago',
-      read: false,
-      type: 'booking',
-      group: 'Today',
-      studentName: 'Ahmad Razak',
-      actionRequired: true,
-    },
-    {
-      id: '2',
-      title: 'Session Reminder',
-      message: 'Upcoming consultation with Siti Aminah in 30 minutes (Room BK-34).',
-      time: '45m ago',
-      read: false,
-      type: 'reminder',
-      group: 'Today',
-      studentName: 'Siti Aminah',
-    },
-    {
-      id: '3',
-      title: 'New Consultation Request',
-      message: 'Jason Lee requested an online Webex consultation on 2026-10-09 at 02:30 PM.',
-      time: '2h ago',
-      read: false,
-      type: 'booking',
-      group: 'Today',
-      studentName: 'Jason Lee',
-      actionRequired: true,
-    },
-    {
-      id: '4',
-      title: 'Booking Cancelled',
-      message: 'Muhammad Lee cancelled consultation request #1042.',
-      time: 'Yesterday at 04:15 PM',
-      read: true,
-      type: 'cancellation',
-      group: 'Yesterday',
-      studentName: 'Muhammad Lee',
-    },
-    {
-      id: '5',
-      title: 'Session Log Completed',
-      message: 'Consultation notes saved for Farhan Zulkifli (Matric A21EC0099).',
-      time: 'Yesterday at 11:30 AM',
-      read: true,
-      type: 'reminder',
-      group: 'Yesterday',
-      studentName: 'Farhan Zulkifli',
-    },
-  ];
+  // Start with an empty array for real data
+  notifications: LecturerNotification[] = [];
+
+  private pollingSub!: Subscription;
 
   get todayNotifications(): LecturerNotification[] {
     return this.notifications.filter((n) => n.group === 'Today');
@@ -113,7 +66,58 @@ export class SidebarLect implements OnInit {
       if (savedNotifPref !== null) {
         this.notificationsEnabled = savedNotifPref === 'true';
       }
+
+      // Fetch immediately, then poll every 10 seconds
+      this.fetchRealNotifications();
+      this.pollingSub = interval(10000).subscribe(() => {
+        this.fetchRealNotifications();
+      });
     }
+  }
+
+  ngOnDestroy() {
+    // Stop the timer when the component is destroyed
+    if (this.pollingSub) {
+      this.pollingSub.unsubscribe();
+    }
+  }
+
+  fetchRealNotifications() {
+    this.consultationService.getLecturerConsultations().subscribe({
+      next: (consultations: Consultation[]) => {
+        // Find all pending requests in the database
+        const pendingRequests = consultations.filter(c => c.status === 'PENDING');
+
+        // 1. Add any NEW pending requests to the top of our notifications array
+        pendingRequests.forEach(req => {
+          const exists = this.notifications.find(n => n.id === req.id);
+          if (!exists) {
+            this.notifications.unshift({
+              id: req.id,
+              title: 'New Consultation Request',
+              message: `${req.studentName} requested a consultation on ${req.scheduledDate} at ${req.scheduledTime}.`,
+              time: 'Just now',
+              read: false,
+              type: 'booking',
+              group: 'Today',
+              studentName: req.studentName,
+              actionRequired: true,
+            });
+          }
+        });
+
+        // 2. Remove notifications for requests that are NO LONGER pending
+        // (e.g., you approved them on the dashboard)
+        this.notifications = this.notifications.filter(n => {
+          if (n.type === 'booking' && n.actionRequired) {
+            // Keep it only if it is still pending in the database
+            return pendingRequests.some(pr => pr.id === n.id);
+          }
+          return true; // Keep other types of notifications safely
+        });
+      },
+      error: (err) => console.error('Failed to load notifications', err)
+    });
   }
 
   @HostListener('document:keydown.escape', ['$event'])
@@ -183,8 +187,6 @@ export class SidebarLect implements OnInit {
       event.stopPropagation();
     }
     notif.read = true;
-    notif.actionRequired = false;
-    alert(`Approved booking request for ${notif.studentName || 'student'}. Navigating to appointments page.`);
     this.router.navigate(['/lecturer/appointments']);
     this.closeDrawer();
   }

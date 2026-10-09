@@ -50,9 +50,9 @@ export class LecturerHistoryComponent implements OnInit {
           time: consultation.scheduledTime,
           location: consultation.location || '',
           reason: consultation.reasonDetails || '',
-          remarks: consultation.rescheduleReason || '',
+          remarks: consultation.lecturerRemarks|| consultation.rejectReason || consultation.cancelReason || '',
           notes: '',
-          status: consultation.status,
+          status: consultation.status === 'NO_SHOW' ? 'NO-SHOW' : consultation.status,
         }));
 
         this.cdr.detectChanges();
@@ -69,7 +69,7 @@ export class LecturerHistoryComponent implements OnInit {
     return this.appointments.filter(
       (a) =>
         a.status === 'COMPLETED' ||
-        a.status === 'NO_SHOW' ||
+        a.status === 'NO-SHOW' ||
         a.status === 'REJECTED' ||
         a.status === 'CANCELLED',
     );

@@ -145,9 +145,16 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
             location: consultation.location || 'To be assigned upon approval',
             reason: consultation.reason || '',
             reasonDetails: consultation.reasonDetails || '',
-            remarks: consultation.rescheduleReason || '',
+            remarks: consultation.lecturerRemarks || '',
             status: mappedStatus as any,
           };
+        });
+
+        this.appointments.sort((a, b) => {
+          const dateTimeA = new Date(`${a.date}T${a.time}`).getTime();
+          const dateTimeB = new Date(`${b.date}T${b.time}`).getTime();
+
+          return dateTimeA - dateTimeB;
         });
 
         this.cdr.detectChanges();
