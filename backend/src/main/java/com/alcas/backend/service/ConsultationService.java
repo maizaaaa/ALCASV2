@@ -219,7 +219,9 @@ public class ConsultationService {
 
     public Consultation approveConsultation(
             String consultationId,
-            Integer lecturerId) {
+            Integer lecturerId,
+            String location,
+            String remarks) {
 
         String email = SecurityContextHolder
                 .getContext()
@@ -259,6 +261,9 @@ public class ConsultationService {
                     "Only pending consultations can be approved."
             );
         }
+
+        consultation.setLocation(location);
+        consultation.setLecturerRemarks(remarks);
 
         consultation.setStatus(
                 Consultation.Status.CONFIRMED

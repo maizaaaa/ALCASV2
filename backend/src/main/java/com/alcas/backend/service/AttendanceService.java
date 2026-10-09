@@ -107,11 +107,16 @@ public class AttendanceService {
 
         if(status == Attendance.Status.PRESENT){
             consultation.setStatus(Consultation.Status.COMPLETED);
+            consultation.setLecturerRemarks(notes);
         } else if (status == Attendance.Status.NO_SHOW) {
             consultation.setStatus(Consultation.Status.NO_SHOW);
+            consultation.setLecturerRemarks(notes);
         } else if (status == Attendance.Status.EXCUSED) {
             consultation.setStatus(Consultation.Status.COMPLETED);
+            consultation.setLecturerRemarks(notes);
         }
+
+        consultationRepository.save(consultation);
 
         return attendanceRepository.save(attendance);
     }

@@ -109,6 +109,7 @@ public class ConsultationController {
                         created.getStudent().getUserId(),
                         created.getLecturer().getUserId(),
                         created.getLecturer().getUser().getFullName(),
+                        created.getLecturerRemarks(),
                         created.getScheduledDate().toString(),
                         created.getScheduledTime().toString(),
                         created.getReason(),
@@ -122,7 +123,9 @@ public class ConsultationController {
                         created.getProposedTime() != null
                         ? created.getProposedTime().toString()
                         : null,
-                        created.getRescheduleReason()
+                        created.getRescheduleReason(),
+                        created.getRejectReason(),
+                        created.getCancelReason()
                 );
 
         return ResponseEntity.ok(response);
@@ -151,6 +154,7 @@ public class ConsultationController {
                                 consultation.getStudent().getUserId(),
                                 consultation.getLecturer().getUserId(),
                                 consultation.getLecturer().getUser().getFullName(),
+                                consultation.getLecturerRemarks(),
                                 consultation.getScheduledDate().toString(),
                                 consultation.getScheduledTime().toString(),
                                 consultation.getReason(),
@@ -164,7 +168,9 @@ public class ConsultationController {
                                 consultation.getProposedTime() != null
                                 ? consultation.getProposedTime().toString()
                                 : null,
-                                consultation.getRescheduleReason()
+                                consultation.getRescheduleReason(),
+                                consultation.getRejectReason(),
+                                consultation.getCancelReason()
                         )
                         )
                         .toList();
@@ -201,6 +207,7 @@ public class ConsultationController {
                         cancelled.getStudent().getUserId(),
                         cancelled.getLecturer().getUserId(),
                         cancelled.getLecturer().getUser().getFullName(),
+                        cancelled.getLecturerRemarks(),
                         cancelled.getScheduledDate().toString(),
                         cancelled.getScheduledTime().toString(),
                         cancelled.getReason(),
@@ -214,7 +221,9 @@ public class ConsultationController {
                         cancelled.getProposedTime() != null
                         ? cancelled.getProposedTime().toString()
                         : null,
-                        cancelled.getRescheduleReason()
+                        cancelled.getRescheduleReason(),
+                        cancelled.getRejectReason(),
+                        cancelled.getCancelReason()
                 );
 
         return ResponseEntity.ok(response);
@@ -245,6 +254,7 @@ public class ConsultationController {
                                 consultation.getStudent().getMatricNumber(),
                                 consultation.getLecturer().getUserId(),
                                 consultation.getLecturer().getUser().getFullName(),
+                                consultation.getLecturerRemarks(),
                                 consultation.getScheduledDate().toString(),
                                 consultation.getScheduledTime().toString(),
                                 consultation.getReason(),
@@ -258,7 +268,9 @@ public class ConsultationController {
                                 consultation.getProposedTime() != null
                                 ? consultation.getProposedTime().toString()
                                 : null,
-                                consultation.getRescheduleReason()
+                                consultation.getRescheduleReason(),
+                                consultation.getRejectReason(),
+                                consultation.getCancelReason()
                         )
                         )
                         .toList();
@@ -269,6 +281,8 @@ public class ConsultationController {
     @PutMapping("/{consultationId}/approve")
     public ResponseEntity<ConsultationResponse> approveConsultation(
             @PathVariable String consultationId,
+            @RequestParam (required = false) String location,
+            @RequestParam (required = false) String remarks,
             Authentication authentication) {
 
         String email = authentication.getName();
@@ -282,7 +296,9 @@ public class ConsultationController {
         Consultation approved
                 = consultationService.approveConsultation(
                         consultationId,
-                        lecturerId
+                        lecturerId,
+                        location,
+                        remarks
                 );
 
         ConsultationResponse response
@@ -291,6 +307,7 @@ public class ConsultationController {
                         approved.getStudent().getUserId(),
                         approved.getLecturer().getUserId(),
                         approved.getLecturer().getUser().getFullName(),
+                        approved.getLecturerRemarks(),
                         approved.getScheduledDate().toString(),
                         approved.getScheduledTime().toString(),
                         approved.getReason(),
@@ -304,7 +321,9 @@ public class ConsultationController {
                         approved.getProposedTime() != null
                         ? approved.getProposedTime().toString()
                         : null,
-                        approved.getRescheduleReason()
+                        approved.getRescheduleReason(),
+                        approved.getRejectReason(),
+                        approved.getCancelReason()
                 );
 
         return ResponseEntity.ok(response);
@@ -339,6 +358,7 @@ public class ConsultationController {
                         rejected.getStudent().getUserId(),
                         rejected.getLecturer().getUserId(),
                         rejected.getLecturer().getUser().getFullName(),
+                        rejected.getLecturerRemarks(),
                         rejected.getScheduledDate().toString(),
                         rejected.getScheduledTime().toString(),
                         rejected.getReason(),
@@ -352,7 +372,9 @@ public class ConsultationController {
                         rejected.getProposedTime() != null
                         ? rejected.getProposedTime().toString()
                         : null,
-                        rejected.getRescheduleReason()
+                        rejected.getRescheduleReason(),
+                        rejected.getRejectReason(),
+                        rejected.getCancelReason()
                 );
 
         return ResponseEntity.ok(response);
@@ -391,6 +413,7 @@ public class ConsultationController {
                         rescheduled.getStudent().getUserId(),
                         rescheduled.getLecturer().getUserId(),
                         rescheduled.getLecturer().getUser().getFullName(),
+                        rescheduled.getLecturerRemarks(),
                         rescheduled.getScheduledDate().toString(),
                         rescheduled.getScheduledTime().toString(),
                         rescheduled.getReason(),
@@ -404,7 +427,9 @@ public class ConsultationController {
                         rescheduled.getProposedTime() != null
                         ? rescheduled.getProposedTime().toString()
                         : null,
-                        rescheduled.getRescheduleReason()
+                        rescheduled.getRescheduleReason(),
+                        rescheduled.getRejectReason(),
+                        rescheduled.getCancelReason()
                 );
 
         return ResponseEntity.ok(response);
@@ -437,6 +462,7 @@ public class ConsultationController {
                         accepted.getStudent().getUserId(),
                         accepted.getLecturer().getUserId(),
                         accepted.getLecturer().getUser().getFullName(),
+                        accepted.getLecturerRemarks(),
                         accepted.getScheduledDate().toString(),
                         accepted.getScheduledTime().toString(),
                         accepted.getReason(),
@@ -450,7 +476,9 @@ public class ConsultationController {
                         accepted.getProposedTime() != null
                         ? accepted.getProposedTime().toString()
                         : null,
-                        accepted.getRescheduleReason()
+                        accepted.getRescheduleReason(),
+                        accepted.getRejectReason(),
+                        accepted.getCancelReason()
                 );
 
         return ResponseEntity.ok(response);
@@ -483,6 +511,7 @@ public class ConsultationController {
                         rejected.getStudent().getUserId(),
                         rejected.getLecturer().getUserId(),
                         rejected.getLecturer().getUser().getFullName(),
+                        rejected.getLecturerRemarks(),
                         rejected.getScheduledDate().toString(),
                         rejected.getScheduledTime().toString(),
                         rejected.getReason(),
@@ -496,7 +525,9 @@ public class ConsultationController {
                         rejected.getProposedTime() != null
                         ? rejected.getProposedTime().toString()
                         : null,
-                        rejected.getRescheduleReason()
+                        rejected.getRescheduleReason(),
+                        rejected.getRejectReason(),
+                        rejected.getCancelReason()
                 );
 
         return ResponseEntity.ok(response);

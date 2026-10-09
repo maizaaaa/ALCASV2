@@ -8,6 +8,7 @@ public class ConsultationResponse {
     private String studentMatric;
     private Integer lecturerId;
     private String lecturerName;
+    private String lecturerRemarks;
     private String scheduledDate;
     private String scheduledTime;
     private String reason;
@@ -18,6 +19,8 @@ public class ConsultationResponse {
     private String proposedDate;
     private String proposedTime;
     private String rescheduleReason;
+    private String rejectReason;
+    private String cancelReason;
 
     public ConsultationResponse() {
     }
@@ -29,6 +32,7 @@ public class ConsultationResponse {
             String studentMatric,
             Integer lecturerId,
             String lecturerName,
+            String lecturerRemarks,
             String scheduledDate,
             String scheduledTime,
             String reason,
@@ -38,7 +42,9 @@ public class ConsultationResponse {
             String status,
             String proposedDate,
             String proposedTime,
-            String rescheduleReason) {
+            String rescheduleReason,
+            String rejectReason,
+            String cancelReason) {
 
         this.id = id;
         this.studentId = studentId;
@@ -46,6 +52,7 @@ public class ConsultationResponse {
         this.studentMatric = studentMatric;
         this.lecturerId = lecturerId;
         this.lecturerName = lecturerName;
+        this.lecturerRemarks = lecturerRemarks;
         this.scheduledDate = scheduledDate;
         this.scheduledTime = scheduledTime;
         this.reason = reason;
@@ -56,6 +63,8 @@ public class ConsultationResponse {
         this.proposedDate = proposedDate;
         this.proposedTime = proposedTime;
         this.rescheduleReason = rescheduleReason;
+        this.rejectReason = rejectReason;
+        this.cancelReason = cancelReason;
     }
 
     public ConsultationResponse(
@@ -63,6 +72,7 @@ public class ConsultationResponse {
             Integer studentId,
             Integer lecturerId,
             String lecturerName,
+            String lecturerRemarks,
             String scheduledDate,
             String scheduledTime,
             String reason,
@@ -72,7 +82,9 @@ public class ConsultationResponse {
             String status,
             String proposedDate,
             String proposedTime,
-            String rescheduleReason) {
+            String rescheduleReason,
+            String rejectReason,
+            String cancelReason) {
 
         this(
                 id,
@@ -81,6 +93,7 @@ public class ConsultationResponse {
                 null,
                 lecturerId,
                 lecturerName,
+                lecturerRemarks,
                 scheduledDate,
                 scheduledTime,
                 reason,
@@ -90,7 +103,9 @@ public class ConsultationResponse {
                 status,
                 proposedDate,
                 proposedTime,
-                rescheduleReason
+                rescheduleReason,
+                rejectReason,
+                cancelReason
         );
     }
 
@@ -140,6 +155,14 @@ public class ConsultationResponse {
 
     public void setLecturerName(String lecturerName) {
         this.lecturerName = lecturerName;
+    }
+
+    public String getLecturerRemarks() {
+        return lecturerRemarks;
+    }
+
+    public void setLecturerRemarks(String lecturerRemarks) {
+        this.lecturerRemarks = lecturerRemarks;
     }
 
     public String getScheduledDate() {
@@ -220,5 +243,21 @@ public class ConsultationResponse {
 
     public void setRescheduleReason(String rescheduleReason) {
         this.rescheduleReason = rescheduleReason;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
+    }
+
+    public String getCancelReason() {
+        return cancelReason;
+    }
+
+    public void setCancelReason(String cancelReason) {
+        this.cancelReason = cancelReason;
     }
 }
