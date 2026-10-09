@@ -42,7 +42,40 @@ export class ConsultationService {
     return this.http.get<Consultation[]>(`${this.apiUrl}/lecturer`, { headers });
   }
 
-  approveConsultation(consultationId: string, location: string, remarks: string,): Observable<Consultation> {
+  getStudentConsultations(): Observable<Consultation[]> {
+    const token = localStorage.getItem('token');
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.http.get<Consultation[]>(`${this.apiUrl}/student`, { headers });
+  }
+
+  cancelConsultation(consultationId: string, cancelReason: string): Observable<Consultation> {
+    const token = localStorage.getItem('token');
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.http.put<Consultation>(
+      `${this.apiUrl}/${consultationId}/cancel`,
+      {},
+      {
+        headers,
+        params: {
+          cancelReason,
+        },
+      },
+    );
+  }
+
+  approveConsultation(
+    consultationId: string,
+    location: string,
+    remarks: string,
+  ): Observable<Consultation> {
     const token = localStorage.getItem('token');
 
     const headers = new HttpHeaders({
@@ -105,6 +138,35 @@ export class ConsultationService {
           rescheduleReason,
         },
       },
+    );
+  }
+
+
+  acceptReschedule(consultationId: string): Observable<Consultation> {
+    const token = localStorage.getItem('token');
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.put<Consultation>(
+        `${this.apiUrl}/${consultationId}/reschedule/accept`,
+        {},
+        { headers }
+    );
+  }
+
+  rejectReschedule(consultationId: string): Observable<Consultation> {
+    const token = localStorage.getItem('token');
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.put<Consultation>(
+        `${this.apiUrl}/${consultationId}/reschedule/reject`,
+        {},
+        { headers }
     );
   }
 }

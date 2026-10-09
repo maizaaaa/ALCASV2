@@ -41,7 +41,9 @@
       <div
         class="hybrid-calendar-card bg-white/95 dark:bg-[#071317]/80 backdrop-blur-2xl border border-slate-100 dark:border-teal-900/40 shadow-[0_15px_50px_rgba(15,118,110,0.06)] dark:shadow-[0_10px_40px_rgba(45,212,191,0.05)] rounded-[2rem] overflow-hidden">
 
-        <div class="grid grid-cols-5 min-h-[600px]">
+        <div
+          class="grid min-h-[600px]"
+          [style.gridTemplateColumns]="'repeat(' + weekDays.length + ', minmax(0, 1fr))'">
 
           <div
             class="flex flex-col relative after:content-[''] after:absolute after:right-0 after:top-0 after:bottom-0 after:w-[1px] after:bg-slate-100 dark:after:bg-teal-900/20 last:after:hidden"
