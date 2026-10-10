@@ -20,6 +20,10 @@ public class LecturerProfileService {
         return lecturerProfileRepository.findById(userId);
     }
 
+    public List<LecturerProfile> findAll() {
+        return lecturerProfileRepository.findAll();
+    }
+
     public List<LecturerProfile> findBySchoolId(Integer schoolId) {
         return lecturerProfileRepository.findBySchoolId(schoolId);
     }

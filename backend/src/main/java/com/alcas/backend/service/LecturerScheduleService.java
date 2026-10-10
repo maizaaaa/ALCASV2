@@ -26,7 +26,7 @@ public class LecturerScheduleService {
 
     public List<LecturerSchedule> findByLecturerIdAndDay(Integer lecturerId, String dayOfWeek) {
         return lecturerScheduleRepository
-                .findByLecturerUserIdAndDayOfWeek(lecturerId, dayOfWeek);
+                .findByLecturerUserIdAndDayOfWeekIgnoreCase(lecturerId, dayOfWeek);
     }
     public LecturerSchedule save(LecturerSchedule schedule) {
         return lecturerScheduleRepository.save(schedule);

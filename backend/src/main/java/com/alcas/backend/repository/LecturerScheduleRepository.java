@@ -14,4 +14,9 @@ public interface LecturerScheduleRepository
             Integer lecturerId,
             String dayOfWeek
     );
+
+    List<LecturerSchedule> findByLecturerUserIdAndDayOfWeekIgnoreCase(
+            Integer lecturerId,
+            String dayOfWeek
+    );
 }

@@ -26,6 +26,27 @@ public class LecturerController {
         this.schoolService = schoolService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<LecturerResponse>> getAllLecturers() {
+        List<LecturerProfile> lecturers = lecturerProfileService.findAll();
+
+        List<LecturerResponse> response = lecturers.stream()
+                .map(lecturer -> {
+                    String schoolName = schoolService.findById(lecturer.getSchoolId())
+                            .map(School::getName)
+                            .orElse("General");
+                    String lecturerName = lecturer.getUser() != null ? lecturer.getUser().getFullName() : "Lecturer";
+                    return new LecturerResponse(
+                            lecturer.getUserId(),
+                            lecturerName,
+                            schoolName
+                    );
+                })
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/school/{schoolId}")
     public ResponseEntity<List<LecturerResponse>> getLecturersBySchool(
             @PathVariable Integer schoolId) {

@@ -201,7 +201,11 @@ public class LecturerAvailabilityController {
                 systemSettingService
                         .findById("WORKING_DAYS")
                         .map(setting -> setting.getSettingValue())
-                        .orElse("");
+                        .orElse("MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY");
+
+        if (workingDaysValue == null || workingDaysValue.trim().isEmpty()) {
+            workingDaysValue = "MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY";
+        }
 
         List<String> workingDays =
                 java.util.Arrays.stream(workingDaysValue.split(","))
