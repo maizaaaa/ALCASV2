@@ -146,6 +146,27 @@ export class StudentBookingComponent implements OnInit {
     this.updateCalendar();
     this.loadSchools();
     this.loadWorkingDays();
+    this.loadAllLecturers();
+  }
+
+  loadAllLecturers(): void {
+    const token = localStorage.getItem('token');
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    this.http.get<Lecturer[]>('http://localhost:8080/api/lecturers', { headers }).subscribe({
+      next: (lecturers) => {
+        this.allLecturers = lecturers;
+        console.log('All lecturers loaded:', lecturers);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load all lecturers:', error);
+        this.allLecturers = [];
+      },
+    });
   }
 
   loadWorkingDays(): void {
@@ -241,6 +262,11 @@ export class StudentBookingComponent implements OnInit {
   }
 
   onSchoolChange(): void {
+    if (this.selectedSchool === 'All Schools') {
+      this.loadAllLecturers();
+      return;
+    }
+
     const selectedSchool = this.schools.find((school) => school.name === this.selectedSchool);
 
     if (!selectedSchool) {

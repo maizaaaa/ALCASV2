@@ -43,10 +43,13 @@ export class StudentAppointmentsComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private consultationService: ConsultationService,
-  ) {}
+    private consultationService: ConsultationService
+  ) { }
 
   ngOnInit(): void {
+    console.log('StudentAppointmentsComponent initialized');
+    console.log('Initial activeTab:', this.activeTab);
+
     this.loadAppointments();
   }
 
@@ -68,6 +71,7 @@ export class StudentAppointmentsComponent implements OnInit {
         }));
 
         console.log('Student appointments loaded:', this.appointments);
+
       },
       error: (error) => {
         console.error('Failed to load student appointments:', error);
@@ -106,7 +110,7 @@ export class StudentAppointmentsComponent implements OnInit {
   confirmReschedule(): void {
     alert(
       'Rescheduling must be initiated by your lecturer. ' +
-        'You can accept or reject the lecturer’s proposal when it appears here.',
+      'You can accept or reject the lecturer’s proposal when it appears here.',
     );
     this.closeModal();
   }
@@ -119,8 +123,8 @@ export class StudentAppointmentsComponent implements OnInit {
 
     const accepted = confirm(
       `Accept the proposed appointment?\n\n` +
-        `New date: ${appointment.proposedDate}\n` +
-        `New time: ${appointment.proposedTime}`,
+      `New date: ${appointment.proposedDate}\n` +
+      `New time: ${appointment.proposedTime}`,
     );
 
     if (!accepted) return;
@@ -146,7 +150,7 @@ export class StudentAppointmentsComponent implements OnInit {
 
     const rejected = confirm(
       `Reject the lecturer's proposed appointment time?\n\n` +
-        `Your original appointment date and time will remain unchanged.`,
+      `Your original appointment date and time will remain unchanged.`,
     );
 
     if (!rejected) return;

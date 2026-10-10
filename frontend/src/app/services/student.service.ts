@@ -42,4 +42,17 @@ export class StudentService {
       `${this.apiUrl}/schedule`
     );
   }
+
+  saveScheduleSlot(slot: { id?: number; dayOfWeek: string; timeSlot: string; category: string }): Observable<StudentClassSchedule> {
+    return this.http.post<StudentClassSchedule>(
+      `${this.apiUrl}/schedule`,
+      slot
+    );
+  }
+
+  deleteScheduleSlot(id: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.apiUrl}/schedule/${id}`
+    );
+  }
 }

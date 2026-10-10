@@ -3,14 +3,20 @@
 :host {
   display: block;
   width: 100%;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  height: 70px;
+  position: relative;
+  z-index: 1000;
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 /* --- Light Mode Student Navbar (Rich Turquoise/Teal) --- */
 .student-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1000;
   background: linear-gradient(135deg, #0F766E 0%, #0b554f 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 20px rgba(15, 118, 110, 0.25);

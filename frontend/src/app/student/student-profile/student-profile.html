@@ -527,42 +527,50 @@
 
           <!-- Schedule Header -->
           <div
-            class="p-8 border-b border-slate-200 dark:border-slate-800">
+            class="p-8 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center flex-wrap gap-4">
 
-            <h2
-              class="text-xl font-extrabold text-slate-900 dark:text-white">
+            <div>
+              <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">
+                Class Schedule
+              </h2>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Click any cell in the timetable grid to add or update your class schedule.
+              </p>
+            </div>
 
-              Class Schedule
 
-            </h2>
+            <button
+              (click)="openSlotModal(days[0], timeSlots[0])"
+              [disabled]="days.length === 0 || timeSlots.length === 0"
+              class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer">
 
-            <p
-              class="text-sm text-slate-500 mt-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 4v16m8-8H4"></path>
+              </svg>
 
-              View your weekly class schedule.
-
-            </p>
+              Add Class Slot
+            </button>
 
           </div>
-
 
           <!-- Schedule Grid -->
           <div class="p-8 overflow-x-auto">
 
             <div class="min-w-[900px]">
 
+
               <!-- Days Header -->
               <div
-                class="grid grid-cols-[100px_repeat(5,1fr)] gap-2 mb-2">
+                class="grid gap-2 mb-2"
+                [style.gridTemplateColumns]="'100px repeat(' + days.length + ', minmax(0, 1fr))'">
 
                 <div></div>
 
                 <div
                   *ngFor="let day of days"
                   class="text-center text-xs font-bold text-teal-700 dark:text-teal-300">
-
                   {{ day }}
-
                 </div>
 
               </div>
@@ -571,51 +579,36 @@
               <!-- Time Slots -->
               <div
                 *ngFor="let time of timeSlots"
-                class="grid grid-cols-[100px_repeat(5,1fr)] gap-2 mb-2">
+                class="grid gap-2 mb-2"
+                [style.gridTemplateColumns]="'100px repeat(' + days.length + ', minmax(0, 1fr))'">
 
                 <!-- Time -->
                 <div
                   class="flex items-center justify-center text-xs font-bold text-slate-400">
-
                   {{ time }}
-
                 </div>
-
 
                 <!-- Day Slots -->
                 <div
                   *ngFor="let day of days"
-                  class="relative min-h-[60px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
+                  (click)="openSlotModal(day, time)"
+                  class="relative min-h-[60px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50/40 dark:hover:bg-teal-950/20 cursor-pointer transition-all duration-200 group flex items-center justify-center p-1">
 
                   <div
-                    class="w-full h-full min-h-[60px] flex items-center justify-center p-2">
+                    *ngIf="getSlotForItem(day, time) as item"
+                    class="w-full h-full min-h-[44px] rounded-lg bg-teal-100 dark:bg-teal-950/80 border border-teal-300 dark:border-teal-800 flex items-center justify-center p-2 shadow-xs group-hover:scale-[1.02] transition-transform">
+      <span class="text-xs font-extrabold text-teal-800 dark:text-teal-200 text-center truncate">
+        {{ item.category }}
+      </span>
+                  </div>
 
-                    <!-- Database Schedule -->
-                    <ng-container
-                      *ngFor="let scheduleItem of scheduleData">
-
-                      <div
-                        *ngIf="
-                    scheduleItem.dayOfWeek === day &&
-                    scheduleItem.timeSlot === time
-                  "
-                        class="w-full h-full min-h-[44px] rounded-lg bg-teal-100 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 flex items-center justify-center">
-
-                  <span
-                    class="text-xs font-bold text-teal-700 dark:text-teal-300">
-
-                    {{ scheduleItem.category }}
-
-                  </span>
-
-                      </div>
-
-                    </ng-container>
-
+                  <div
+                    *ngIf="!getSlotForItem(day, time)"
+                    class="opacity-0 group-hover:opacity-100 transition-opacity text-[11px] font-bold text-teal-600 dark:text-teal-400 flex items-center gap-1">
+                    <span>+ Add</span>
                   </div>
 
                 </div>
-
               </div>
 
             </div>
@@ -624,6 +617,95 @@
 
         </div>
 
+      </div>
+
+      <!-- EDIT/UPDATE SCHEDULE SLOT MODAL -->
+      <div *ngIf="showScheduleModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity" (click)="closeSlotModal()"></div>
+
+        <div
+          class="relative bg-white/95 dark:bg-[#091d24]/95 backdrop-blur-3xl border border-slate-100 dark:border-teal-900/35 shadow-2xl rounded-[2.5rem] w-full max-w-md overflow-hidden transform transition-all p-8 animate-fade-in-up">
+
+          <!-- Close Button -->
+          <button
+            (click)="closeSlotModal()"
+            class="absolute top-6 right-6 p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-full transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+
+          <!-- Modal Title -->
+          <div class="mb-6">
+            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">
+              {{ editingSlotId ? 'Update Class Slot' : 'Add Class Slot' }}
+            </h3>
+            <p class="text-xs text-teal-600 dark:text-teal-400 font-bold mt-1">
+              📅 {{ selectedSlotDay }} @ {{ selectedSlotTime }}
+            </p>
+          </div>
+
+          <!-- Form Fields -->
+          <div class="space-y-4 mb-6">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                Day of Week
+              </label>
+              <select
+                [(ngModel)]="selectedSlotDay"
+                class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-teal-900/30 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                <option *ngFor="let d of days" [value]="d">{{ d }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                Time Slot
+              </label>
+              <select
+                [(ngModel)]="selectedSlotTime"
+                class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-teal-900/30 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                <option *ngFor="let t of timeSlots" [value]="t">{{ t }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                Class / Category Title
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="selectedSlotCategory"
+                placeholder="e.g. CLASS, STIA1123, TUTORIAL, BUSY..."
+                class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-teal-900/30 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 text-sm font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400" />
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-3">
+            <button
+              *ngIf="editingSlotId"
+              (click)="deleteSlot()"
+              [disabled]="isSavingSlot"
+              class="py-3 px-4 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 font-extrabold text-sm transition-all cursor-pointer">
+              Delete
+            </button>
+
+            <button
+              (click)="closeSlotModal()"
+              class="flex-1 py-3 px-4 rounded-xl border border-slate-200 dark:border-teal-900/30 text-slate-500 hover:bg-slate-100 font-bold text-sm transition-all cursor-pointer">
+              Cancel
+            </button>
+
+            <button
+              (click)="saveSlot()"
+              [disabled]="isSavingSlot"
+              class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-extrabold text-sm shadow-md transition-all cursor-pointer">
+              {{ isSavingSlot ? 'Saving...' : 'Save Slot' }}
+            </button>
+          </div>
+
+        </div>
       </div>
 
     </main>

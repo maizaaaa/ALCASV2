@@ -4,6 +4,7 @@ import { RouterLink, Router } from '@angular/router';
 import { NavbarStudent } from '../../shared/navbar-student/navbar-student';
 import { SystemSettingsService } from '../../services/system-settings.service';
 import { ConsultationService, Consultation } from '../../services/consultation.service';
+import { StudentService, StudentClassSchedule } from '../../services/student.service';
 
 interface DashboardAppointment {
   id: string;
@@ -13,6 +14,15 @@ interface DashboardAppointment {
   lecturer: string;
   type: string;
   status: string;
+}
+
+interface DashboardScheduleItem {
+  kind: 'appointment' | 'class';
+  time: string;
+  sortMinutes: number;
+  title: string;
+  description: string;
+  status?: string;
 }
 
 @Component({
@@ -31,6 +41,7 @@ export class StudentDashboardComponent implements OnInit {
 
   // Student Appointments
   myAppointments: DashboardAppointment[] = [];
+  classSchedule: StudentClassSchedule[] = [];
 
   private weekStart = '';
   private weekEnd = '';
@@ -39,6 +50,7 @@ export class StudentDashboardComponent implements OnInit {
     private router: Router,
     private systemSettingsService: SystemSettingsService,
     private consultationService: ConsultationService,
+    private studentService: StudentService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -84,6 +96,7 @@ export class StudentDashboardComponent implements OnInit {
 
     // Load the logged-in student's consultations
     this.loadStudentAppointments();
+    this.loadStudentClassSchedule();
   }
 
   private loadStudentAppointments(): void {
@@ -114,8 +127,68 @@ export class StudentDashboardComponent implements OnInit {
     });
   }
 
+  private loadStudentClassSchedule(): void {
+    this.studentService.getMySchedule().subscribe({
+      next: (schedule: StudentClassSchedule[]) => {
+        this.classSchedule = schedule;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load student class schedule:', error);
+      },
+    });
+  }
+
+  getClassScheduleForDay(day: string): StudentClassSchedule[] {
+    return this.classSchedule.filter((slot) => slot.dayOfWeek?.toLowerCase() === day.toLowerCase());
+  }
+
   getAppointmentsForDay(day: string): DashboardAppointment[] {
     return this.myAppointments.filter((appt) => appt.day === day);
+  }
+
+  getScheduleItemsForDay(day: string): DashboardScheduleItem[] {
+    const appointments: DashboardScheduleItem[] = this.getAppointmentsForDay(day).map((appt) => ({
+      kind: 'appointment',
+      time: appt.time,
+      sortMinutes: this.timeToMinutes(appt.time),
+      title: appt.lecturer,
+      description: appt.type,
+      status: appt.status,
+    }));
+
+    const classes: DashboardScheduleItem[] = this.getClassScheduleForDay(day).map((slot) => ({
+      kind: 'class',
+      time: slot.timeSlot,
+      sortMinutes: this.timeToMinutes(slot.timeSlot),
+      title: slot.category,
+      description: 'Class Schedule',
+    }));
+
+    return [...classes, ...appointments].sort((a, b) => a.sortMinutes - b.sortMinutes);
+  }
+
+  private timeToMinutes(time: string): number {
+    const match = time
+      .trim()
+      .toUpperCase()
+      .match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/);
+
+    if (!match) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
+    let hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    const period = match[3];
+
+    if (period === 'AM' && hours === 12) {
+      hours = 0;
+    } else if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    }
+
+    return hours * 60 + minutes;
   }
 
   private getDayName(dateString: string): string {
