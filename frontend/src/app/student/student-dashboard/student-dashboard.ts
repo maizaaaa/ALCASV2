@@ -55,22 +55,6 @@ export class StudentDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Calculate the current week: Monday to Sunday
-    const today = new Date();
-    const monday = new Date(today);
-    const dayOfWeek = today.getDay();
-
-    monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-
-    this.weekStart = this.toDateString(monday);
-    this.weekEnd = this.toDateString(sunday);
-
-    this.currentWeek = `${this.formatWeekDate(monday)} - ${this.formatWeekDate(sunday)}`;
-
-    // Load the admin's working days
     this.systemSettingsService.getWorkingDays().subscribe({
       next: (workingDays) => {
         const dayOrder = [
@@ -83,10 +67,37 @@ export class StudentDashboardComponent implements OnInit {
           'SATURDAY',
         ];
 
-        this.weekDays = [...workingDays]
-          .sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b))
-          .map((day) => day.charAt(0) + day.slice(1).toLowerCase());
+        const normalizedDays = [...workingDays]
+          .map((day) => day.trim().toUpperCase())
+          .filter((day) => dayOrder.includes(day))
+          .sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
 
+        this.weekDays = normalizedDays.map((day) => day.charAt(0) + day.slice(1).toLowerCase());
+
+        if (normalizedDays.length === 0) {
+          console.error('No working days configured.');
+          return;
+        }
+
+        const today = new Date();
+        const todayNumber = today.getDay();
+        const firstWorkingDay = this.getDayNumber(normalizedDays[0]);
+
+        // Find the start of the configured working week
+        const daysSinceStart = (todayNumber - firstWorkingDay + 7) % 7;
+
+        const firstDay = new Date(today);
+        firstDay.setDate(today.getDate() - daysSinceStart);
+
+        const lastDay = new Date(firstDay);
+        lastDay.setDate(firstDay.getDate() + normalizedDays.length - 1);
+
+        this.weekStart = this.toDateString(firstDay);
+        this.weekEnd = this.toDateString(lastDay);
+
+        this.currentWeek = `${this.formatWeekDate(firstDay)} - ${this.formatWeekDate(lastDay)}`;
+
+        this.loadStudentAppointments();
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -189,6 +200,20 @@ export class StudentDashboardComponent implements OnInit {
     }
 
     return hours * 60 + minutes;
+  }
+
+  private getDayNumber(day: string): number {
+    const dayNumbers: Record<string, number> = {
+      SUNDAY: 0,
+      MONDAY: 1,
+      TUESDAY: 2,
+      WEDNESDAY: 3,
+      THURSDAY: 4,
+      FRIDAY: 5,
+      SATURDAY: 6,
+    };
+
+    return dayNumbers[day.trim().toUpperCase()];
   }
 
   private getDayName(dateString: string): string {

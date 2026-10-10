@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, NgZone, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,7 +6,6 @@ import { Router } from '@angular/router';
 import { NavbarStudent } from '../../shared/navbar-student/navbar-student';
 import { StudentService, StudentProfile, StudentClassSchedule } from '../../services/student.service';
 import { SystemSettingsService } from '../../services/system-settings.service';
-
 
 @Component({
   selector: 'app-student-profile',
@@ -44,6 +43,7 @@ export class StudentProfileComponent implements OnInit {
   selectedSlotCategory = 'CLASS';
   editingSlotId: number | null = null;
   isSavingSlot = false;
+  successMessage = '';
 
   // Profile Image State
   profileImage: string | ArrayBuffer | null = null;
@@ -66,13 +66,13 @@ export class StudentProfileComponent implements OnInit {
     specialization: string;
     previousEducation: string;
   } = {
-    university: 'Universiti Utara Malaysia (UUM)',
-    campus: 'Sintok, Kedah',
-    school: '',
-    degree: '',
-    specialization: 'Software Engineering',
-    previousEducation: 'Diploma in Information Technology',
-  };
+      university: 'Universiti Utara Malaysia (UUM)',
+      campus: 'Sintok, Kedah',
+      school: '',
+      degree: '',
+      specialization: 'Software Engineering',
+      previousEducation: 'Diploma in Information Technology',
+    };
 
   // Notification Settings
   emailNotifications = true;
@@ -82,8 +82,10 @@ export class StudentProfileComponent implements OnInit {
     private router: Router,
     private studentService: StudentService,
     private systemSettingsService: SystemSettingsService,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -102,13 +104,18 @@ export class StudentProfileComponent implements OnInit {
 
     this.systemSettingsService.getWorkingDays().subscribe({
       next: (workingDays: string[]) => {
-        this.days = [...workingDays]
-          .filter((day) => dayOrder.includes(day.trim().toUpperCase()))
-          .sort(
-            (a, b) =>
-              dayOrder.indexOf(a.trim().toUpperCase()) - dayOrder.indexOf(b.trim().toUpperCase()),
-          )
-          .map((day) => day.trim().charAt(0).toUpperCase() + day.trim().slice(1).toLowerCase());
+        this.ngZone.run(() => {
+          if (workingDays && workingDays.length > 0) {
+            this.days = [...workingDays]
+              .filter((day) => dayOrder.includes(day.trim().toUpperCase()))
+              .sort(
+                (a, b) =>
+                  dayOrder.indexOf(a.trim().toUpperCase()) - dayOrder.indexOf(b.trim().toUpperCase()),
+              )
+              .map((day) => day.trim().charAt(0).toUpperCase() + day.trim().slice(1).toLowerCase());
+          }
+          this.cdr.detectChanges();
+        });
       },
       error: (error) => {
         console.error('Failed to load working days:', error);
@@ -116,36 +123,33 @@ export class StudentProfileComponent implements OnInit {
     });
   }
 
-
   private loadStudentProfile(): void {
-    console.log('[Student Profile] Request started');
-
     this.studentService.getMyProfile().subscribe({
       next: (profile: StudentProfile) => {
-        console.log('[Student Profile] Response received:', profile);
+        this.ngZone.run(() => {
+          this.studentData = {
+            fullName: profile.fullName || '',
+            nickname: profile.fullName?.split(' ')[0] || '',
+            studentId: profile.matricNumber || '',
+            email: profile.email || '',
+            phone: profile.phone || '',
+          };
 
-        this.studentData = {
-          fullName: profile.fullName || '',
-          nickname: profile.fullName?.split(' ')[0] || '',
-          studentId: profile.matricNumber || '',
-          email: profile.email || '',
-          phone: profile.phone || '',
-        };
+          this.academicData = {
+            university: 'Universiti Utara Malaysia (UUM)',
+            campus: 'Sintok, Kedah',
+            school: profile.school || '',
+            degree: profile.program || '',
+            specialization: 'Software Engineering',
+            previousEducation: 'Diploma in Information Technology',
+          };
 
-        this.academicData = {
-          university: 'Universiti Utara Malaysia (UUM)',
-          campus: 'Sintok, Kedah',
-          school: profile.school || '',
-          degree: profile.program || '',
-          specialization: 'Software Engineering',
-          previousEducation: 'Diploma in Information Technology',
-        };
+          this.profileImage = profile.profileImg || null;
+          this.emailNotifications = profile.emailNotifications ?? true;
+          this.autoReminder24h = profile.autoReminder24h ?? true;
 
-        this.profileImage = profile.profileImg || null;
-        this.emailNotifications = profile.emailNotifications ?? true;
-        this.autoReminder24h = profile.autoReminder24h ?? true;
-
-        console.log('[Student Profile] Assigned data:', this.studentData);
+          this.cdr.detectChanges();
+        });
       },
       error: (error) => {
         console.error('[Student Profile] Failed to load:', error);
@@ -156,7 +160,10 @@ export class StudentProfileComponent implements OnInit {
   loadStudentSchedule(): void {
     this.studentService.getMySchedule().subscribe({
       next: (schedule: StudentClassSchedule[]) => {
-        this.scheduleData = schedule;
+        this.ngZone.run(() => {
+          this.scheduleData = schedule;
+          this.cdr.detectChanges();
+        });
       },
       error: (error) => {
         console.error('Failed to load student schedule:', error);
@@ -184,12 +191,15 @@ export class StudentProfileComponent implements OnInit {
     }
 
     this.showScheduleModal = true;
+    this.cdr.detectChanges();
   }
 
   closeSlotModal(): void {
     this.showScheduleModal = false;
     this.editingSlotId = null;
     this.selectedSlotCategory = 'CLASS';
+    this.isSavingSlot = false;
+    this.cdr.detectChanges();
   }
 
   saveSlot(): void {
@@ -199,6 +209,10 @@ export class StudentProfileComponent implements OnInit {
     }
 
     this.isSavingSlot = true;
+    this.successMessage = '';
+    this.cdr.detectChanges();
+
+    const isEditing = this.editingSlotId !== null;
 
     this.studentService
       .saveScheduleSlot({
@@ -209,13 +223,25 @@ export class StudentProfileComponent implements OnInit {
       })
       .subscribe({
         next: () => {
-          this.isSavingSlot = false;
-          this.closeSlotModal();
-          this.loadStudentSchedule();
+          this.ngZone.run(() => {
+            this.isSavingSlot = false;
+
+            const msg = isEditing
+              ? 'Class slot updated successfully!'
+              : 'Class slot added successfully!';
+
+            this.closeSlotModal();
+            this.successMessage = msg;
+            this.loadStudentSchedule();
+            this.cdr.detectChanges();
+          });
         },
         error: (err) => {
           console.error('Failed to save slot:', err);
-          this.isSavingSlot = false;
+          this.ngZone.run(() => {
+            this.isSavingSlot = false;
+            this.cdr.detectChanges();
+          });
           alert('Failed to save schedule slot. Please try again.');
         },
       });
@@ -231,15 +257,25 @@ export class StudentProfileComponent implements OnInit {
     }
 
     this.isSavingSlot = true;
+    this.successMessage = '';
+    this.cdr.detectChanges();
+
     this.studentService.deleteScheduleSlot(this.editingSlotId).subscribe({
       next: () => {
-        this.isSavingSlot = false;
-        this.closeSlotModal();
-        this.loadStudentSchedule();
+        this.ngZone.run(() => {
+          this.isSavingSlot = false;
+          this.closeSlotModal();
+          this.successMessage = 'Class slot removed successfully!';
+          this.loadStudentSchedule();
+          this.cdr.detectChanges();
+        });
       },
       error: (err) => {
         console.error('Failed to delete slot:', err);
-        this.isSavingSlot = false;
+        this.ngZone.run(() => {
+          this.isSavingSlot = false;
+          this.cdr.detectChanges();
+        });
         alert('Failed to delete schedule slot. Please try again.');
       },
     });

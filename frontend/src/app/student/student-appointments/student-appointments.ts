@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -35,15 +35,22 @@ export class StudentAppointmentsComponent implements OnInit {
   modalMode: 'view' | 'cancel' | 'reschedule' | null = null;
 
   // Temporary compatibility with your existing HTML.
-  // We will remove the student rescheduling UI in the next step.
   smartSuggestion = '';
   selectedNewSlot = '';
   cancelReason = '';
   rescheduleReason = '';
 
+  // Success Popup Modal State
+  showSuccessModal = false;
+  successTitle = '';
+  successMessage = '';
+  successType: 'success' | 'info' | 'warning' = 'success';
+
   constructor(
     private router: Router,
-    private consultationService: ConsultationService
+    private consultationService: ConsultationService,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone,
   ) { }
 
   ngOnInit(): void {
@@ -53,25 +60,42 @@ export class StudentAppointmentsComponent implements OnInit {
     this.loadAppointments();
   }
 
+  showSuccessPopup(title: string, message: string, type: 'success' | 'info' | 'warning' = 'success'): void {
+    this.successTitle = title;
+    this.successMessage = message;
+    this.successType = type;
+    this.showSuccessModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeSuccessModal(): void {
+    this.showSuccessModal = false;
+    this.successTitle = '';
+    this.successMessage = '';
+    this.cdr.detectChanges();
+  }
+
   private loadAppointments(): void {
     this.consultationService.getStudentConsultations().subscribe({
       next: (consultations: Consultation[]) => {
-        this.appointments = consultations.map((c) => ({
-          id: c.id,
-          lecturer: c.lecturerName || 'Lecturer',
-          reason: c.reasonDetails || c.reason || 'Consultation',
-          date: this.formatDate(c.scheduledDate),
-          time: this.formatTime(c.scheduledTime),
-          location: c.location || '',
-          remarks: c.lecturerRemarks || '',
-          status: (c.status || '').toUpperCase().replace(/_/g, '-'),
-          proposedDate: c.proposedDate ? this.formatDate(c.proposedDate) : '',
-          proposedTime: c.proposedTime ? this.formatTime(c.proposedTime) : '',
-          rescheduleReason: c.rescheduleReason || '',
-        }));
+        this.ngZone.run(() => {
+          this.appointments = consultations.map((c) => ({
+            id: c.id,
+            lecturer: c.lecturerName || 'Lecturer',
+            reason: c.reasonDetails || c.reason || 'Consultation',
+            date: this.formatDate(c.scheduledDate),
+            time: this.formatTime(c.scheduledTime),
+            location: c.location || '',
+            remarks: c.lecturerRemarks || '',
+            status: (c.status || '').toUpperCase().replace(/_/g, '-'),
+            proposedDate: c.proposedDate ? this.formatDate(c.proposedDate) : '',
+            proposedTime: c.proposedTime ? this.formatTime(c.proposedTime) : '',
+            rescheduleReason: c.rescheduleReason || '',
+          }));
 
-        console.log('Student appointments loaded:', this.appointments);
-
+          this.cdr.detectChanges();
+          console.log('Student appointments loaded:', this.appointments);
+        });
       },
       error: (error) => {
         console.error('Failed to load student appointments:', error);
@@ -98,11 +122,13 @@ export class StudentAppointmentsComponent implements OnInit {
     this.selectedNewSlot = '';
     this.cancelReason = '';
     this.rescheduleReason = '';
+    this.cdr.detectChanges();
   }
 
   closeModal(): void {
     this.selectedAppointment = null;
     this.modalMode = null;
+    this.cdr.detectChanges();
   }
 
   // Student rescheduling is disabled:
@@ -121,22 +147,34 @@ export class StudentAppointmentsComponent implements OnInit {
       return;
     }
 
-    const accepted = confirm(
-      `Accept the proposed appointment?\n\n` +
-      `New date: ${appointment.proposedDate}\n` +
-      `New time: ${appointment.proposedTime}`,
-    );
-
-    if (!accepted) return;
-
     this.consultationService.acceptReschedule(appointment.id).subscribe({
       next: () => {
-        this.closeModal();
-        this.loadAppointments();
-        alert('Reschedule accepted! Your appointment has been updated.');
+        this.ngZone.run(() => {
+          appointment.status = 'CONFIRMED';
+          if (appointment.proposedDate) {
+            appointment.date = appointment.proposedDate;
+          }
+          if (appointment.proposedTime) {
+            appointment.time = appointment.proposedTime;
+          }
+
+          this.closeModal();
+
+          this.showSuccessPopup(
+            'Proposal Accepted!',
+            `You have accepted the new schedule proposal with ${appointment.lecturer}. Your appointment status is now CONFIRMED for ${appointment.date} at ${appointment.time}.`,
+            'success'
+          );
+
+          this.loadAppointments();
+          this.cdr.detectChanges();
+        });
       },
       error: (error) => {
         console.error('Failed to accept reschedule:', error);
+        this.ngZone.run(() => {
+          this.cdr.detectChanges();
+        });
         alert(error.error?.message || 'Unable to accept the proposed time. Please try again.');
       },
     });
@@ -148,21 +186,28 @@ export class StudentAppointmentsComponent implements OnInit {
       return;
     }
 
-    const rejected = confirm(
-      `Reject the lecturer's proposed appointment time?\n\n` +
-      `Your original appointment date and time will remain unchanged.`,
-    );
-
-    if (!rejected) return;
-
     this.consultationService.rejectReschedule(appointment.id).subscribe({
       next: () => {
-        this.closeModal();
-        this.loadAppointments();
-        alert('Proposal rejected. Your original appointment remains confirmed.');
+        this.ngZone.run(() => {
+          appointment.status = 'CONFIRMED';
+
+          this.closeModal();
+
+          this.showSuccessPopup(
+            'Proposal Rejected',
+            `You have rejected the proposed reschedule time. Your appointment with ${appointment.lecturer} remains CONFIRMED at the original date and time.`,
+            'info'
+          );
+
+          this.loadAppointments();
+          this.cdr.detectChanges();
+        });
       },
       error: (error) => {
         console.error('Failed to reject reschedule:', error);
+        this.ngZone.run(() => {
+          this.cdr.detectChanges();
+        });
         alert(error.error?.message || 'Unable to reject the proposed time. Please try again.');
       },
     });
@@ -177,16 +222,29 @@ export class StudentAppointmentsComponent implements OnInit {
     }
 
     const appointmentId = this.selectedAppointment.id;
+    const lecturerName = this.selectedAppointment.lecturer;
     const reason = this.cancelReason.trim();
 
     this.consultationService.cancelConsultation(appointmentId, reason).subscribe({
       next: () => {
-        this.closeModal();
-        this.loadAppointments();
-        alert('Appointment successfully cancelled.');
+        this.ngZone.run(() => {
+          this.closeModal();
+
+          this.showSuccessPopup(
+            'Appointment Cancelled',
+            `Your consultation session with ${lecturerName} has been cancelled.`,
+            'warning'
+          );
+
+          this.loadAppointments();
+          this.cdr.detectChanges();
+        });
       },
       error: (error) => {
         console.error('Failed to cancel appointment:', error);
+        this.ngZone.run(() => {
+          this.cdr.detectChanges();
+        });
         alert(error.error?.message || 'Unable to cancel this appointment. Please try again.');
       },
     });
