@@ -24,7 +24,7 @@ import { LecturerHistoryComponent } from './lecturer/lecturer-history/lecturer-h
 import { LecturerProfileComponent } from './lecturer/lecturer-profile/lecturer-profile';
 
 //-- STUDENT --//
-import { StudentDashboardComponent} from './student/student-dashboard/student-dashboard';
+import { StudentDashboardComponent } from './student/student-dashboard/student-dashboard';
 import { StudentBookingComponent } from './student/student-booking/student-booking';
 import { StudentAppointmentsComponent } from './student/student-appointments/student-appointments';
 import { StudentProfileComponent } from './student/student-profile/student-profile';

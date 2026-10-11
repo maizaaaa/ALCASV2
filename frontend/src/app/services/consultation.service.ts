@@ -32,6 +32,22 @@ export class ConsultationService {
 
   constructor(private http: HttpClient) {}
 
+  private getAuthHeaders(): HttpHeaders {
+    const token = typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+      ? localStorage.getItem('token')
+      : null;
+
+    return token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
+  }
+
+  getAllConsultations(): Observable<Consultation[]> {
+    return this.http.get<Consultation[]>('http://localhost:8080/api/admin/consultations', {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
   getLecturerConsultations(): Observable<Consultation[]> {
     const token = localStorage.getItem('token');
 

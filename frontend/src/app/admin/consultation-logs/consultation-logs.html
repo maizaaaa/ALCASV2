@@ -17,7 +17,7 @@
         </div>
         <button class="btn-premium" (click)="exportLogs()">
           <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          Export CSV
+          Export Excel
         </button>
       </div>
 
@@ -26,7 +26,7 @@
           <label>Search Logs</label>
           <div class="input-with-icon">
             <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            <input type="text" [(ngModel)]="searchQuery" placeholder="Search ID, Student, or Lecturer...">
+            <input type="text" [(ngModel)]="searchQuery" placeholder="Search ID, Student, Lecturer, or Reason...">
           </div>
         </div>
 
@@ -34,10 +34,12 @@
           <label>Status</label>
           <select [(ngModel)]="statusFilter" class="modern-select">
             <option value="ALL">All Statuses</option>
-            <option value="COMPLETED">Completed</option>
+            <option value="CONFIRMED">Confirmed</option>
             <option value="PENDING">Pending</option>
-            <option value="NO-SHOW">No-Show</option>
+            <option value="COMPLETED">Completed</option>
             <option value="CANCELLED">Cancelled</option>
+            <option value="NO-SHOW">No-Show</option>
+            <option value="REJECTED">Rejected</option>
           </select>
         </div>
 
@@ -64,7 +66,13 @@
             </tr>
             </thead>
             <tbody>
-            <tr *ngIf="filteredLogs.length === 0">
+            <tr *ngIf="isLoading">
+              <td colspan="5" class="empty-state">
+                Loading consultation records from database...
+              </td>
+            </tr>
+
+            <tr *ngIf="!isLoading && filteredLogs.length === 0">
               <td colspan="5" class="empty-state">
                 No logs found matching your filters.
               </td>
@@ -72,7 +80,7 @@
 
             <tr *ngFor="let log of filteredLogs">
               <td>
-                <div class="log-id-text">{{ log.id }}</div>
+                <div class="log-id-text" [title]="log.id">{{ log.displayId }}</div>
                 <div class="date-time-text">{{ log.date }} </div>
                 <div class="date-time-text">{{ log.time }}</div>
               </td>
@@ -81,10 +89,10 @@
                 <div class="participant-text text-muted"><strong>L:</strong> {{ log.lecturer }}</div>
               </td>
               <td>
-                <div class="reason-text">{{ log.reason }}</div>
+                <div class="reason-text" [title]="log.reasonDetails ? log.reason + ' - ' + log.reasonDetails : log.reason">{{ log.reason }}</div>
               </td>
               <td>
-                <span class="status-badge" [ngClass]="log.status.toLowerCase()">
+                <span class="status-badge" [ngClass]="log.statusClass">
                   {{ log.status }}
                 </span>
               </td>
@@ -114,7 +122,7 @@
 
         <div class="modal-body">
 
-          <div class="status-banner" [ngClass]="selectedLog.status.toLowerCase() + '-bg'">
+          <div class="status-banner" [ngClass]="selectedLog.statusClass + '-bg'">
             Current Status: <strong>{{ selectedLog.status }}</strong>
           </div>
 
@@ -143,6 +151,9 @@
             <label>Reason for Visit (Student Input)</label>
             <div class="text-box">
               {{ selectedLog.reason }}
+              <div *ngIf="selectedLog.reasonDetails" class="mt-2 text-muted" style="margin-top: 6px; font-size: 13px;">
+                {{ selectedLog.reasonDetails }}
+              </div>
             </div>
           </div>
 

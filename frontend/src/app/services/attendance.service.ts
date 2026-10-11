@@ -20,7 +20,7 @@ export interface AttendanceRecord {
 export class AttendanceService {
   private apiUrl = 'http://localhost:8080/api/attendance';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   markAttendance(
     consultationId: string,

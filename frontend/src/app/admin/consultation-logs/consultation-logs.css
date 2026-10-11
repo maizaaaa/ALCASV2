@@ -363,13 +363,27 @@
   border: 1px solid #d1fae5;
 }
 
+.status-badge.confirmed {
+  background: #F0FDFA;
+  color: #0F766E;
+  border: 1px solid #CCFBF1;
+}
+
 .status-badge.pending {
   background: #fffbeb;
   color: #d97706;
   border: 1px solid #fef3c7;
 }
 
-.status-badge.no-show {
+.status-badge.reschedule-pending,
+.status-badge.reschedule_pending {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #ffedd5;
+}
+
+.status-badge.no-show,
+.status-badge.no_show {
   background: #fef2f2;
   color: #dc2626;
   border: 1px solid #fee2e2;
@@ -379,6 +393,12 @@
   background: #f1f5f9;
   color: #475569;
   border: 1px solid #e2e8f0;
+}
+
+.status-badge.rejected {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2;
 }
 
 .actions-cell {
@@ -518,13 +538,27 @@
   border-color: #d1fae5;
 }
 
+.confirmed-bg {
+  background-color: #F0FDFA;
+  color: #0F766E;
+  border-color: #CCFBF1;
+}
+
 .pending-bg {
   background-color: #fffbeb;
   color: #d97706;
   border-color: #fef3c7;
 }
 
-.no-show-bg {
+.reschedule-pending-bg,
+.reschedule_pending-bg {
+  background-color: #fff7ed;
+  color: #ea580c;
+  border-color: #ffedd5;
+}
+
+.no-show-bg,
+.no_show-bg {
   background-color: #fef2f2;
   color: #dc2626;
   border-color: #fee2e2;
@@ -534,6 +568,12 @@
   background-color: #f1f5f9;
   color: #475569;
   border-color: #e2e8f0;
+}
+
+.rejected-bg {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #fee2e2;
 }
 
 /* Detail Grid with Vertical Divider */
@@ -739,13 +779,27 @@
   border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
+:host-context(.dark) .status-badge.confirmed {
+  background: rgba(45, 212, 191, 0.1);
+  color: #2dd4bf;
+  border: 1px solid rgba(45, 212, 191, 0.25);
+}
+
 :host-context(.dark) .status-badge.pending {
   background: rgba(245, 158, 11, 0.1);
   color: #fbbf24;
   border: 1px solid rgba(245, 158, 11, 0.25);
 }
 
-:host-context(.dark) .status-badge.no-show {
+:host-context(.dark) .status-badge.reschedule-pending,
+:host-context(.dark) .status-badge.reschedule_pending {
+  background: rgba(234, 88, 12, 0.1);
+  color: #fb923c;
+  border: 1px solid rgba(251, 146, 60, 0.25);
+}
+
+:host-context(.dark) .status-badge.no-show,
+:host-context(.dark) .status-badge.no_show {
   background: rgba(239, 68, 68, 0.1);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.25);
@@ -755,6 +809,12 @@
   background: rgba(100, 116, 139, 0.1);
   color: #94a3b8;
   border: 1px solid rgba(100, 116, 139, 0.25);
+}
+
+:host-context(.dark) .status-badge.rejected {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 :host-context(.dark) .view-btn {
@@ -843,13 +903,27 @@
   border-color: rgba(16, 185, 129, 0.25);
 }
 
+:host-context(.dark) .confirmed-bg {
+  background-color: rgba(45, 212, 191, 0.1);
+  color: #2dd4bf;
+  border-color: rgba(45, 212, 191, 0.25);
+}
+
 :host-context(.dark) .pending-bg {
   background-color: rgba(245, 158, 11, 0.1);
   color: #fbbf24;
   border-color: rgba(245, 158, 11, 0.25);
 }
 
-:host-context(.dark) .no-show-bg {
+:host-context(.dark) .reschedule-pending-bg,
+:host-context(.dark) .reschedule_pending-bg {
+  background-color: rgba(234, 88, 12, 0.1);
+  color: #fb923c;
+  border-color: rgba(251, 146, 60, 0.25);
+}
+
+:host-context(.dark) .no-show-bg,
+:host-context(.dark) .no_show-bg {
   background-color: rgba(239, 68, 68, 0.1);
   color: #f87171;
   border-color: rgba(239, 68, 68, 0.25);
@@ -859,6 +933,12 @@
   background-color: rgba(100, 116, 139, 0.1);
   color: #94a3b8;
   border-color: rgba(100, 116, 139, 0.25);
+}
+
+:host-context(.dark) .rejected-bg {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.25);
 }
 
 :host-context(.dark) .detail-grid .detail-group:nth-child(odd) {
