@@ -41,6 +41,9 @@ public class Attendance {
     @Column(name = "marked_at")
     private LocalDateTime markedAt;
 
+    @Column(name = "warning_issued")
+    private Boolean warningIssued = false;
+
     public enum Status {
         PRESENT,
         NO_SHOW,
@@ -119,5 +122,13 @@ public class Attendance {
 
     public void setMarkedAt(LocalDateTime markedAt) {
         this.markedAt = markedAt;
+    }
+
+    public Boolean getWarningIssued() {
+        return warningIssued != null && warningIssued;
+    }
+
+    public void setWarningIssued(Boolean warningIssued) {
+        this.warningIssued = warningIssued;
     }
 }

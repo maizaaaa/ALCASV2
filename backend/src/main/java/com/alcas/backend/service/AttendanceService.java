@@ -29,10 +29,10 @@ public class AttendanceService {
     private final UserRepository userRepository;
 
     public AttendanceService(AttendanceRepository attendanceRepository,
-                             ConsultationRepository consultationRepository,
-                             LecturerProfileRepository lecturerProfileRepository,
-                             StudentProfileRepository studentProfileRepository,
-                             UserRepository userRepository) {
+            ConsultationRepository consultationRepository,
+            LecturerProfileRepository lecturerProfileRepository,
+            StudentProfileRepository studentProfileRepository,
+            UserRepository userRepository) {
 
         this.attendanceRepository = attendanceRepository;
         this.consultationRepository = consultationRepository;
@@ -42,16 +42,16 @@ public class AttendanceService {
     }
 
     @Transactional
-    public Attendance markAttendance (
+    public Attendance markAttendance(
             String consultationId,
             Integer lecturerId,
             Attendance.Status status,
             String notes
     ) {
-        Consultation consultation =
-                consultationRepository.findById(consultationId)
-                        .orElseThrow(() ->
-                                new RuntimeException("Consultation not found"));
+        Consultation consultation
+                = consultationRepository.findById(consultationId)
+                        .orElseThrow(()
+                                -> new RuntimeException("Consultation not found"));
 
         if (!consultation.getLecturer()
                 .getUserId()
@@ -67,32 +67,32 @@ public class AttendanceService {
             throw new RuntimeException("Attendance can only be marked for a confirmed consultation");
         }
 
-        LecturerProfile lecturer =
-                lecturerProfileRepository.findById(lecturerId)
-                        .orElseThrow(() ->
-                                new RuntimeException("Lecturer profile not found."));
+        LecturerProfile lecturer
+                = lecturerProfileRepository.findById(lecturerId)
+                        .orElseThrow(()
+                                -> new RuntimeException("Lecturer profile not found."));
 
         String email = SecurityContextHolder
                 .getContext()
                 .getAuthentication()
                 .getName();
 
-        User markedBy =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException("Authenticated user not found."));
+        User markedBy
+                = userRepository.findByEmail(email)
+                        .orElseThrow(()
+                                -> new RuntimeException("Authenticated user not found."));
 
-        if (!markedBy.getId().equals(lecturerId)){
+        if (!markedBy.getId().equals(lecturerId)) {
             throw new UnauthorizedException("You are not allowed to mark attendance for another lecturer");
         }
 
-        StudentProfile student =
-                studentProfileRepository.findById(
+        StudentProfile student
+                = studentProfileRepository.findById(
                         consultation.getStudent()
                                 .getUserId()
                 )
-                        .orElseThrow(() ->
-                                new RuntimeException("Student profile not found"));
+                        .orElseThrow(()
+                                -> new RuntimeException("Student profile not found"));
 
         Attendance attendance = new Attendance();
 
@@ -105,7 +105,7 @@ public class AttendanceService {
         attendance.setMarkedBy(markedBy);
         attendance.setMarkedAt(LocalDateTime.now());
 
-        if(status == Attendance.Status.PRESENT){
+        if (status == Attendance.Status.PRESENT) {
             consultation.setStatus(Consultation.Status.COMPLETED);
             consultation.setLecturerRemarks(notes);
         } else if (status == Attendance.Status.NO_SHOW) {
@@ -129,17 +129,17 @@ public class AttendanceService {
         return attendanceRepository.findById(id);
     }
 
-    public List<Attendance> findByLecturerId (Integer lecturerId) {
+    public List<Attendance> findByLecturerId(Integer lecturerId) {
 
         String email = SecurityContextHolder
                 .getContext()
                 .getAuthentication()
                 .getName();
 
-        User authenticatedUser =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException("Authenticated user not found."));
+        User authenticatedUser
+                = userRepository.findByEmail(email)
+                        .orElseThrow(()
+                                -> new RuntimeException("Authenticated user not found."));
 
         if (!authenticatedUser.getId().equals(lecturerId)) {
             throw new UnauthorizedException(
@@ -150,17 +150,17 @@ public class AttendanceService {
                 .findByLecturerUserIdOrderByAttendanceDateDesc(lecturerId);
     }
 
-    public List <Attendance> findByStudentId (Integer studentId) {
+    public List<Attendance> findByStudentId(Integer studentId) {
 
         String email = SecurityContextHolder
                 .getContext()
                 .getAuthentication()
                 .getName();
 
-        User authenticatedUser =
-                userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException("Authentication user not found."));
+        User authenticatedUser
+                = userRepository.findByEmail(email)
+                        .orElseThrow(()
+                                -> new RuntimeException("Authentication user not found."));
 
         if (!authenticatedUser.getId().equals(studentId)) {
             throw new UnauthorizedException("You are not allowed to view another student's attendance");
