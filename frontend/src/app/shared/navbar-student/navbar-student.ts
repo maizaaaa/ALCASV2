@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, PLATFORM_ID, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { RouterLink, Router, RouterLinkActive } from '@angular/router';
 import { ConsultationService, Consultation } from '../../services/consultation.service';
 import { SystemSettingsService } from '../../services/system-settings.service';
@@ -27,6 +28,7 @@ export class NavbarStudent implements OnInit {
   private document = inject(DOCUMENT);
   private router = inject(Router);
   private elementRef = inject(ElementRef);
+  private http = inject(HttpClient);
   private consultationService = inject(ConsultationService);
   private systemSettingsService = inject(SystemSettingsService);
   private studentService = inject(StudentService);
@@ -39,6 +41,7 @@ export class NavbarStudent implements OnInit {
   studentName: string = 'Student';
 
   notifications: NotificationItem[] = [];
+  private dbNotifications: NotificationItem[] = [];
   private consultationNotifications: NotificationItem[] = [];
   private systemNotifications: NotificationItem[] = [];
   private readNotifIds: Set<string> = new Set();
@@ -106,7 +109,7 @@ export class NavbarStudent implements OnInit {
           this.cdr.detectChanges();
         }
       },
-      error: () => {},
+      error: () => { },
     });
   }
 
@@ -134,6 +137,32 @@ export class NavbarStudent implements OnInit {
         this.addDefaultSystemAnnouncement();
       },
     });
+
+    // 3. Fetch Real Notifications from Backend (e.g. Warning alerts issued by admin)
+    const token = typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+      ? localStorage.getItem('token')
+      : null;
+    if (token) {
+      this.http.get<any[]>('http://localhost:8080/api/notifications', {
+        headers: { Authorization: `Bearer ${token}` },
+      }).subscribe({
+        next: (dbNotifs) => {
+          if (Array.isArray(dbNotifs)) {
+            this.dbNotifications = dbNotifs.map((n) => ({
+              id: `db-${n.id}`,
+              title: n.title,
+              message: n.message,
+              time: 'Notice',
+              read: n.isRead || this.readNotifIds.has(`db-${n.id}`),
+              type: 'reminder' as const,
+              link: '/student/history',
+            }));
+            this.combineNotifications();
+          }
+        },
+        error: () => {},
+      });
+    }
   }
 
   private buildConsultationNotifications(consultations: Consultation[]): void {
@@ -194,6 +223,20 @@ export class NavbarStudent implements OnInit {
           link: '/student/history',
         });
       }
+
+      // 4. Consultation No-Show Alert for Student
+      if (statusUpper === 'NO_SHOW' || statusUpper === 'NO-SHOW') {
+        const noShowId = `noshow-${c.id}`;
+        list.push({
+          id: noShowId,
+          title: 'Attendance Alert: Missed Consultation',
+          message: `Notice: You were recorded as a NO-SHOW for your consultation with ${c.lecturerName || 'Lecturer'} on ${c.scheduledDate} at ${formattedTime}. Please review this attendance issue.`,
+          time: timeAgo,
+          read: this.readNotifIds.has(noShowId),
+          type: 'reminder',
+          link: '/student/history',
+        });
+      }
     });
 
     this.consultationNotifications = list;
@@ -231,7 +274,7 @@ export class NavbarStudent implements OnInit {
   }
 
   private combineNotifications(): void {
-    const merged = [...this.consultationNotifications, ...this.systemNotifications];
+    const merged = [...this.dbNotifications, ...this.consultationNotifications, ...this.systemNotifications];
     // Filter out dismissed notifications
     this.notifications = merged.filter((n) => !this.dismissedNotifIds.has(n.id));
     this.cdr.detectChanges();

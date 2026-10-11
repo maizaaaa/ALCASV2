@@ -6,8 +6,11 @@ import com.alcas.backend.repository.StudentProfileRepository;
 import com.alcas.backend.repository.LecturerProfileRepository;
 import com.alcas.backend.repository.SchoolRepository;
 import com.alcas.backend.repository.ProgramRepository;
+import com.alcas.backend.repository.ConsultationRepository;
 import com.alcas.backend.dto.AdminUserResponse;
 import com.alcas.backend.dto.AdminCreateUserRequest;
+import com.alcas.backend.dto.ConsultationResponse;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -24,19 +27,22 @@ public class AdminController {
     private final StudentProfileRepository studentProfileRepository;
     private final ProgramRepository programRepository;
     private final SchoolRepository schoolRepository;
+    private final ConsultationRepository consultationRepository;
 
     public AdminController(UserRepository userRepository,
-                           PasswordEncoder passwordEncoder,
-                           StudentProfileRepository studentProfileRepository,
-                           LecturerProfileRepository lecturerProfileRepository,
-                           ProgramRepository programRepository,
-                           SchoolRepository schoolRepository) {
+            PasswordEncoder passwordEncoder,
+            StudentProfileRepository studentProfileRepository,
+            LecturerProfileRepository lecturerProfileRepository,
+            ProgramRepository programRepository,
+            SchoolRepository schoolRepository,
+            ConsultationRepository consultationRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.studentProfileRepository = studentProfileRepository;
         this.lecturerProfileRepository = lecturerProfileRepository;
         this.programRepository = programRepository;
         this.schoolRepository = schoolRepository;
+        this.consultationRepository = consultationRepository;
     }
 
     @GetMapping("/test")
@@ -55,6 +61,37 @@ public class AdminController {
                 .toList();
     }
 
+    @GetMapping("/consultations")
+    @Transactional(readOnly = true)
+    public List<ConsultationResponse> getAllConsultations() {
+        return consultationRepository.findAll(Sort.by(Sort.Direction.DESC, "scheduledDate", "scheduledTime"))
+                .stream()
+                .map(consultation -> new ConsultationResponse(
+                        consultation.getId(),
+                        consultation.getStudent() != null ? consultation.getStudent().getUserId() : null,
+                        consultation.getStudent() != null && consultation.getStudent().getUser() != null
+                        ? consultation.getStudent().getUser().getFullName() : "Unknown Student",
+                        consultation.getStudent() != null ? consultation.getStudent().getMatricNumber() : "",
+                        consultation.getLecturer() != null ? consultation.getLecturer().getUserId() : null,
+                        consultation.getLecturer() != null && consultation.getLecturer().getUser() != null
+                        ? consultation.getLecturer().getUser().getFullName() : "Unknown Lecturer",
+                        consultation.getLecturerRemarks(),
+                        consultation.getScheduledDate() != null ? consultation.getScheduledDate().toString() : "",
+                        consultation.getScheduledTime() != null ? consultation.getScheduledTime().toString() : "",
+                        consultation.getReason(),
+                        consultation.getReasonDetails(),
+                        consultation.getConsultationMode(),
+                        consultation.getLocation(),
+                        consultation.getStatus() != null ? consultation.getStatus().name() : "",
+                        consultation.getProposedDate() != null ? consultation.getProposedDate().toString() : null,
+                        consultation.getProposedTime() != null ? consultation.getProposedTime().toString() : null,
+                        consultation.getRescheduleReason(),
+                        consultation.getRejectReason(),
+                        consultation.getCancelReason()
+                ))
+                .toList();
+    }
+
     @PutMapping("/users/{id}/status")
     public AdminUserResponse updateUserStatus(
             @PathVariable Integer id,
@@ -68,8 +105,8 @@ public class AdminController {
         User updatedUser = userRepository.save(user);
 
         return new AdminUserResponse(updatedUser,
-                                    studentProfileRepository,
-                                    lecturerProfileRepository);
+                studentProfileRepository,
+                lecturerProfileRepository);
     }
 
     @PutMapping("/users/{id}")
@@ -95,9 +132,9 @@ public class AdminController {
         if (updatedUser.getRole() == User.Role.STUDENT) {
 
             if (studentProfileRepository.findAll().stream()
-                    .anyMatch(profile ->
-                            profile.getMatricNumber() != null
-                                    && profile.getMatricNumber()
+                    .anyMatch(profile
+                            -> profile.getMatricNumber() != null
+                            && profile.getMatricNumber()
                                     .equalsIgnoreCase(request.getUserId()))) {
 
                 throw new RuntimeException("Matric number already exists");
@@ -125,9 +162,9 @@ public class AdminController {
         if (updatedUser.getRole() == User.Role.LECTURER) {
 
             if (lecturerProfileRepository.findAll().stream()
-                    .anyMatch(profile ->
-                            profile.getStaffNumber() != null
-                                    && profile.getStaffNumber()
+                    .anyMatch(profile
+                            -> profile.getStaffNumber() != null
+                            && profile.getStaffNumber()
                                     .equalsIgnoreCase(request.getUserId()))) {
 
                 throw new RuntimeException("Staff number already exists");
@@ -208,7 +245,7 @@ public class AdminController {
         }
 
         return new AdminUserResponse(savedUser,
-                                    studentProfileRepository,
-                                    lecturerProfileRepository);
+                studentProfileRepository,
+                lecturerProfileRepository);
     }
 }

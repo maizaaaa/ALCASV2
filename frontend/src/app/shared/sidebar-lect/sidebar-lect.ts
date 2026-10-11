@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, PLATFORM_ID, ElementRef, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { RouterLink, Router, RouterLinkActive } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { ConsultationService, Consultation } from '../../services/consultation.service';
@@ -28,6 +29,7 @@ export class SidebarLect implements OnInit, OnDestroy {
   private document = inject(DOCUMENT);
   private router = inject(Router);
   private elementRef = inject(ElementRef);
+  private http = inject(HttpClient);
   private consultationService = inject(ConsultationService); // Injected Service
 
   isDarkMode: boolean = false;
@@ -106,15 +108,66 @@ export class SidebarLect implements OnInit, OnDestroy {
           }
         });
 
-        // 2. Remove notifications for requests that are NO LONGER pending
-        // (e.g., you approved them on the dashboard)
+        // 2. Add No-Show consultation alerts for lecturer
+        const noShowConsultations = consultations.filter(
+          c => (c.status || '').toUpperCase() === 'NO_SHOW' || (c.status || '').toUpperCase() === 'NO-SHOW'
+        );
+        noShowConsultations.forEach(req => {
+          const notifId = `noshow-${req.id}`;
+          const exists = this.notifications.find(n => n.id === notifId);
+          if (!exists) {
+            this.notifications.unshift({
+              id: notifId,
+              title: 'Attendance Alert: Missed Consultation',
+              message: `Notice: ${req.studentName || 'Student'} did not attend the scheduled consultation on ${req.scheduledDate} at ${req.scheduledTime}.`,
+              time: 'Alert',
+              read: false,
+              type: 'cancellation',
+              group: 'Today',
+              studentName: req.studentName,
+              actionRequired: false,
+            });
+          }
+        });
+
+        // 3. Remove notifications for requests that are NO LONGER pending
         this.notifications = this.notifications.filter(n => {
           if (n.type === 'booking' && n.actionRequired) {
-            // Keep it only if it is still pending in the database
             return pendingRequests.some(pr => pr.id === n.id);
           }
-          return true; // Keep other types of notifications safely
+          return true;
         });
+
+        // 4. Fetch Real Notifications from Backend (e.g. Warning alerts issued by admin)
+        const token = typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+          ? localStorage.getItem('token')
+          : null;
+        if (token) {
+          this.http.get<any[]>('http://localhost:8080/api/notifications', {
+            headers: { Authorization: `Bearer ${token}` }
+          }).subscribe({
+            next: (dbNotifs) => {
+              if (Array.isArray(dbNotifs)) {
+                dbNotifs.forEach(n => {
+                  const dbId = `db-${n.id}`;
+                  if (!this.notifications.find(x => x.id === dbId)) {
+                    this.notifications.unshift({
+                      id: dbId,
+                      title: n.title,
+                      message: n.message,
+                      time: 'Notice',
+                      read: n.isRead,
+                      type: 'cancellation',
+                      group: 'Today',
+                      actionRequired: false,
+                    });
+                  }
+                });
+              }
+            },
+            error: () => {},
+          });
+        }
       },
       error: (err) => console.error('Failed to load notifications', err)
     });
