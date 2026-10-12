@@ -127,8 +127,12 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
             mappedStatus = 'UPCOMING';
           } else if (rawStatus === 'PENDING') {
             mappedStatus = 'PENDING';
+          } else if (rawStatus === 'NO_SHOW' || rawStatus === 'NO-SHOW') {
+            mappedStatus = 'NO-SHOW';
+          } else if (rawStatus === 'RESCHEDULE_PENDING' || rawStatus === 'RESCHEDULE-PENDING') {
+            mappedStatus = 'RESCHEDULE-PENDING';
           } else {
-            mappedStatus = rawStatus; // handles COMPLETED, NO-SHOW, REJECTED, etc.
+            mappedStatus = rawStatus; // handles COMPLETED, REJECTED, etc.
           }
 
           return {

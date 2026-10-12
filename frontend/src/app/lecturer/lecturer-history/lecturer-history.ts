@@ -52,7 +52,7 @@ export class LecturerHistoryComponent implements OnInit {
           reason: consultation.reasonDetails || '',
           remarks: consultation.lecturerRemarks|| consultation.rejectReason || consultation.cancelReason || '',
           notes: '',
-          status: consultation.status === 'NO_SHOW' ? 'NO-SHOW' : consultation.status,
+          status: consultation.status === 'NO_SHOW' ? 'NO-SHOW' : (consultation.status === 'RESCHEDULE_PENDING' ? 'RESCHEDULE-PENDING' : consultation.status),
         }));
 
         this.cdr.detectChanges();

@@ -96,7 +96,9 @@ export class ConsultationLogsComponent implements OnInit {
       notes = '-';
     }
 
-    const status = (c.status || 'PENDING').toUpperCase();
+    let status = (c.status || 'PENDING').toUpperCase();
+    if (status === 'NO_SHOW') status = 'NO-SHOW';
+    if (status === 'RESCHEDULE_PENDING') status = 'RESCHEDULE-PENDING';
     const statusClass = status.toLowerCase().replace(/_/g, '-');
 
     return {

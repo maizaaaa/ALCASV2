@@ -205,6 +205,7 @@ export class NavbarStudent implements OnInit {
       if (
         statusUpper === 'RESCHEDULED' ||
         statusUpper === 'RESCHEDULE_PENDING' ||
+        statusUpper === 'RESCHEDULE-PENDING' ||
         statusUpper === 'RESCHEDULE' ||
         statusUpper === 'PROPOSED'
       ) {

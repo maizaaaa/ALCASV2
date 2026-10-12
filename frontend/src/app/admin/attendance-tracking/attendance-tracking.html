@@ -109,7 +109,7 @@
                 </td>
                 <td>
                   <span class="status-badge" [ngClass]="getStatusBadgeClass(record.status)">
-                    {{ (record.status === 'NO_SHOW' || record.status === 'no_show') ? 'NO-SHOW' : record.status }}
+                    {{ formatStatus(record.status) }}
                   </span>
                 </td>
                 <td class="notes-cell">{{ record.notes || '-' }}</td>

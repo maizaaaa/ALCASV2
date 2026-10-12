@@ -11,11 +11,12 @@
 
       <div class="dashboard-header glass-header">
         <div>
-          <h1 class="page-title">Advanced Analytics</h1>
-          <p class="page-subtitle">Generate custom period reports and export visual summaries.</p>
+          <h1 class="page-title">Advanced Analytics & Reports</h1>
+          <p class="page-subtitle">Generate verified school-based reports and export actual database analytics.</p>
         </div>
       </div>
 
+      <!-- Controls Form -->
       <div class="report-controls-card glass-card">
         <div class="controls-grid">
           <div class="form-group">
@@ -27,73 +28,306 @@
             <input type="date" [(ngModel)]="reportEndDate" class="modern-input">
           </div>
           <div class="form-group">
-            <label>Department Filter</label>
-            <select [(ngModel)]="selectedDepartment" class="modern-select">
-              <option value="ALL">All Departments</option>
-              <option value="CS">Computer Science</option>
-              <option value="IT">Information Technology</option>
+            <label>School Filter</label>
+            <select [(ngModel)]="selectedSchoolId" (change)="generateReport()" class="modern-select">
+              <option value="ALL">All Schools</option>
+              <option *ngFor="let s of schools" [value]="s.id">{{ s.name }}</option>
             </select>
           </div>
           <div class="form-actions">
             <button class="btn-premium-solid" (click)="generateReport()" [disabled]="isGenerating">
-              {{ isGenerating ? 'Aggregating...' : 'Generate Report' }}
+              {{ isGenerating ? 'Generating...' : 'Generate Report' }}
             </button>
           </div>
         </div>
       </div>
 
-      <div class="report-container fade-in" *ngIf="reportGenerated">
+      <div class="error-banner glass-card" *ngIf="errorMessage">
+        <p>{{ errorMessage }}</p>
+      </div>
+
+      <!-- Generated Report Container -->
+      <div class="report-container fade-in" *ngIf="reportGenerated && reportData">
+
+        <!-- PDF Print Official Document Header (Visible only when downloading/printing PDF) -->
+        <div class="pdf-print-header">
+          <div class="pdf-header-masthead">
+            <div class="pdf-branding">
+              <span class="pdf-institution">UNIVERSITI UTARA MALAYSIA</span>
+              <h1 class="pdf-sys-title">ALCAS &bull; ACADEMIC CONSULTATION & ADVISING SYSTEM</h1>
+              <h2 class="pdf-doc-title">Executive Analytics & Attendance Performance Report</h2>
+            </div>
+            <div class="pdf-badge-confidential">
+              <span>ADMINISTRATIVE RECORD</span>
+              <small>CONFIDENTIAL AUDIT</small>
+            </div>
+          </div>
+          <div class="pdf-meta-summary-card">
+            <div class="pdf-meta-col">
+              <span class="meta-caption">TARGET FACULTY / SCHOOL</span>
+              <span class="meta-heading">{{ reportData.schoolName || 'All Schools' }}</span>
+            </div>
+            <div class="pdf-meta-col">
+              <span class="meta-caption">REPORTING TIMEFRAME</span>
+              <span class="meta-heading">{{ reportStartDate | date:'mediumDate' }} &ndash; {{ reportEndDate |
+                date:'mediumDate' }}</span>
+            </div>
+            <div class="pdf-meta-col">
+              <span class="meta-caption">VERIFIED DATA SOURCE</span>
+              <span class="meta-heading">{{ todayDate | date:'medium' }}</span>
+            </div>
+            <div class="pdf-meta-col">
+              <span class="meta-caption">RECORDS INCLUDED</span>
+              <span class="meta-heading">{{ reportData.totalConsultations }} Total Consultations</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Screen Toolbar -->
         <div class="report-toolbar">
-          <h2 class="report-title">Report: {{ reportStartDate | date:'mediumDate' }} - {{ reportEndDate | date:'mediumDate' }}</h2>
+          <div>
+            <h2 class="report-title">{{ reportData.schoolName || 'All Schools' }}</h2>
+            <p class="report-subtitle-text">
+              Period: {{ reportStartDate | date:'mediumDate' }} &ndash; {{ reportEndDate | date:'mediumDate' }}
+            </p>
+          </div>
           <div class="export-actions">
-            <button class="btn-outline" (click)="exportToCSV()">Export CSV</button>
-            <button class="btn-premium-solid" (click)="exportToPDF()">Download PDF</button>
+            <button id="btn-export-excel" class="btn-outline" (click)="exportToExcel()"
+              [disabled]="!reportData.consultations || reportData.consultations.length === 0">
+              Export Excel
+            </button>
+            <button id="btn-export-pdf" class="btn-premium-solid" (click)="exportToPDF()">
+              Download PDF
+            </button>
           </div>
         </div>
 
+        <!-- 6 Executive Data Cards (Interactive & Print-Centered) -->
         <div class="metrics-grid">
-          <div class="metric-card glass-card">
-            <div class="metric-label">Total Consultations</div>
+          <!-- Card 1: Total Volume -->
+          <div id="card-filter-all" class="metric-card glass-card interactive-card"
+            [class.card-active]="selectedStatusFilter === 'ALL'" (click)="setStatusFilter('ALL')">
+            <div class="metric-card-header">
+              <span class="metric-label">Total Consultations</span>
+              <span class="metric-tag tag-teal">Volume</span>
+            </div>
             <div class="metric-value text-forest">{{ reportData.totalConsultations }}</div>
+            <div class="metric-subtext">Verified sessions in period</div>
           </div>
+
+          <!-- Card 2: Top Lecturer -->
           <div class="metric-card glass-card">
-            <div class="metric-label">Completion Rate</div>
-            <div class="metric-value text-green">{{ reportData.completionRate }}</div>
+            <div class="metric-card-header">
+              <span class="metric-label">Top Lecturer</span>
+              <span class="metric-tag tag-blue">Faculty</span>
+            </div>
+            <div class="metric-value text-dark" style="font-size: 17px;">{{ reportData.mostActiveLecturer }}</div>
+            <div class="metric-subtext">Highest session volume</div>
           </div>
+
+          <!-- Card 3: Peak Booking Day -->
           <div class="metric-card glass-card">
-            <div class="metric-label">Top Lecturer</div>
-            <div class="metric-value text-dark" style="font-size: 18px;">{{ reportData.mostActiveLecturer }}</div>
-          </div>
-          <div class="metric-card glass-card">
-            <div class="metric-label">Peak Booking Day</div>
-            <div class="metric-value text-dark" style="font-size: 18px;">{{ reportData.peakDay }}</div>
+            <div class="metric-card-header">
+              <span class="metric-label">Peak Demand Day</span>
+              <span class="metric-tag tag-purple">Schedule</span>
+            </div>
+            <div class="metric-value text-dark" style="font-size: 17px;">{{ reportData.peakDay }}</div>
+            <div class="metric-subtext">Most frequent session day</div>
           </div>
         </div>
 
+        <!-- Cleared & High-Contrast Charts Layout (Pure SVG Vector) -->
         <div class="charts-layout">
+          <!-- SVG Bar Chart: Weekly Volume -->
           <div class="chart-card glass-card">
-            <h3>Consultation Volume by Week</h3>
-            <div class="pure-css-bar-chart">
-              <div class="bar-wrapper" *ngFor="let data of weeklyTrend">
-                <div class="bar-value">{{ data.count }}</div>
-                <div class="bar" [style.height]="data.height"></div>
-                <div class="bar-label">{{ data.week }}</div>
+            <div class="chart-header-row">
+              <div>
+                <h3>Consultation Volume by Week</h3>
+                <span class="chart-sub-label">Distribution across selected period</span>
               </div>
+              <span class="chart-badge">{{ reportData.totalConsultations }} Total Sessions</span>
+            </div>
+
+            <div class="chart-svg-container" *ngIf="svgBarItems && svgBarItems.length > 0">
+              <svg viewBox="0 0 460 180" class="chart-svg-bars" preserveAspectRatio="xMidYMid meet">
+                <!-- Grid Lines -->
+                <line x1="20" y1="45" x2="440" y2="45" class="chart-grid-line" />
+                <line x1="20" y1="95" x2="440" y2="95" class="chart-grid-line" />
+                <line x1="20" y1="145" x2="440" y2="145" class="chart-baseline" />
+
+                <!-- Bars and Labels -->
+                <g *ngFor="let bar of svgBarItems" class="svg-bar-group">
+                  <text [attr.x]="bar.centerX" [attr.y]="bar.textY" text-anchor="middle" class="bar-val-svg">{{
+                    bar.count }}</text>
+                  <rect [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height" rx="5"
+                    ry="5" [attr.fill]="bar.fill" class="svg-bar-rect" />
+                  <text [attr.x]="bar.centerX" y="165" text-anchor="middle" class="bar-lbl-svg">{{ bar.week }}</text>
+                </g>
+              </svg>
+            </div>
+
+            <div class="chart-empty" *ngIf="!svgBarItems || svgBarItems.length === 0">
+              No consultations found for this period.
             </div>
           </div>
 
+          <!-- SVG Doughnut Chart: Status Distribution -->
           <div class="chart-card glass-card">
-            <h3>Status Distribution</h3>
+            <div class="chart-header-row">
+              <div>
+                <h3>Status Distribution</h3>
+                <span class="chart-sub-label">Performance Breakdown</span>
+              </div>
+            </div>
+
             <div class="pie-chart-placeholder">
-              <div class="fake-pie"></div>
-              <div class="legend">
-                <div class="legend-item"><span class="dot green"></span> Completed (88.5%)</div>
-                <div class="legend-item"><span class="dot red"></span> No-Show (8.5%)</div>
-                <div class="legend-item"><span class="dot gray"></span> Cancelled (3.0%)</div>
+              <!-- Crisp Vector SVG Doughnut -->
+              <div class="donut-svg-wrapper">
+                <svg viewBox="0 0 160 160" width="140" height="140" class="donut-svg">
+                  <!-- Base Track Circle -->
+                  <circle cx="80" cy="80" r="50" fill="none" stroke="#e2e8f0" stroke-width="22" class="donut-track" />
+                  <!-- Dynamic SVG Segments -->
+                  <circle *ngFor="let seg of svgDonutSegments" cx="80" cy="80" r="50" fill="none"
+                    [attr.stroke]="seg.color" stroke-width="22" [attr.stroke-dasharray]="seg.dasharray"
+                    [attr.stroke-dashoffset]="seg.dashoffset" transform="rotate(-90 80 80)" class="donut-segment"
+                    (click)="setStatusFilter(seg.statusKey)" />
+                  <!-- Center Total Badge -->
+                  <text x="80" y="76" text-anchor="middle" class="donut-center-total">{{ reportData.totalConsultations
+                    }}</text>
+                  <text x="80" y="93" text-anchor="middle" class="donut-center-label">TOTAL</text>
+                </svg>
+              </div>
+
+              <!-- High-Contrast Interactive Legend -->
+              <div class="legend" *ngIf="reportData.statusDistribution">
+                <div class="legend-item interactive-legend" [class.active-legend]="selectedStatusFilter === 'COMPLETED'"
+                  (click)="setStatusFilter('COMPLETED')">
+                  <span class="dot green"></span>
+                  <span class="legend-name">Completed:</span>
+                  <strong class="legend-count green-text">{{ reportData.statusDistribution.completedCount }} ({{
+                    reportData.statusDistribution.completedPercentage }}%)</strong>
+                </div>
+                <div class="legend-item interactive-legend" [class.active-legend]="selectedStatusFilter === 'NO-SHOW' || selectedStatusFilter === 'NO_SHOW'"
+                  (click)="setStatusFilter('NO-SHOW')">
+                  <span class="dot red"></span>
+                  <span class="legend-name">No-Show:</span>
+                  <strong class="legend-count red-text">{{ reportData.statusDistribution.noShowCount }} ({{
+                    reportData.statusDistribution.noShowPercentage }}%)</strong>
+                </div>
+                <div class="legend-item interactive-legend" [class.active-legend]="selectedStatusFilter === 'CANCELLED'"
+                  (click)="setStatusFilter('CANCELLED')">
+                  <span class="dot gray"></span>
+                  <span class="legend-name">Cancelled/Declined:</span>
+                  <strong class="legend-count gray-text">{{ reportData.statusDistribution.cancelledCount }} ({{
+                    reportData.statusDistribution.cancelledPercentage }}%)</strong>
+                </div>
+                <div class="legend-item interactive-legend" [class.active-legend]="selectedStatusFilter === 'PENDING'"
+                  (click)="setStatusFilter('PENDING')">
+                  <span class="dot yellow"></span>
+                  <span class="legend-name">Pending/Confirmed:</span>
+                  <strong class="legend-count yellow-text">{{ reportData.statusDistribution.pendingCount }} ({{
+                    reportData.statusDistribution.pendingPercentage }}%)</strong>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Authentic Database Records Table -->
+        <div class="table-card glass-card" style="margin-top: 24px;">
+          <div class="table-header-row">
+            <div>
+              <h3>Detailed Consultation Records</h3>
+              <p class="table-subtitle">
+                Underlying verified database records for {{ reportData.schoolName || 'All Schools' }} &bull; Showing {{
+                filteredConsultations.length }} of {{ reportData.totalConsultations }} records
+              </p>
+            </div>
+
+            <!-- Interactive Search & Filter Bar (Screen only) -->
+            <div class="table-interactive-controls">
+              <div class="filter-pills-row">
+                <button id="btn-filter-all" class="pill-btn" [class.active]="selectedStatusFilter === 'ALL'"
+                  (click)="setStatusFilter('ALL')">
+                  All ({{ reportData.totalConsultations }})
+                </button>
+                <button id="btn-filter-completed" class="pill-btn pill-green"
+                  [class.active]="selectedStatusFilter === 'COMPLETED'" (click)="setStatusFilter('COMPLETED')">
+                  Completed ({{ reportData.completedCount }})
+                </button>
+                <button id="btn-filter-noshow" class="pill-btn pill-red"
+                  [class.active]="selectedStatusFilter === 'NO-SHOW' || selectedStatusFilter === 'NO_SHOW'" (click)="setStatusFilter('NO-SHOW')">
+                  No-Show ({{ reportData.noShowCount }})
+                </button>
+                <button id="btn-filter-cancelled" class="pill-btn pill-gray"
+                  [class.active]="selectedStatusFilter === 'CANCELLED'" (click)="setStatusFilter('CANCELLED')">
+                  Cancelled ({{ reportData.cancelledCount }})
+                </button>
+                <button id="btn-filter-pending" class="pill-btn pill-yellow"
+                  [class.active]="selectedStatusFilter === 'PENDING'" (click)="setStatusFilter('PENDING')">
+                  Pending ({{ reportData.pendingCount }})
+                </button>
+              </div>
+
+              <div class="table-search-row">
+                <input id="input-table-search" type="text" [(ngModel)]="tableSearchQuery"
+                  placeholder="Filter by student, matric, lecturer, reason..." class="table-search-input">
+                <button id="btn-clear-filter" class="btn-clear-filter"
+                  *ngIf="selectedStatusFilter !== 'ALL' || tableSearchQuery" (click)="resetTableFilters()">
+                  Reset Filter
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive" *ngIf="filteredConsultations && filteredConsultations.length > 0">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Student</th>
+                  <th>Matric No</th>
+                  <th>Lecturer</th>
+                  <th>School</th>
+                  <th>Reason</th>
+                  <th>Mode</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of filteredConsultations">
+                  <td class="font-medium whitespace-nowrap">{{ row.scheduledDate }} {{ row.scheduledTime }}</td>
+                  <td>{{ row.studentName }}</td>
+                  <td><span class="matric-badge">{{ row.studentMatric }}</span></td>
+                  <td>{{ row.lecturerName }}</td>
+                  <td><span class="school-badge">{{ row.schoolName }}</span></td>
+                  <td>{{ row.reason }}</td>
+                  <td><span class="mode-badge">{{ row.consultationMode }}</span></td>
+                  <td>
+                    <span class="status-pill" [ngClass]="getStatusClass(row.status)">
+                      {{ formatStatus(row.status) }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="empty-table-state" *ngIf="!filteredConsultations || filteredConsultations.length === 0">
+            <p *ngIf="selectedStatusFilter !== 'ALL' || tableSearchQuery">No consultation records match the active
+              filter criteria. <a href="javascript:void(0)" (click)="resetTableFilters()">Clear filter</a> to view all.
+            </p>
+            <p *ngIf="selectedStatusFilter === 'ALL' && !tableSearchQuery">No consultation records exist in the database
+              for the selected school and period.</p>
+          </div>
+        </div>
+
+        <!-- PDF Print Footer (Centered & Formal) -->
+        <div class="pdf-print-footer">
+          <span>ALCAS Academic Consultation Platform &bull; Universiti Utara Malaysia</span>
+          <span>Official Institutional Analytics Record &bull; Generated by Administrator</span>
+        </div>
+
       </div>
     </div>
   </main>

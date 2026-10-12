@@ -103,6 +103,14 @@ export class AttendanceTrackingComponent implements OnInit {
     });
   }
 
+  formatStatus(status?: string): string {
+    if (!status) return '';
+    const upper = status.trim().toUpperCase();
+    if (upper === 'NO_SHOW' || upper === 'NO-SHOW') return 'NO-SHOW';
+    if (upper === 'RESCHEDULE_PENDING' || upper === 'RESCHEDULE-PENDING') return 'RESCHEDULE-PENDING';
+    return upper;
+  }
+
   getStatusBadgeClass(status: string): string {
     if (!status) return '';
     const s = status.toUpperCase();
