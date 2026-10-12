@@ -13,15 +13,23 @@ import com.alcas.backend.dto.AdminUserResponse;
 import com.alcas.backend.dto.AdminCreateUserRequest;
 import com.alcas.backend.dto.ConsultationResponse;
 import com.alcas.backend.dto.AdminAttendanceResponse;
+import com.alcas.backend.dto.AdminAnalyticsReportResponse;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.DayOfWeek;
+import java.time.format.TextStyle;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -441,13 +449,251 @@ public class AdminController {
                 attendance.getLecturer() != null && attendance.getLecturer().getUser() != null
                 ? attendance.getLecturer().getUser().getFullName() : "Unknown Lecturer",
                 attendance.getAttendanceDate() != null ? attendance.getAttendanceDate().toString() : "",
-                attendance.getStatus() != null ? attendance.getStatus().name() : "",
+                attendance.getStatus() != null ? (attendance.getStatus() == Attendance.Status.NO_SHOW ? "NO-SHOW" : attendance.getStatus().name()) : "",
                 attendance.getNotes() != null ? attendance.getNotes() : "",
                 attendance.getMarkedBy() != null ? attendance.getMarkedBy().getId() : null,
                 attendance.getMarkedBy() != null ? attendance.getMarkedBy().getFullName() : null,
                 attendance.getMarkedAt() != null ? attendance.getMarkedAt().toString() : null
         );
         response.setWarningIssued(warningIssued);
+        return response;
+    }
+
+    @GetMapping("/schools")
+    public List<School> getAdminSchools() {
+        return schoolRepository.findAll();
+    }
+
+    @GetMapping("/reports/analytics")
+    @Transactional(readOnly = true)
+    public AdminAnalyticsReportResponse getAnalyticsReport(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) Integer schoolId) {
+
+        LocalDate start;
+        LocalDate end;
+
+        try {
+            start = (startDate != null && !startDate.isBlank())
+                    ? LocalDate.parse(startDate)
+                    : LocalDate.now().minusMonths(1);
+        } catch (Exception e) {
+            start = LocalDate.now().minusMonths(1);
+        }
+
+        try {
+            end = (endDate != null && !endDate.isBlank())
+                    ? LocalDate.parse(endDate)
+                    : LocalDate.now();
+        } catch (Exception e) {
+            end = LocalDate.now();
+        }
+
+        if (start.isAfter(end)) {
+            LocalDate temp = start;
+            start = end;
+            end = temp;
+        }
+
+        final LocalDate effectiveStart = start;
+        final LocalDate effectiveEnd = end;
+
+        List<Consultation> all = consultationRepository.findAll();
+
+        List<Consultation> filtered = all.stream()
+                .filter(c -> {
+                    if (c.getScheduledDate() == null) {
+                        return false;
+                    }
+                    if (c.getScheduledDate().isBefore(effectiveStart) || c.getScheduledDate().isAfter(effectiveEnd)) {
+                        return false;
+                    }
+                    if (schoolId != null && schoolId > 0) {
+                        boolean match = false;
+                        if (c.getStudent() != null && c.getStudent().getSchool() != null
+                                && schoolId.equals(c.getStudent().getSchool().getId())) {
+                            match = true;
+                        }
+                        if (c.getLecturer() != null && schoolId.equals(c.getLecturer().getSchoolId())) {
+                            match = true;
+                        }
+                        return match;
+                    }
+                    return true;
+                })
+                .sorted((a, b) -> {
+                    int d = a.getScheduledDate().compareTo(b.getScheduledDate());
+                    if (d != 0) return d;
+                    if (a.getScheduledTime() != null && b.getScheduledTime() != null) {
+                        return a.getScheduledTime().compareTo(b.getScheduledTime());
+                    }
+                    return 0;
+                })
+                .toList();
+
+        AdminAnalyticsReportResponse response = new AdminAnalyticsReportResponse();
+        response.setStartDate(effectiveStart.toString());
+        response.setEndDate(effectiveEnd.toString());
+        response.setSchoolId(schoolId != null && schoolId > 0 ? schoolId : null);
+
+        String schoolName = "All Schools";
+        if (schoolId != null && schoolId > 0) {
+            schoolName = schoolRepository.findById(schoolId)
+                    .map(School::getName)
+                    .orElse("School #" + schoolId);
+        }
+        response.setSchoolName(schoolName);
+
+        int total = filtered.size();
+        response.setTotalConsultations(total);
+
+        int completed = 0;
+        int noShow = 0;
+        int cancelled = 0;
+        int pending = 0;
+
+        for (Consultation c : filtered) {
+            Consultation.Status st = c.getStatus();
+            if (st == null) {
+                pending++;
+            } else {
+                switch (st) {
+                    case COMPLETED -> completed++;
+                    case NO_SHOW -> noShow++;
+                    case CANCELLED, REJECTED -> cancelled++;
+                    default -> pending++;
+                }
+            }
+        }
+
+        response.setCompletedCount(completed);
+        response.setNoShowCount(noShow);
+        response.setCancelledCount(cancelled);
+        response.setPendingCount(pending);
+
+        double compRate = total > 0 ? (completed * 100.0) / total : 0.0;
+        response.setCompletionRate(String.format(Locale.US, "%.1f%%", compRate));
+
+        // Top Lecturer
+        Map<String, Long> lecturerCounts = filtered.stream()
+                .filter(c -> c.getLecturer() != null && c.getLecturer().getUser() != null)
+                .collect(Collectors.groupingBy(
+                        c -> c.getLecturer().getUser().getFullName(),
+                        Collectors.counting()
+                ));
+
+        var topLecturerEntry = lecturerCounts.entrySet().stream()
+                .max(Map.Entry.comparingByValue());
+
+        if (topLecturerEntry.isPresent()) {
+            response.setMostActiveLecturer(topLecturerEntry.get().getKey() + " (" + topLecturerEntry.get().getValue() + " sessions)");
+        } else {
+            response.setMostActiveLecturer("No sessions");
+        }
+
+        // Peak Day
+        Map<DayOfWeek, Long> dayCounts = filtered.stream()
+                .filter(c -> c.getScheduledDate() != null)
+                .collect(Collectors.groupingBy(
+                        c -> c.getScheduledDate().getDayOfWeek(),
+                        Collectors.counting()
+                ));
+
+        var peakDayEntry = dayCounts.entrySet().stream()
+                .max(Map.Entry.comparingByValue());
+
+        if (peakDayEntry.isPresent() && total > 0) {
+            double dayPct = (peakDayEntry.get().getValue() * 100.0) / total;
+            String dayName = peakDayEntry.get().getKey().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+            response.setPeakDay(String.format(Locale.US, "%s (%.0f%% of bookings)", dayName, dayPct));
+        } else {
+            response.setPeakDay("No bookings");
+        }
+
+        // Weekly Trend: calculate 4 dynamic intervals covering [effectiveStart, effectiveEnd]
+        long totalDays = ChronoUnit.DAYS.between(effectiveStart, effectiveEnd) + 1;
+        int numBuckets = 4;
+        long bucketDays = Math.max(1, (totalDays + numBuckets - 1) / numBuckets);
+
+        int[] counts = new int[numBuckets];
+        for (Consultation c : filtered) {
+            long diff = ChronoUnit.DAYS.between(effectiveStart, c.getScheduledDate());
+            int bucket = (int) (diff / bucketDays);
+            if (bucket >= numBuckets) bucket = numBuckets - 1;
+            if (bucket < 0) bucket = 0;
+            counts[bucket]++;
+        }
+
+        int maxWeeklyCount = 0;
+        for (int c : counts) {
+            if (c > maxWeeklyCount) maxWeeklyCount = c;
+        }
+
+        List<AdminAnalyticsReportResponse.WeeklyTrendItem> weeklyTrend = new ArrayList<>();
+        for (int i = 0; i < numBuckets; i++) {
+            LocalDate wStart = effectiveStart.plusDays(i * bucketDays);
+            String label = "Week " + (i + 1);
+            if (totalDays > 7) {
+                label = "W" + (i + 1) + " (" + wStart.getMonthValue() + "/" + wStart.getDayOfMonth() + ")";
+            }
+            String height = maxWeeklyCount > 0
+                    ? Math.max(10, Math.round((counts[i] * 100.0f) / maxWeeklyCount)) + "%"
+                    : "0%";
+            weeklyTrend.add(new AdminAnalyticsReportResponse.WeeklyTrendItem(label, counts[i], height));
+        }
+        response.setWeeklyTrend(weeklyTrend);
+
+        // Status Distribution
+        double completedPct = total > 0 ? Math.round((completed * 1000.0) / total) / 10.0 : 0.0;
+        double noShowPct = total > 0 ? Math.round((noShow * 1000.0) / total) / 10.0 : 0.0;
+        double cancelledPct = total > 0 ? Math.round((cancelled * 1000.0) / total) / 10.0 : 0.0;
+        double pendingPct = total > 0 ? Math.round((pending * 1000.0) / total) / 10.0 : 0.0;
+
+        response.setStatusDistribution(new AdminAnalyticsReportResponse.StatusDistribution(
+                completed, completedPct,
+                noShow, noShowPct,
+                cancelled, cancelledPct,
+                pending, pendingPct
+        ));
+
+        // Detailed consultations for report table & CSV export
+        List<AdminAnalyticsReportResponse.ConsultationRecordItem> recordItems = filtered.stream()
+                .map(c -> {
+                    String sName = "Unknown";
+                    if (c.getStudent() != null && c.getStudent().getSchool() != null) {
+                        sName = c.getStudent().getSchool().getName();
+                    } else if (c.getLecturer() != null && c.getLecturer().getSchoolId() != null) {
+                        sName = schoolRepository.findById(c.getLecturer().getSchoolId())
+                                .map(School::getName)
+                                .orElse("School #" + c.getLecturer().getSchoolId());
+                    }
+                    String statusStr = "";
+                    if (c.getStatus() != null) {
+                        if (c.getStatus() == Consultation.Status.NO_SHOW) {
+                            statusStr = "NO-SHOW";
+                        } else if (c.getStatus() == Consultation.Status.RESCHEDULE_PENDING) {
+                            statusStr = "RESCHEDULE-PENDING";
+                        } else {
+                            statusStr = c.getStatus().name();
+                        }
+                    }
+                    return new AdminAnalyticsReportResponse.ConsultationRecordItem(
+                            c.getId(),
+                            c.getScheduledDate() != null ? c.getScheduledDate().toString() : "",
+                            c.getScheduledTime() != null ? c.getScheduledTime().toString() : "",
+                            c.getStudent() != null && c.getStudent().getUser() != null ? c.getStudent().getUser().getFullName() : "Unknown Student",
+                            c.getStudent() != null && c.getStudent().getMatricNumber() != null ? c.getStudent().getMatricNumber() : "",
+                            c.getLecturer() != null && c.getLecturer().getUser() != null ? c.getLecturer().getUser().getFullName() : "Unknown Lecturer",
+                            sName,
+                            c.getReason() != null ? c.getReason() : "",
+                            c.getConsultationMode() != null ? c.getConsultationMode() : "",
+                            statusStr
+                    );
+                })
+                .toList();
+        response.setConsultations(recordItems);
+
         return response;
     }
 }

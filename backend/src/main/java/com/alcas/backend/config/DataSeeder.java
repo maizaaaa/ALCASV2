@@ -1,7 +1,9 @@
 package com.alcas.backend.config;
 
 import com.alcas.backend.entity.User;
+import com.alcas.backend.entity.School;
 import com.alcas.backend.repository.UserRepository;
+import com.alcas.backend.repository.SchoolRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -93,6 +95,28 @@ public class DataSeeder {
                 );
 
                 userRepository.save(admin);
+            }
+        };
+    }
+
+    @Bean
+    CommandLineRunner seedSchools(SchoolRepository schoolRepository) {
+        return args -> {
+            String[] defaultSchools = {
+                "School of Computing (SOC)",
+                "School of Technology Management and Logistics (STML)",
+                "School of Business Management (SBM)",
+                "School of Quantitative Sciences (SQS)"
+            };
+            for (String schoolName : defaultSchools) {
+                boolean exists = schoolRepository.findAll().stream()
+                        .anyMatch(s -> s.getName() != null && (s.getName().equalsIgnoreCase(schoolName)
+                                || s.getName().toLowerCase().contains(schoolName.toLowerCase().substring(0, 15))));
+                if (!exists) {
+                    School s = new School();
+                    s.setName(schoolName);
+                    schoolRepository.save(s);
+                }
             }
         };
     }

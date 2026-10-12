@@ -89,6 +89,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/attendance/lecturer/**").hasRole("LECTURER")
                         .requestMatchers("/api/admin/**").permitAll()
                         .requestMatchers("/api/notifications/**").permitAll()
+                        .requestMatchers("/api/schools/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/system-settings/**").authenticated()
                         .requestMatchers("/api/system-settings/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
