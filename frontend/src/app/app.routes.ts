@@ -46,6 +46,7 @@ export const routes: Routes = [
   { path: 'admin/attendance', component: AttendanceTrackingComponent },
   { path: 'admin/settings', component: SystemSettingsComponent },
   { path: 'admin/broadcasts', component: BroadcastHubComponent },
+  { path: 'admin/broadcast-hub', redirectTo: 'admin/broadcasts', pathMatch: 'full' },
   { path: 'admin/analytics', component: AnalyticsReportsComponent },
 
   //-- LECTURER ROUTES --//

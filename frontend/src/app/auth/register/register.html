@@ -113,8 +113,9 @@
                 type="text"
                 id="fullName"
                 name="fullName"
-                placeholder="Full Name"
+                placeholder="e.g., Nur Aisyah"
                 [(ngModel)]="registerData.fullName"
+                (ngModelChange)="onFullNameChange()"
                 required
                 class="form-control"
               />
@@ -155,13 +156,13 @@
               <select
                 id="school"
                 name="school"
-                [(ngModel)]="registerData.school"
+                [(ngModel)]="registerData.schoolId"
                 (ngModelChange)="onSchoolChange()"
                 required
                 class="form-control select-control"
               >
-                <option value="" disabled selected hidden>Select School</option>
-                <option *ngFor="let s of schools" [value]="s">{{ s }}</option>
+                <option [ngValue]="null" disabled selected hidden>Select School</option>
+                <option *ngFor="let s of schoolsList" [ngValue]="s.id">{{ s.name }}</option>
               </select>
             </div>
           </div>
@@ -179,20 +180,35 @@
               <select
                 id="program"
                 name="program"
-                [(ngModel)]="registerData.program"
-                [disabled]="!registerData.school"
+                [(ngModel)]="registerData.programId"
+                [disabled]="!registerData.schoolId || availablePrograms.length === 0"
                 required
                 class="form-control select-control"
               >
-                <option value="" disabled selected hidden>Select Program</option>
-                <option *ngFor="let p of availablePrograms" [value]="p">{{ p }}</option>
+                <option [ngValue]="null" disabled selected hidden>Select Program</option>
+                <option *ngFor="let p of availablePrograms" [ngValue]="p.id">{{ p.name }}</option>
               </select>
             </div>
           </div>
 
-          <!-- Email Address -->
+          <!-- Student Email Address -->
           <div class="form-group">
-            <label for="email" class="form-label">Email Address</label>
+            <div class="label-row">
+              <label for="email" class="form-label">Student Email Address</label>
+              <button
+                type="button"
+                (click)="regenerateEmail()"
+                class="btn-regenerate-email"
+                title="Auto-generate student email from name and school"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="feather-mini">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Auto-generate
+              </button>
+            </div>
             <div class="input-wrapper">
               <span class="input-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather">
@@ -204,12 +220,16 @@
                 type="email"
                 id="email"
                 name="email"
-                placeholder="name@uum.edu"
+                placeholder="e.g., nur_aisyah@soc.uum.edu.my"
                 [(ngModel)]="registerData.email"
+                (input)="onEmailManualInput()"
                 required
                 class="form-control"
               />
             </div>
+            <span class="field-hint">
+              Student email format with underscore: e.g. <code>nur_aisyah@soc.uum.edu.my</code>
+            </span>
           </div>
 
           <!-- Password -->
@@ -280,11 +300,21 @@
         <!-- Form Actions -->
         <div class="register-actions" *ngIf="!isSubmitted">
           <a routerLink="/login" class="btn-cancel">Cancel</a>
-          <button type="submit" [disabled]="!registerForm.valid" class="btn-login-small">Submit</button>
+          <button type="submit" [disabled]="!registerForm.valid || isSubmitting" class="btn-login-small">
+            <span *ngIf="!isSubmitting">Submit</span>
+            <span *ngIf="isSubmitting">Registering...</span>
+          </button>
         </div>
 
-        <div class="register-footer" *ngIf="isSubmitted">
-          <a routerLink="/login" class="register-link">Return to Login</a>
+        <div class="register-footer" *ngIf="isSubmitted" style="text-align: center; margin-top: 1.5rem;">
+          <a routerLink="/login" class="btn-login-small back-to-login-btn">
+            <span>Proceed to Login</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" class="btn-arrow-icon" style="width: 18px; height: 18px; margin-left: 8px;">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
         </div>
       </form>
     </div>

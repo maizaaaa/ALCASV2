@@ -133,3 +133,76 @@
   cursor: not-allowed;
   box-shadow: none;
 }
+
+/* 🌟 Student Email Helper & Auto-Generate 🌟 */
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.label-row .form-label {
+  margin-bottom: 0;
+}
+
+.btn-regenerate-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  color: var(--teal-medium, #0D9488);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-regenerate-email:hover {
+  color: var(--teal-dark, #0F766E);
+  background-color: rgba(13, 148, 136, 0.1);
+  transform: translateY(-1px);
+}
+
+:host-context(.dark) .btn-regenerate-email {
+  color: var(--teal-light, #2DD4BF);
+}
+
+:host-context(.dark) .btn-regenerate-email:hover {
+  color: #5EEAD4;
+  background-color: rgba(45, 212, 191, 0.15);
+}
+
+.feather-mini {
+  width: 14px;
+  height: 14px;
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--text-muted, #64748B);
+  margin-top: 0.35rem;
+  line-height: 1.35;
+}
+
+.field-hint code {
+  background-color: rgba(13, 148, 136, 0.08);
+  color: var(--teal-dark, #0F766E);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+:host-context(.dark) .field-hint {
+  color: #94A3B8;
+}
+
+:host-context(.dark) .field-hint code {
+  background-color: rgba(45, 212, 191, 0.12);
+  color: #2DD4BF;
+}

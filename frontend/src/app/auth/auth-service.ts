@@ -57,7 +57,15 @@ export class AuthService {
   }
 
   registerStudent(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register-student`, data);
+    return this.http.post<any>(`${this.apiUrl}/register`, data);
+  }
+
+  getSchools(): Observable<any[]> {
+    return this.http.get<any[]>('http://localhost:8080/api/schools');
+  }
+
+  getProgramsBySchool(schoolId: number): Observable<any[]> {
+    return this.http.get<any[]>(`http://localhost:8080/api/programs/school/${schoolId}`);
   }
 
   forgotPassword(email: string): Observable<any> {

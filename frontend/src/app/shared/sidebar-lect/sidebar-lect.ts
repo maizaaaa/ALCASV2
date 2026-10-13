@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, PLATFORM_ID, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, PLATFORM_ID, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink, Router, RouterLinkActive } from '@angular/router';
@@ -30,7 +30,8 @@ export class SidebarLect implements OnInit, OnDestroy {
   private router = inject(Router);
   private elementRef = inject(ElementRef);
   private http = inject(HttpClient);
-  private consultationService = inject(ConsultationService); // Injected Service
+  private consultationService = inject(ConsultationService);
+  private cdr = inject(ChangeDetectorRef);
 
   isDarkMode: boolean = false;
   isNotificationOpen: boolean = false;
@@ -42,7 +43,15 @@ export class SidebarLect implements OnInit, OnDestroy {
   private pollingSub!: Subscription;
 
   get todayNotifications(): LecturerNotification[] {
-    return this.notifications.filter((n) => n.group === 'Today');
+    return this.notifications
+      .filter((n) => n.group === 'Today')
+      .sort((a, b) => {
+        const aIsBroadcast = a.time === 'Broadcast';
+        const bIsBroadcast = b.time === 'Broadcast';
+        if (aIsBroadcast && !bIsBroadcast) return -1;
+        if (!aIsBroadcast && bIsBroadcast) return 1;
+        return 0;
+      });
   }
 
   get yesterdayNotifications(): LecturerNotification[] {
@@ -85,12 +94,47 @@ export class SidebarLect implements OnInit, OnDestroy {
   }
 
   fetchRealNotifications() {
+    // 1. Fetch In-App Notifications from Backend (e.g. Broadcast announcements & Admin warnings)
+    const token = typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+      ? localStorage.getItem('token')
+      : null;
+    if (token) {
+      this.http.get<any[]>('http://localhost:8080/api/notifications', {
+        headers: { Authorization: `Bearer ${token}` }
+      }).subscribe({
+        next: (dbNotifs) => {
+          if (Array.isArray(dbNotifs)) {
+            dbNotifs.forEach(n => {
+              const dbId = `db-${n.id}`;
+              const exists = this.notifications.find(x => x.id === dbId);
+              const isBroadcast = (n.type || '').toUpperCase() === 'BROADCAST';
+              if (!exists) {
+                this.notifications.unshift({
+                  id: dbId,
+                  title: n.title,
+                  message: n.message,
+                  time: isBroadcast ? 'Broadcast' : 'Notice',
+                  read: n.isRead,
+                  type: isBroadcast ? 'reminder' : 'cancellation',
+                  group: 'Today',
+                  actionRequired: false,
+                });
+              }
+            });
+            this.cdr.detectChanges();
+          }
+        },
+        error: (err) => console.warn('Failed to load DB notifications', err),
+      });
+    }
+
+    // 2. Fetch Consultation Requests from Backend
     this.consultationService.getLecturerConsultations().subscribe({
       next: (consultations: Consultation[]) => {
         // Find all pending requests in the database
-        const pendingRequests = consultations.filter(c => c.status === 'PENDING');
+        const pendingRequests = (consultations || []).filter(c => c.status === 'PENDING');
 
-        // 1. Add any NEW pending requests to the top of our notifications array
+        // Add any NEW pending requests to notifications array
         pendingRequests.forEach(req => {
           const exists = this.notifications.find(n => n.id === req.id);
           if (!exists) {
@@ -108,8 +152,8 @@ export class SidebarLect implements OnInit, OnDestroy {
           }
         });
 
-        // 2. Add No-Show consultation alerts for lecturer
-        const noShowConsultations = consultations.filter(
+        // Add No-Show consultation alerts for lecturer
+        const noShowConsultations = (consultations || []).filter(
           c => (c.status || '').toUpperCase() === 'NO_SHOW' || (c.status || '').toUpperCase() === 'NO-SHOW'
         );
         noShowConsultations.forEach(req => {
@@ -130,46 +174,16 @@ export class SidebarLect implements OnInit, OnDestroy {
           }
         });
 
-        // 3. Remove notifications for requests that are NO LONGER pending
+        // Remove notifications for requests that are NO LONGER pending
         this.notifications = this.notifications.filter(n => {
           if (n.type === 'booking' && n.actionRequired) {
             return pendingRequests.some(pr => pr.id === n.id);
           }
           return true;
         });
-
-        // 4. Fetch Real Notifications from Backend (e.g. Warning alerts issued by admin)
-        const token = typeof window !== 'undefined' && typeof localStorage !== 'undefined'
-          ? localStorage.getItem('token')
-          : null;
-        if (token) {
-          this.http.get<any[]>('http://localhost:8080/api/notifications', {
-            headers: { Authorization: `Bearer ${token}` }
-          }).subscribe({
-            next: (dbNotifs) => {
-              if (Array.isArray(dbNotifs)) {
-                dbNotifs.forEach(n => {
-                  const dbId = `db-${n.id}`;
-                  if (!this.notifications.find(x => x.id === dbId)) {
-                    this.notifications.unshift({
-                      id: dbId,
-                      title: n.title,
-                      message: n.message,
-                      time: 'Notice',
-                      read: n.isRead,
-                      type: 'cancellation',
-                      group: 'Today',
-                      actionRequired: false,
-                    });
-                  }
-                });
-              }
-            },
-            error: () => {},
-          });
-        }
+        this.cdr.detectChanges();
       },
-      error: (err) => console.error('Failed to load notifications', err)
+      error: (err) => console.warn('Consultation list info:', err)
     });
   }
 

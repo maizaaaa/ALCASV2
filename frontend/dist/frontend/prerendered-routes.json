@@ -4,6 +4,7 @@
     "/admin": {},
     "/admin/analytics": {},
     "/admin/attendance": {},
+    "/admin/broadcast-hub": {},
     "/admin/broadcasts": {},
     "/admin/logs": {},
     "/admin/settings": {},
