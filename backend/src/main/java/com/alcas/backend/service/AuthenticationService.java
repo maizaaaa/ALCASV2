@@ -86,8 +86,17 @@ public class AuthenticationService {
 
     public void registerStudent(RegisterRequest request) {
 
-        if (userService.existsByEmail(request.getEmail())) {
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        if (userService.existsByEmail(request.getEmail().trim())) {
             throw new RuntimeException("Email already registered");
+        }
+
+        if (request.getMatricNumber() != null && !request.getMatricNumber().isBlank()
+                && studentProfileService.existsByMatricNumber(request.getMatricNumber().trim())) {
+            throw new RuntimeException("Matric number already registered");
         }
 
         if (request.getSchoolId() == null) {
@@ -108,13 +117,13 @@ public class AuthenticationService {
 
         User user = new User();
 
-        user.setEmail(request.getEmail());
+        user.setEmail(request.getEmail().trim());
         user.setPassword(
                 passwordEncoder.encode(request.getPassword())
         );
-        user.setFullName(request.getFullName());
+        user.setFullName(request.getFullName() != null ? request.getFullName().trim() : "Student");
         user.setRole(User.Role.STUDENT);
-        user.setStatus(User.Status.PENDING);
+        user.setStatus(User.Status.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
 
@@ -123,8 +132,8 @@ public class AuthenticationService {
         StudentProfile studentProfile = new StudentProfile();
 
         studentProfile.setUser(savedUser);
-        studentProfile.setMatricNumber(request.getMatricNumber());
-        studentProfile.setPhone(request.getPhone());
+        studentProfile.setMatricNumber(request.getMatricNumber() != null ? request.getMatricNumber().trim() : null);
+        studentProfile.setPhone(request.getPhone() != null ? request.getPhone().trim() : "");
         studentProfile.setSchool(school);
         studentProfile.setProgram(program);
         studentProfile.setCreatedAt(LocalDateTime.now());

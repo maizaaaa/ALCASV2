@@ -9,11 +9,14 @@ import com.alcas.backend.repository.ProgramRepository;
 import com.alcas.backend.repository.ConsultationRepository;
 import com.alcas.backend.repository.AttendanceRepository;
 import com.alcas.backend.repository.NotificationRepository;
+import com.alcas.backend.repository.BroadcastRepository;
 import com.alcas.backend.dto.AdminUserResponse;
 import com.alcas.backend.dto.AdminCreateUserRequest;
 import com.alcas.backend.dto.ConsultationResponse;
 import com.alcas.backend.dto.AdminAttendanceResponse;
 import com.alcas.backend.dto.AdminAnalyticsReportResponse;
+import com.alcas.backend.dto.AdminBroadcastRequest;
+import com.alcas.backend.dto.AdminBroadcastResponse;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,6 +47,7 @@ public class AdminController {
     private final ConsultationRepository consultationRepository;
     private final AttendanceRepository attendanceRepository;
     private final NotificationRepository notificationRepository;
+    private final BroadcastRepository broadcastRepository;
 
     public AdminController(UserRepository userRepository,
             PasswordEncoder passwordEncoder,
@@ -53,7 +57,8 @@ public class AdminController {
             SchoolRepository schoolRepository,
             ConsultationRepository consultationRepository,
             AttendanceRepository attendanceRepository,
-            NotificationRepository notificationRepository) {
+            NotificationRepository notificationRepository,
+            BroadcastRepository broadcastRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.studentProfileRepository = studentProfileRepository;
@@ -63,6 +68,7 @@ public class AdminController {
         this.consultationRepository = consultationRepository;
         this.attendanceRepository = attendanceRepository;
         this.notificationRepository = notificationRepository;
+        this.broadcastRepository = broadcastRepository;
     }
 
     @GetMapping("/test")
@@ -695,5 +701,88 @@ public class AdminController {
         response.setConsultations(recordItems);
 
         return response;
+    }
+
+    @GetMapping("/broadcasts")
+    @Transactional(readOnly = true)
+    public List<AdminBroadcastResponse> getAllBroadcasts() {
+        return broadcastRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(AdminBroadcastResponse::fromEntity)
+                .toList();
+    }
+
+    @PostMapping("/broadcasts")
+    @Transactional
+    public ResponseEntity<?> createBroadcast(
+            @RequestBody AdminBroadcastRequest request,
+            org.springframework.security.core.Authentication authentication) {
+        if (request.getSubject() == null || request.getSubject().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Subject is required"));
+        }
+        if (request.getMessage() == null || request.getMessage().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Message body is required"));
+        }
+
+        // Identify admin user or fallback
+        User adminUser = null;
+        if (authentication != null && authentication.getName() != null) {
+            adminUser = userRepository.findByEmail(authentication.getName()).orElse(null);
+        }
+        if (adminUser == null) {
+            adminUser = userRepository.findFirstByRole(User.Role.ADMIN).orElse(null);
+        }
+        if (adminUser == null) {
+            adminUser = userRepository.findAll().stream().findFirst().orElseThrow(() -> new RuntimeException("No user found in system"));
+        }
+
+        Broadcast broadcast = new Broadcast();
+        broadcast.setSubject(request.getSubject().trim());
+        broadcast.setMessage(request.getMessage().trim());
+
+        String audience = request.getTargetAudience() != null ? request.getTargetAudience().toUpperCase() : "ALL";
+        broadcast.setTargetAudience(audience);
+
+        boolean sendInApp = request.getSendInApp() != null ? request.getSendInApp() : true;
+        boolean sendEmail = request.getSendEmail() != null ? request.getSendEmail() : false;
+        broadcast.setSendInApp(sendInApp);
+        broadcast.setSendEmail(sendEmail);
+        broadcast.setStatus("SENT");
+        broadcast.setCreatedBy(adminUser);
+        broadcast.setCreatedAt(LocalDateTime.now());
+
+        Broadcast saved = broadcastRepository.save(broadcast);
+
+        // If in-app delivery is chosen, create in-app notifications
+        if (sendInApp) {
+            List<User> recipients = new ArrayList<>();
+            if ("STUDENTS".equalsIgnoreCase(audience)) {
+                recipients = userRepository.findByRole(User.Role.STUDENT);
+            } else if ("LECTURERS".equalsIgnoreCase(audience)) {
+                recipients = userRepository.findByRole(User.Role.LECTURER);
+            } else {
+                recipients.addAll(userRepository.findByRole(User.Role.STUDENT));
+                recipients.addAll(userRepository.findByRole(User.Role.LECTURER));
+            }
+
+            List<Notification> notifications = new ArrayList<>();
+            LocalDateTime now = LocalDateTime.now();
+            for (User u : recipients) {
+                Notification n = new Notification();
+                n.setUser(u);
+                n.setTitle(saved.getSubject());
+                n.setMessage(saved.getMessage());
+                n.setType("BROADCAST");
+                n.setIsRead(false);
+                n.setBroadcast(saved);
+                n.setCreatedAt(now);
+                notifications.add(n);
+            }
+            if (!notifications.isEmpty()) {
+                notificationRepository.saveAll(notifications);
+            }
+        }
+
+        return ResponseEntity.ok(AdminBroadcastResponse.fromEntity(saved));
     }
 }

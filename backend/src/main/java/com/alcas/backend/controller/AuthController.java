@@ -7,7 +7,9 @@ import com.alcas.backend.dto.VerifyCodeRequest;
 import com.alcas.backend.dto.ForgotPasswordRequest;
 import com.alcas.backend.dto.ResetPasswordRequest;
 import com.alcas.backend.service.AuthenticationService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,11 +31,14 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<Map<String, Object>> register(@RequestBody RegisterRequest request) {
 
         authenticationService.registerStudent(request);
 
-        return "Registration successful. Please verify your account.";
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Registration successful. Please verify your account."
+        ));
     }
 
     @PostMapping("/verify")

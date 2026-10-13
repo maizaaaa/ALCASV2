@@ -23,6 +23,14 @@ public class StudentProfileService {
         return studentProfileRepository.save(studentProfile);
     }
 
+    public boolean existsByMatricNumber(String matricNumber) {
+        return studentProfileRepository.existsByMatricNumber(matricNumber);
+    }
+
+    public Optional<StudentProfile> findByMatricNumber(String matricNumber) {
+        return studentProfileRepository.findByMatricNumber(matricNumber);
+    }
+
     public void deleteById(Integer userId) {
         studentProfileRepository.deleteById(userId);
     }

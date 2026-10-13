@@ -11,6 +11,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 
+import com.alcas.backend.entity.Program;
+import com.alcas.backend.repository.ProgramRepository;
+import com.alcas.backend.entity.Broadcast;
+import com.alcas.backend.repository.BroadcastRepository;
+
 @Configuration
 public class DataSeeder {
 
@@ -100,7 +105,7 @@ public class DataSeeder {
     }
 
     @Bean
-    CommandLineRunner seedSchools(SchoolRepository schoolRepository) {
+    CommandLineRunner seedSchools(SchoolRepository schoolRepository, ProgramRepository programRepository) {
         return args -> {
             String[] defaultSchools = {
                 "School of Computing (SOC)",
@@ -116,6 +121,87 @@ public class DataSeeder {
                     School s = new School();
                     s.setName(schoolName);
                     schoolRepository.save(s);
+                }
+            }
+
+            for (School school : schoolRepository.findAll()) {
+                String sName = school.getName().toLowerCase();
+                String[] progs = {};
+                if (sName.contains("computing")) {
+                    progs = new String[] {
+                        "Bachelor of Science with Hons (Information Technology)",
+                        "Bachelor of Computer Science (BCS)",
+                        "Bachelor of Software Engineering (BSE)"
+                    };
+                } else if (sName.contains("logistics") || sName.contains("technology management")) {
+                    progs = new String[] {
+                        "Bachelor of Technology Management (BTM)",
+                        "Bachelor of Logistics and Transportation (BLT)"
+                    };
+                } else if (sName.contains("business")) {
+                    progs = new String[] {
+                        "Bachelor of Business Administration (BBA)",
+                        "Bachelor of Marketing (BM)"
+                    };
+                } else if (sName.contains("quantitative")) {
+                    progs = new String[] {
+                        "Bachelor of Science in Decision Science (BDS)",
+                        "Bachelor of Science in Industrial Statistics (BIS)"
+                    };
+                }
+
+                for (String pName : progs) {
+                    boolean pExists = programRepository.findBySchoolId(school.getId()).stream()
+                            .anyMatch(p -> p.getName() != null && p.getName().equalsIgnoreCase(pName));
+                    if (!pExists) {
+                        Program p = new Program();
+                        p.setSchool(school);
+                        p.setName(pName);
+                        programRepository.save(p);
+                    }
+                }
+            }
+        };
+    }
+
+    @Bean
+    CommandLineRunner seedBroadcasts(BroadcastRepository broadcastRepository, UserRepository userRepository) {
+        return args -> {
+            if (broadcastRepository.count() == 0) {
+                User admin = userRepository.findFirstByRole(User.Role.ADMIN).orElse(null);
+                if (admin != null) {
+                    Broadcast b1 = new Broadcast();
+                    b1.setSubject("System Maintenance Tonight");
+                    b1.setMessage("Scheduled maintenance will take place tonight from 11:00 PM to 02:00 AM.");
+                    b1.setTargetAudience("ALL");
+                    b1.setSendInApp(true);
+                    b1.setSendEmail(true);
+                    b1.setStatus("SENT");
+                    b1.setCreatedBy(admin);
+                    b1.setCreatedAt(LocalDateTime.now().minusDays(5));
+                    broadcastRepository.save(b1);
+
+                    Broadcast b2 = new Broadcast();
+                    b2.setSubject("Reminder: Update Consultation Hours");
+                    b2.setMessage("All faculty members are kindly requested to update their weekly availability slots.");
+                    b2.setTargetAudience("LECTURERS");
+                    b2.setSendInApp(true);
+                    b2.setSendEmail(false);
+                    b2.setStatus("SENT");
+                    b2.setCreatedBy(admin);
+                    b2.setCreatedAt(LocalDateTime.now().minusDays(10));
+                    broadcastRepository.save(b2);
+
+                    Broadcast b3 = new Broadcast();
+                    b3.setSubject("Welcome to Semester A232");
+                    b3.setMessage("Welcome to the new academic semester! Please check consultation slots early.");
+                    b3.setTargetAudience("STUDENTS");
+                    b3.setSendInApp(false);
+                    b3.setSendEmail(true);
+                    b3.setStatus("SENT");
+                    b3.setCreatedBy(admin);
+                    b3.setCreatedAt(LocalDateTime.now().minusDays(20));
+                    broadcastRepository.save(b3);
                 }
             }
         };
