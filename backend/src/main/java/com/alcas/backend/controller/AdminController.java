@@ -17,6 +17,7 @@ import com.alcas.backend.dto.AdminAttendanceResponse;
 import com.alcas.backend.dto.AdminAnalyticsReportResponse;
 import com.alcas.backend.dto.AdminBroadcastRequest;
 import com.alcas.backend.dto.AdminBroadcastResponse;
+import com.alcas.backend.dto.AdminDashboardResponse;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.DayOfWeek;
+import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -74,6 +76,136 @@ public class AdminController {
     @GetMapping("/test")
     public String testAdminAccess() {
         return "Admin endpoint is working";
+    }
+
+    @GetMapping("/dashboard")
+    @Transactional(readOnly = true)
+    public AdminDashboardResponse getAdminDashboard() {
+        LocalDate today = LocalDate.now();
+        List<Consultation> all = consultationRepository.findAll(Sort.by(Sort.Direction.DESC, "scheduledDate", "scheduledTime"));
+
+        // 1. Stats
+        List<Consultation> todayList = all.stream()
+                .filter(c -> c.getScheduledDate() != null && c.getScheduledDate().isEqual(today))
+                .toList();
+        int todayConsultations = todayList.size();
+
+        int pendingApprovals = (int) all.stream()
+                .filter(c -> c.getStatus() == Consultation.Status.PENDING || c.getStatus() == Consultation.Status.RESCHEDULE_PENDING)
+                .count();
+
+        LocalDate sevenDaysAgo = today.minusDays(7);
+        int weeklyNoShows = (int) all.stream()
+                .filter(c -> c.getStatus() == Consultation.Status.NO_SHOW && c.getScheduledDate() != null && !c.getScheduledDate().isBefore(sevenDaysAgo))
+                .count();
+        if (weeklyNoShows == 0) {
+            weeklyNoShows = (int) all.stream().filter(c -> c.getStatus() == Consultation.Status.NO_SHOW).count();
+        }
+
+        AdminDashboardResponse.Stats stats = new AdminDashboardResponse.Stats(todayConsultations, pendingApprovals, weeklyNoShows);
+
+        // 2. Today's Breakdown
+        List<Consultation> breakdownSource = todayConsultations > 0 ? todayList : all;
+        int totalForBreakdown = breakdownSource.size();
+
+        int completedCount = 0;
+        int pendingCount = 0;
+        int noShowCount = 0;
+
+        for (Consultation c : breakdownSource) {
+            if (c.getStatus() == Consultation.Status.COMPLETED) {
+                completedCount++;
+            } else if (c.getStatus() == Consultation.Status.NO_SHOW) {
+                noShowCount++;
+            } else if (c.getStatus() == Consultation.Status.PENDING || c.getStatus() == Consultation.Status.CONFIRMED || c.getStatus() == Consultation.Status.RESCHEDULE_PENDING) {
+                pendingCount++;
+            }
+        }
+
+        int completedPct = totalForBreakdown > 0 ? Math.round((completedCount * 100.0f) / totalForBreakdown) : 0;
+        int pendingPct = totalForBreakdown > 0 ? Math.round((pendingCount * 100.0f) / totalForBreakdown) : 0;
+        int noShowPct = totalForBreakdown > 0 ? Math.round((noShowCount * 100.0f) / totalForBreakdown) : 0;
+
+        List<AdminDashboardResponse.BreakdownItem> breakdownItems = new ArrayList<>();
+        breakdownItems.add(new AdminDashboardResponse.BreakdownItem("Completed", completedCount, completedPct, "bg-teal"));
+        breakdownItems.add(new AdminDashboardResponse.BreakdownItem("Pending", pendingCount, pendingPct, "bg-yellow"));
+        breakdownItems.add(new AdminDashboardResponse.BreakdownItem("No-Shows", noShowCount, noShowPct, "bg-red"));
+
+        // 3. Recent Consultations
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
+
+        java.util.function.Function<Consultation, AdminDashboardResponse.RecentLogItem> mapper = c -> {
+            String shortId = c.getId() != null ? (c.getId().length() > 8 ? c.getId().substring(0, 8).toUpperCase() : c.getId().toUpperCase()) : "REQ";
+            String displayId = "REQ-" + shortId;
+
+            String studentName = c.getStudent() != null && c.getStudent().getUser() != null
+                    ? c.getStudent().getUser().getFullName() : "Unknown Student";
+            String matric = c.getStudent() != null && c.getStudent().getMatricNumber() != null
+                    ? c.getStudent().getMatricNumber()
+                    : (c.getStudent() != null && c.getStudent().getUserId() != null ? String.valueOf(c.getStudent().getUserId()) : "-");
+            String lecturerName = c.getLecturer() != null && c.getLecturer().getUser() != null
+                    ? c.getLecturer().getUser().getFullName() : "Unknown Lecturer";
+
+            String statusStr = "Pending";
+            if (c.getStatus() != null) {
+                switch (c.getStatus()) {
+                    case COMPLETED -> statusStr = "Completed";
+                    case NO_SHOW -> statusStr = "No-Show";
+                    case REJECTED -> statusStr = "Rejected";
+                    case CANCELLED -> statusStr = "Cancelled";
+                    case CONFIRMED -> statusStr = "Confirmed";
+                    case RESCHEDULE_PENDING -> statusStr = "Reschedule Pending";
+                    default -> statusStr = "Pending";
+                }
+            }
+
+            String timeStr = "";
+            if (c.getScheduledTime() != null) {
+                try {
+                    timeStr = c.getScheduledTime().format(timeFormatter);
+                } catch (Exception e) {
+                    timeStr = c.getScheduledTime().toString();
+                }
+            } else if (c.getScheduledDate() != null) {
+                timeStr = c.getScheduledDate().toString();
+            }
+
+            String dateStr = c.getScheduledDate() != null ? c.getScheduledDate().toString() : today.toString();
+            String topic = c.getReason() != null && !c.getReason().isBlank() ? c.getReason() : "General Consultation";
+            String mode = c.getConsultationMode() != null ? c.getConsultationMode() : "IN_PERSON";
+            String room = c.getLocation() != null && !c.getLocation().isBlank() ? c.getLocation()
+                    : ("ONLINE".equalsIgnoreCase(c.getConsultationMode()) ? "Virtual Session" : "Faculty Office");
+            String notes = c.getLecturerRemarks() != null && !c.getLecturerRemarks().isBlank() ? c.getLecturerRemarks()
+                    : (c.getRejectReason() != null && !c.getRejectReason().isBlank() ? "Rejected: " + c.getRejectReason()
+                    : (c.getCancelReason() != null && !c.getCancelReason().isBlank() ? "Cancelled: " + c.getCancelReason()
+                    : (c.getReasonDetails() != null && !c.getReasonDetails().isBlank() ? c.getReasonDetails() : "No notes recorded.")));
+
+            return new AdminDashboardResponse.RecentLogItem(
+                    displayId,
+                    studentName,
+                    lecturerName,
+                    statusStr,
+                    timeStr,
+                    topic,
+                    room,
+                    notes,
+                    dateStr,
+                    matric,
+                    mode
+            );
+        };
+
+        List<AdminDashboardResponse.RecentLogItem> recentLogs = all.stream()
+                .limit(20)
+                .map(mapper)
+                .toList();
+
+        // Appointments specifically for TODAY covering all statuses (completed, no-show, rejected, cancelled, etc.)
+        List<AdminDashboardResponse.RecentLogItem> todayLogs = todayList.stream()
+                .map(mapper)
+                .toList();
+
+        return new AdminDashboardResponse(stats, breakdownItems, recentLogs, todayLogs);
     }
 
     @GetMapping("/users")

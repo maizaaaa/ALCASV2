@@ -15,6 +15,8 @@ import com.alcas.backend.entity.Program;
 import com.alcas.backend.repository.ProgramRepository;
 import com.alcas.backend.entity.Broadcast;
 import com.alcas.backend.repository.BroadcastRepository;
+import com.alcas.backend.entity.SystemSetting;
+import com.alcas.backend.repository.SystemSettingRepository;
 
 @Configuration
 public class DataSeeder {
@@ -203,6 +205,56 @@ public class DataSeeder {
                     b3.setCreatedAt(LocalDateTime.now().minusDays(20));
                     broadcastRepository.save(b3);
                 }
+            }
+        };
+    }
+
+    @Bean
+    CommandLineRunner seedSystemSettings(SystemSettingRepository systemSettingRepository) {
+        return args -> {
+            if (!systemSettingRepository.existsById("SEMESTER_NAME")) {
+                SystemSetting s = new SystemSetting();
+                s.setSettingKey("SEMESTER_NAME");
+                s.setSettingValue("Semester 1 2026/2027");
+                s.setDescription("Active academic semester name");
+                s.setUpdatedAt(LocalDateTime.now());
+                systemSettingRepository.save(s);
+            }
+
+            if (!systemSettingRepository.existsById("SEMESTER_START_DATE")) {
+                SystemSetting s = new SystemSetting();
+                s.setSettingKey("SEMESTER_START_DATE");
+                s.setSettingValue("2026-09-01");
+                s.setDescription("Academic semester start date");
+                s.setUpdatedAt(LocalDateTime.now());
+                systemSettingRepository.save(s);
+            }
+
+            if (!systemSettingRepository.existsById("SEMESTER_END_DATE")) {
+                SystemSetting s = new SystemSetting();
+                s.setSettingKey("SEMESTER_END_DATE");
+                s.setSettingValue("2027-01-31");
+                s.setDescription("Academic semester end date");
+                s.setUpdatedAt(LocalDateTime.now());
+                systemSettingRepository.save(s);
+            }
+
+            if (!systemSettingRepository.existsById("WORKING_DAYS")) {
+                SystemSetting s = new SystemSetting();
+                s.setSettingKey("WORKING_DAYS");
+                s.setSettingValue("MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY");
+                s.setDescription("Institution working days");
+                s.setUpdatedAt(LocalDateTime.now());
+                systemSettingRepository.save(s);
+            }
+
+            if (!systemSettingRepository.existsById("GLOBAL_BLOCK_OUT_DATES")) {
+                SystemSetting s = new SystemSetting();
+                s.setSettingKey("GLOBAL_BLOCK_OUT_DATES");
+                s.setSettingValue("[{\"date\":\"2026-10-25\",\"reason\":\"Deepavali Holiday\"},{\"date\":\"2026-12-25\",\"reason\":\"Christmas Day\"},{\"date\":\"2027-01-01\",\"reason\":\"New Year's Day\"}]");
+                s.setDescription("Global block-out dates for holidays and breaks");
+                s.setUpdatedAt(LocalDateTime.now());
+                systemSettingRepository.save(s);
             }
         };
     }

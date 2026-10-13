@@ -27,15 +27,18 @@ public class ConsultationService {
     private final ConsultationRepository consultationRepository;
     private final UserRepository userRepository;
     private final LecturerScheduleRepository lecturerScheduleRepository;
+    private final SystemSettingService systemSettingService;
 
     public ConsultationService(
             ConsultationRepository consultationRepository,
             UserRepository userRepository,
-            LecturerScheduleRepository lecturerScheduleRepository) {
+            LecturerScheduleRepository lecturerScheduleRepository,
+            SystemSettingService systemSettingService) {
 
         this.consultationRepository = consultationRepository;
         this.userRepository = userRepository;
         this.lecturerScheduleRepository = lecturerScheduleRepository;
+        this.systemSettingService = systemSettingService;
     }
 
     public Consultation createConsultation(
@@ -46,6 +49,40 @@ public class ConsultationService {
 
         LocalDate scheduledDate
                 = consultation.getScheduledDate();
+
+        // 1. Validate Academic Calendar
+        String semesterStart = systemSettingService.getSettingValue("SEMESTER_START_DATE", null);
+        String semesterEnd = systemSettingService.getSettingValue("SEMESTER_END_DATE", null);
+
+        if (semesterStart != null && !semesterStart.trim().isEmpty()) {
+            try {
+                LocalDate start = LocalDate.parse(semesterStart.trim());
+                if (scheduledDate.isBefore(start)) {
+                    throw new BookingConflictException(
+                            "Booking is not allowed before the academic semester start date (" + start + ")."
+                    );
+                }
+            } catch (java.time.format.DateTimeParseException ignored) {}
+        }
+
+        if (semesterEnd != null && !semesterEnd.trim().isEmpty()) {
+            try {
+                LocalDate end = LocalDate.parse(semesterEnd.trim());
+                if (scheduledDate.isAfter(end)) {
+                    throw new BookingConflictException(
+                            "Booking is not allowed after the academic semester end date (" + end + ")."
+                    );
+                }
+            } catch (java.time.format.DateTimeParseException ignored) {}
+        }
+
+        // 2. Validate Global Block-Out Dates (Holidays / Special Breaks)
+        String globalBlockDatesJson = systemSettingService.getSettingValue("GLOBAL_BLOCK_OUT_DATES", null);
+        if (globalBlockDatesJson != null && globalBlockDatesJson.contains("\"" + scheduledDate.toString() + "\"")) {
+            throw new BookingConflictException(
+                    "The selected date (" + scheduledDate + ") is a scheduled holiday / block-out date."
+            );
+        }
 
         LocalTime scheduledTime
                 = consultation.getScheduledTime();

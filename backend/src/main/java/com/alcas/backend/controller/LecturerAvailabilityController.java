@@ -229,6 +229,49 @@ public class LecturerAvailabilityController {
             return ResponseEntity.ok(response);
         }
 
+        // Check Academic Calendar boundaries
+        String semesterStart = systemSettingService.getSettingValue("SEMESTER_START_DATE", null);
+        String semesterEnd = systemSettingService.getSettingValue("SEMESTER_END_DATE", null);
+
+        if (semesterStart != null && !semesterStart.trim().isEmpty()) {
+            try {
+                LocalDate start = LocalDate.parse(semesterStart.trim());
+                if (selectedDate.isBefore(start)) {
+                    return ResponseEntity.ok(new AvailabilityResponse(
+                            lecturerId,
+                            selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                            dayName,
+                            List.of()
+                    ));
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (semesterEnd != null && !semesterEnd.trim().isEmpty()) {
+            try {
+                LocalDate end = LocalDate.parse(semesterEnd.trim());
+                if (selectedDate.isAfter(end)) {
+                    return ResponseEntity.ok(new AvailabilityResponse(
+                            lecturerId,
+                            selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                            dayName,
+                            List.of()
+                    ));
+                }
+            } catch (Exception ignored) {}
+        }
+
+        // Check Global Block-out Dates (Holidays / Breaks)
+        String globalBlockDatesJson = systemSettingService.getSettingValue("GLOBAL_BLOCK_OUT_DATES", null);
+        if (globalBlockDatesJson != null && globalBlockDatesJson.contains("\"" + selectedDate.toString() + "\"")) {
+            return ResponseEntity.ok(new AvailabilityResponse(
+                    lecturerId,
+                    selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                    dayName,
+                    List.of()
+            ));
+        }
+
         boolean isBlocked =
                 blockOutDateRepository
                         .existsByLecturerUserIdAndBlockDate(

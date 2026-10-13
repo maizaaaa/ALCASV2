@@ -47,4 +47,15 @@ public class SystemSettingController {
 
         return ResponseEntity.ok(savedSetting);
     }
+
+    // Batch update settings
+    @PutMapping("/batch")
+    public ResponseEntity<List<SystemSetting>> updateSettingsBatch(
+            @RequestBody List<SystemSetting> settings) {
+
+        List<SystemSetting> savedSettings =
+                systemSettingService.saveAll(settings);
+
+        return ResponseEntity.ok(savedSettings);
+    }
 }
