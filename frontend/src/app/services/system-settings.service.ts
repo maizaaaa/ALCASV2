@@ -11,6 +11,17 @@ export interface SystemSetting {
   updatedBy?: any;
 }
 
+export interface GlobalBlockOutDate {
+  date: string;
+  reason: string;
+}
+
+export interface AcademicCalendarConfig {
+  semesterName: string;
+  semesterStart: string;
+  semesterEnd: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -21,6 +32,19 @@ export class SystemSettingsService {
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: object,
   ) {}
+
+  getAllSettings(): Observable<SystemSetting[]> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return EMPTY;
+    }
+
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.http.get<SystemSetting[]>(this.apiUrl, { headers });
+  }
 
   getSetting(settingKey: string): Observable<SystemSetting> {
     if (!isPlatformBrowser(this.platformId)) {
@@ -36,6 +60,34 @@ export class SystemSettingsService {
     return this.http.get<SystemSetting>(`${this.apiUrl}/${settingKey}`, { headers });
   }
 
+  updateSetting(settingKey: string, settingValue: string, description?: string): Observable<SystemSetting> {
+    const token = localStorage.getItem('token');
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    });
+
+    const requestBody = {
+      settingKey,
+      settingValue,
+      description,
+    };
+
+    return this.http.put<SystemSetting>(`${this.apiUrl}/${settingKey}`, requestBody, { headers });
+  }
+
+  updateSettingsBatch(settings: { settingKey: string; settingValue: string; description?: string }[]): Observable<SystemSetting[]> {
+    const token = localStorage.getItem('token');
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    });
+
+    return this.http.put<SystemSetting[]>(`${this.apiUrl}/batch`, settings, { headers });
+  }
+
   getWorkingDays(): Observable<string[]> {
     return this.getSetting('WORKING_DAYS').pipe(
       map((setting) =>
@@ -48,18 +100,41 @@ export class SystemSettingsService {
   }
 
   updateWorkingDays(workingDays: string[]): Observable<SystemSetting> {
-    const token = localStorage.getItem('token');
+    return this.updateSetting('WORKING_DAYS', workingDays.join(','), 'Institution working days');
+  }
 
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    });
+  getAcademicCalendar(): Observable<AcademicCalendarConfig> {
+    return this.getAllSettings().pipe(
+      map((settings) => {
+        const name = settings.find((s) => s.settingKey === 'SEMESTER_NAME')?.settingValue || '';
+        const start = settings.find((s) => s.settingKey === 'SEMESTER_START_DATE')?.settingValue || '';
+        const end = settings.find((s) => s.settingKey === 'SEMESTER_END_DATE')?.settingValue || '';
+        return {
+          semesterName: name,
+          semesterStart: start,
+          semesterEnd: end,
+        };
+      }),
+    );
+  }
 
-    const requestBody = {
-      settingValue: workingDays.join(','),
-      description: 'Institution working days',
-    };
+  getGlobalBlockOutDates(): Observable<GlobalBlockOutDate[]> {
+    return this.getSetting('GLOBAL_BLOCK_OUT_DATES').pipe(
+      map((setting) => {
+        try {
+          return JSON.parse(setting.settingValue) as GlobalBlockOutDate[];
+        } catch {
+          return [];
+        }
+      }),
+    );
+  }
 
-    return this.http.put<SystemSetting>(`${this.apiUrl}/WORKING_DAYS`, requestBody, { headers });
+  updateGlobalBlockOutDates(dates: GlobalBlockOutDate[]): Observable<SystemSetting> {
+    return this.updateSetting(
+      'GLOBAL_BLOCK_OUT_DATES',
+      JSON.stringify(dates),
+      'Global block-out dates for holidays and breaks',
+    );
   }
 }

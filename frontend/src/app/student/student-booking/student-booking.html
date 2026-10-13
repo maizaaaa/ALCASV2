@@ -21,6 +21,18 @@
         <p class="text-slate-500 font-medium">Select a date from the calendar to find available lecturers.</p>
       </div>
 
+      <div *ngIf="semesterName" class="flex items-center justify-center gap-2 mb-6">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800/60 shadow-sm">
+          <svg class="w-3.5 h-3.5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          Academic Period: <strong class="font-bold">{{ semesterName }}</strong>
+          <span *ngIf="semesterStart && semesterEnd" class="text-teal-600/80 dark:text-teal-400/80">
+            ({{ semesterStart | date:'mediumDate' }} - {{ semesterEnd | date:'mediumDate' }})
+          </span>
+        </span>
+      </div>
+
       <div
         class="bg-white/95 dark:bg-[#071317]/85 border border-slate-100 dark:border-teal-900/30 shadow-[0_15px_50px_rgba(15,118,110,0.06)] dark:shadow-none rounded-3xl overflow-hidden p-6">
 
@@ -62,84 +74,94 @@
           <!-- Actual calendar dates -->
           <div
             *ngFor="let day of daysInMonth"
-            (click)="!isPastDate(day) && isWorkingDay(day) && openDateForm(day)"
-            [class.opacity-40]="isPastDate(day) || !isWorkingDay(day)"
-            [class.cursor-not-allowed]="isPastDate(day) || !isWorkingDay(day)"
-            [class.cursor-pointer]="!isPastDate(day) && isWorkingDay(day)"
+            (click)="isDateAvailableForBooking(day) && openDateForm(day)"
+            [class.opacity-40]="!isDateAvailableForBooking(day)"
+            [class.cursor-not-allowed]="!isDateAvailableForBooking(day)"
+            [class.cursor-pointer]="isDateAvailableForBooking(day)"
             class="h-24 bg-white/95 dark:bg-slate-900/60 border border-slate-100 dark:border-teal-900/25 rounded-2xl flex flex-col justify-between p-4 transition-all duration-300 group shadow-sm"
-            [class.hover:bg-gradient-to-br]="!isPastDate(day) && isWorkingDay(day)"
-            [class.hover:from-teal-500]="!isPastDate(day) && isWorkingDay(day)"
-            [class.hover:to-emerald-500]="!isPastDate(day) && isWorkingDay(day)"
-            [class.hover:text-white]="!isPastDate(day) && isWorkingDay(day)"
-            [class.hover:-translate-y-1.5]="!isPastDate(day) && isWorkingDay(day)"
-            [class.hover:shadow-xl]="!isPastDate(day) && isWorkingDay(day)">
+            [class.hover:bg-gradient-to-br]="isDateAvailableForBooking(day)"
+            [class.hover:from-teal-500]="isDateAvailableForBooking(day)"
+            [class.hover:to-emerald-500]="isDateAvailableForBooking(day)"
+            [class.hover:text-white]="isDateAvailableForBooking(day)"
+            [class.hover:-translate-y-1.5]="isDateAvailableForBooking(day)"
+            [class.hover:shadow-xl]="isDateAvailableForBooking(day)">
 
             <div class="flex justify-between items-start">
-                <span
-                    class="text-xl font-black text-slate-800 dark:text-slate-200 leading-none"
-                    [class.group-hover:text-white]="!isPastDate(day)">
-                    {{ day }}
-                </span>
+              <span
+                class="text-xl font-black text-slate-800 dark:text-slate-200 leading-none"
+                [class.group-hover:text-white]="isDateAvailableForBooking(day)">
+                {{ day }}
+              </span>
 
               <span
-                *ngIf="!isPastDate(day) && isWorkingDay(day)"
+                *ngIf="isDateAvailableForBooking(day)"
                 class="flex h-2.5 w-2.5 relative">
-
-        <span
-          class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 group-hover:bg-white">
-        </span>
-
-        <span
-          class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 group-hover:bg-white">
-        </span>
-
-      </span>
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 group-hover:bg-white">
+                </span>
+                <span
+                  class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 group-hover:bg-white">
+                </span>
+              </span>
             </div>
 
+            <!-- Status 1: Available for Booking -->
             <div
-              *ngIf="!isPastDate(day) && isWorkingDay(day)"
+              *ngIf="isDateAvailableForBooking(day)"
               class="flex items-center gap-1.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-auto">
-
               <svg
                 class="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24">
-
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2.5"
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                 </path>
-
               </svg>
-
               <span>Booking Open</span>
-
             </div>
 
+            <!-- Status 2: Global Block-Out Date (Holiday/Special Date) -->
             <div
-              *ngIf="!isPastDate(day) && !isWorkingDay(day)"
-              class="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest mt-auto">
+              *ngIf="!isPastDate(day) && isGlobalBlockOutDate(day)"
+              class="flex items-center gap-1 text-[9px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-tight mt-auto truncate"
+              [title]="getGlobalBlockOut(day)?.reason || 'Holiday / Blocked'">
+              <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+              <span class="truncate">{{ getGlobalBlockOut(day)?.reason || 'Holiday' }}</span>
+            </div>
 
+            <!-- Status 3: Outside Academic Calendar Period -->
+            <div
+              *ngIf="!isPastDate(day) && !isGlobalBlockOutDate(day) && !isWithinAcademicPeriod(day)"
+              class="flex items-center gap-1.5 text-[9px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest mt-auto">
+              <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>Out of Term</span>
+            </div>
+
+            <!-- Status 4: Non-Working Day (within academic period, not holiday) -->
+            <div
+              *ngIf="!isPastDate(day) && !isGlobalBlockOutDate(day) && isWithinAcademicPeriod(day) && !isWorkingDay(day)"
+              class="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest mt-auto">
               <svg
                 class="w-3.5 h-3.5 text-slate-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24">
-
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
                   d="M6 18L18 6M6 6l12 12">
                 </path>
-
               </svg>
-
               <span>Not Available</span>
-
             </div>
 
           </div>

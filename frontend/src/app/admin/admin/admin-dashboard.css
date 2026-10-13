@@ -264,15 +264,41 @@ body {
 }
 
 .text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: #0F766E;
   text-decoration: none;
   font-size: 13px;
   font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(15, 118, 110, 0.08);
+  border: 1px solid rgba(15, 118, 110, 0.2);
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .text-link:hover {
-  color: #0A524D;
+  color: #ffffff;
+  background: #0F766E;
+  border-color: #0F766E;
+  transform: translateY(-1px);
+}
+
+.table-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 4px 4px 4px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 12px;
+}
+
+.footer-count-text {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
 }
 
 /* Progress Bars */
@@ -1254,10 +1280,22 @@ body {
 
 :host-context(.dark) .text-link {
   color: #2dd4bf;
+  background: rgba(45, 212, 191, 0.1);
+  border-color: rgba(45, 212, 191, 0.25);
 }
 
 :host-context(.dark) .text-link:hover {
-  color: #22d3ee;
+  color: #042f2e;
+  background: #2dd4bf;
+  border-color: #2dd4bf;
+}
+
+:host-context(.dark) .table-card-footer {
+  border-top-color: rgba(45, 212, 191, 0.12);
+}
+
+:host-context(.dark) .footer-count-text {
+  color: #94a3b8;
 }
 
 /* 8. Dark breakdown styles */

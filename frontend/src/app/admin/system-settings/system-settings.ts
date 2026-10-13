@@ -13,11 +13,11 @@ import { SystemSettingsService} from '../../services/system-settings.service';
   styleUrls: ['./system-settings.css'],
 })
 export class SystemSettingsComponent implements OnInit {
-  // Mock Global Configuration Data
+  // Global Configuration Data
   config = {
-    semesterName: 'Semester A232',
-    semesterStart: '2024-03-01',
-    semesterEnd: '2024-07-15',
+    semesterName: '',
+    semesterStart: '',
+    semesterEnd: '',
     defaultSlotDuration: 30, // in minutes
     maxActiveBookingsPerStudent: 3,
     workingDays: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'],
@@ -49,11 +49,7 @@ export class SystemSettingsComponent implements OnInit {
   // Block-out Dates Management
   newBlockDate = '';
   newBlockReason = '';
-  blockOutDates = [
-    { date: '2024-04-10', reason: 'Eid Al-Fitr Holiday' },
-    { date: '2024-04-11', reason: 'Eid Al-Fitr Holiday' },
-    { date: '2024-05-15', reason: 'Mid-Semester Break' },
-  ];
+  blockOutDates: { date: string; reason: string }[] = [];
 
   isSaving = false;
 
@@ -64,28 +60,59 @@ export class SystemSettingsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadWorkingDays();
+    this.loadAllSettings();
   }
 
-  loadWorkingDays(): void {
-    this.systemSettingsService.getWorkingDays().subscribe({
-      next: (workingDays) => {
-        this.config.workingDays = workingDays;
-        console.log('Working Days loaded:', this.config.workingDays);
+  loadAllSettings(): void {
+    this.systemSettingsService.getAllSettings().subscribe({
+      next: (settings) => {
+        const semName = settings.find((s) => s.settingKey === 'SEMESTER_NAME');
+        if (semName) this.config.semesterName = semName.settingValue;
 
+        const semStart = settings.find((s) => s.settingKey === 'SEMESTER_START_DATE');
+        if (semStart) this.config.semesterStart = semStart.settingValue;
+
+        const semEnd = settings.find((s) => s.settingKey === 'SEMESTER_END_DATE');
+        if (semEnd) this.config.semesterEnd = semEnd.settingValue;
+
+        const workingDaysSetting = settings.find((s) => s.settingKey === 'WORKING_DAYS');
+        if (workingDaysSetting && workingDaysSetting.settingValue) {
+          this.config.workingDays = workingDaysSetting.settingValue
+            .split(',')
+            .map((day) => day.trim())
+            .filter((day) => day.length > 0);
+        }
+
+        const blockOutSetting = settings.find((s) => s.settingKey === 'GLOBAL_BLOCK_OUT_DATES');
+        if (blockOutSetting && blockOutSetting.settingValue) {
+          try {
+            this.blockOutDates = JSON.parse(blockOutSetting.settingValue);
+            this.blockOutDates.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          } catch {
+            this.blockOutDates = [];
+          }
+        }
+
+        console.log('All system settings loaded successfully:', settings);
         this.cdr.detectChanges();
-        },
+      },
       error: (error) => {
-        console.error('Failed to load working days:', error);
+        console.error('Failed to load system settings:', error);
       },
     });
   }
 
   addBlockOutDate() {
-    if (this.newBlockDate && this.newBlockReason) {
+    if (this.newBlockDate && this.newBlockReason.trim()) {
+      const exists = this.blockOutDates.some((b) => b.date === this.newBlockDate);
+      if (exists) {
+        alert('This date has already been added as a block-out date.');
+        return;
+      }
+
       this.blockOutDates.push({
         date: this.newBlockDate,
-        reason: this.newBlockReason,
+        reason: this.newBlockReason.trim(),
       });
       this.blockOutDates.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -102,24 +129,55 @@ export class SystemSettingsComponent implements OnInit {
   }
 
   saveSettings(): void {
+    if (this.config.semesterStart && this.config.semesterEnd) {
+      if (this.config.semesterStart > this.config.semesterEnd) {
+        alert('Academic Semester Start Date cannot be after the End Date.');
+        return;
+      }
+    }
+
     this.isSaving = true;
 
-    this.systemSettingsService.updateWorkingDays(
-      this.config.workingDays
-    ).subscribe({
+    const payload = [
+      {
+        settingKey: 'SEMESTER_NAME',
+        settingValue: this.config.semesterName || '',
+        description: 'Active academic semester name',
+      },
+      {
+        settingKey: 'SEMESTER_START_DATE',
+        settingValue: this.config.semesterStart || '',
+        description: 'Academic semester start date',
+      },
+      {
+        settingKey: 'SEMESTER_END_DATE',
+        settingValue: this.config.semesterEnd || '',
+        description: 'Academic semester end date',
+      },
+      {
+        settingKey: 'WORKING_DAYS',
+        settingValue: this.config.workingDays.join(','),
+        description: 'Institution working days',
+      },
+      {
+        settingKey: 'GLOBAL_BLOCK_OUT_DATES',
+        settingValue: JSON.stringify(this.blockOutDates),
+        description: 'Global block-out dates for holidays and breaks',
+      },
+    ];
+
+    this.systemSettingsService.updateSettingsBatch(payload).subscribe({
       next: (response) => {
         this.isSaving = false;
-
-        console.log('Working Days saved:', response);
-
+        console.log('System settings saved successfully:', response);
         alert('System configurations saved successfully!');
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.isSaving = false;
-
-        console.error('Failed to save working days:', error);
-
+        console.error('Failed to save system settings:', error);
         alert('Failed to save system configurations.');
+        this.cdr.detectChanges();
       },
     });
   }

@@ -136,9 +136,9 @@
           <div class="card-header border-none">
             <div>
               <h2>Recent Consultations</h2>
-              <p class="card-subtitle">Click a row to view full details</p>
+              <p class="card-subtitle">Showing latest consultations</p>
             </div>
-            <a href="/admin/logs" class="text-link">View All →</a>
+            <a routerLink="/admin/logs" href="/admin/logs" class="text-link">View All →</a>
           </div>
 
           <!-- Interactive Toolbar -->
@@ -202,6 +202,11 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <div class="table-card-footer" *ngIf="recentLogs.length > 5">
+            <span class="footer-count-text">Showing {{ filteredLogs.length }} of {{ recentLogs.length }}
+              consultations</span>
           </div>
         </div>
 

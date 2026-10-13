@@ -43,6 +43,12 @@ export class StudentBookingComponent implements OnInit {
   workingDays: string[] = [];
   blockOutDates: BlockOutDate[] = [];
 
+  // Academic Calendar & Global Block-Out Dates
+  semesterName = '';
+  semesterStart: string | null = null;
+  semesterEnd: string | null = null;
+  globalBlockOutDates: { date: string; reason: string }[] = [];
+
   currentDate = new Date();
   currentYear = this.currentDate.getFullYear();
   currentMonthIndex = this.currentDate.getMonth();
@@ -145,8 +151,53 @@ export class StudentBookingComponent implements OnInit {
   ngOnInit(): void {
     this.updateCalendar();
     this.loadSchools();
-    this.loadWorkingDays();
+    this.loadSystemSettings();
     this.loadAllLecturers();
+  }
+
+  loadSystemSettings(): void {
+    this.systemSettingsService.getAllSettings().subscribe({
+      next: (settings) => {
+        const semName = settings.find((s) => s.settingKey === 'SEMESTER_NAME');
+        if (semName) this.semesterName = semName.settingValue;
+
+        const semStart = settings.find((s) => s.settingKey === 'SEMESTER_START_DATE');
+        if (semStart && semStart.settingValue) this.semesterStart = semStart.settingValue.trim();
+
+        const semEnd = settings.find((s) => s.settingKey === 'SEMESTER_END_DATE');
+        if (semEnd && semEnd.settingValue) this.semesterEnd = semEnd.settingValue.trim();
+
+        const workingDaysSetting = settings.find((s) => s.settingKey === 'WORKING_DAYS');
+        if (workingDaysSetting && workingDaysSetting.settingValue) {
+          this.workingDays = workingDaysSetting.settingValue
+            .split(',')
+            .map((day) => day.trim())
+            .filter((day) => day.length > 0);
+        }
+
+        const blockOutSetting = settings.find((s) => s.settingKey === 'GLOBAL_BLOCK_OUT_DATES');
+        if (blockOutSetting && blockOutSetting.settingValue) {
+          try {
+            this.globalBlockOutDates = JSON.parse(blockOutSetting.settingValue);
+          } catch {
+            this.globalBlockOutDates = [];
+          }
+        }
+
+        console.log('System settings loaded in Student Booking:', {
+          semesterName: this.semesterName,
+          semesterStart: this.semesterStart,
+          semesterEnd: this.semesterEnd,
+          workingDays: this.workingDays,
+          globalBlockOutDates: this.globalBlockOutDates,
+        });
+
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load system settings for Student Booking:', error);
+      },
+    });
   }
 
   loadAllLecturers(): void {
@@ -169,19 +220,39 @@ export class StudentBookingComponent implements OnInit {
     });
   }
 
-  loadWorkingDays(): void {
-    this.systemSettingsService.getWorkingDays().subscribe({
-      next: (workingDays) => {
-        this.workingDays = workingDays;
+  getDateString(day: number): string {
+    return `${this.currentYear}-${String(this.currentMonthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
 
-        console.log('Working Days loaded for Student Booking:', this.workingDays);
+  isWithinAcademicPeriod(day: number): boolean {
+    if (!this.semesterStart && !this.semesterEnd) {
+      return true;
+    }
+    const dateStr = this.getDateString(day);
+    if (this.semesterStart && dateStr < this.semesterStart) {
+      return false;
+    }
+    if (this.semesterEnd && dateStr > this.semesterEnd) {
+      return false;
+    }
+    return true;
+  }
 
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Failed to load working days for Student Booking:', error);
-      },
-    });
+  getGlobalBlockOut(day: number): { date: string; reason: string } | undefined {
+    const dateStr = this.getDateString(day);
+    return this.globalBlockOutDates.find((b) => b.date === dateStr);
+  }
+
+  isGlobalBlockOutDate(day: number): boolean {
+    return !!this.getGlobalBlockOut(day);
+  }
+
+  isDateAvailableForBooking(day: number): boolean {
+    if (this.isPastDate(day)) return false;
+    if (!this.isWithinAcademicPeriod(day)) return false;
+    if (this.isGlobalBlockOutDate(day)) return false;
+    if (!this.isWorkingDay(day)) return false;
+    return true;
   }
 
   isWorkingDay(day: number): boolean {
@@ -296,13 +367,13 @@ export class StudentBookingComponent implements OnInit {
   // --- FUNCTIONS ---
 
   openDateForm(day: number): void {
-    if (!this.isWorkingDay(day)) {
+    if (!this.isDateAvailableForBooking(day)) {
       return;
     }
 
     this.selectedDate = day;
 
-    this.selectedDateValue = `${this.currentYear}-${String(this.currentMonthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    this.selectedDateValue = this.getDateString(day);
 
     this.isModalOpen = true;
     this.bookingStep = 1;
