@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
 export interface BroadcastItem {
   id: string;
@@ -11,6 +11,7 @@ export interface BroadcastItem {
   audience: string;
   channels: string[];
   status: string;
+  createdAt?: string;
 }
 
 export interface SendBroadcastPayload {
@@ -54,6 +55,12 @@ export class BroadcastService {
   sendBroadcast(payload: SendBroadcastPayload): Observable<BroadcastItem> {
     return this.http.post<BroadcastItem>(this.apiUrl, payload, {
       headers: this.getHeaders(),
-    });
+    }).pipe(
+      tap(() => {
+        if (isPlatformBrowser(this.platformId)) {
+          window.dispatchEvent(new CustomEvent('admin-notification-refresh'));
+        }
+      })
+    );
   }
 }

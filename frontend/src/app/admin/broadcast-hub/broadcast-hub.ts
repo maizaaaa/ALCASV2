@@ -133,6 +133,10 @@ export class BroadcastHubComponent implements OnInit {
           });
         }
 
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('admin-notification-refresh'));
+        }
+
         alert('Broadcast sent successfully!');
 
         // Reset form

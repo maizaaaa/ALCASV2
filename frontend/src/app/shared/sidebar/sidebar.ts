@@ -14,6 +14,7 @@ export interface AdminNotification {
   group: 'Today' | 'Yesterday' | 'Earlier';
   link?: string;
   actionRequired?: boolean;
+  createdAt?: any;
 }
 
 @Component({
@@ -39,15 +40,24 @@ export class Sidebar implements OnInit, OnDestroy {
   private pollingSub!: Subscription;
 
   get todayNotifications(): AdminNotification[] {
-    return this.notifications.filter((n) => n.group === 'Today');
+    return this.notifications
+      .filter((n) => n.group === 'Today')
+      .sort((a, b) => this.getTimeValue(b) - this.getTimeValue(a));
   }
 
   get yesterdayNotifications(): AdminNotification[] {
-    return this.notifications.filter((n) => n.group === 'Yesterday' || n.group === 'Earlier');
+    return this.notifications
+      .filter((n) => n.group === 'Yesterday')
+      .sort((a, b) => this.getTimeValue(b) - this.getTimeValue(a));
   }
 
   get unreadCount(): number {
-    return this.notifications.filter((n) => !n.read).length;
+    return this.notifications.filter((n) => (n.group === 'Today' || n.group === 'Yesterday') && !n.read).length;
+  }
+
+  @HostListener('window:admin-notification-refresh')
+  onAdminNotificationRefresh() {
+    this.fetchRealNotifications();
   }
 
   ngOnInit() {
@@ -67,7 +77,7 @@ export class Sidebar implements OnInit, OnDestroy {
       }
 
       this.fetchRealNotifications();
-      this.pollingSub = interval(15000).subscribe(() => {
+      this.pollingSub = interval(10000).subscribe(() => {
         this.fetchRealNotifications();
       });
     }
@@ -79,6 +89,200 @@ export class Sidebar implements OnInit, OnDestroy {
     }
   }
 
+  parseDate(val: any): Date | null {
+    if (!val) return null;
+    if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+    if (typeof val === 'number') {
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    if (Array.isArray(val) && val.length >= 3) {
+      const year = val[0];
+      const month = val[1] - 1;
+      const day = val[2];
+      const hour = val[3] || 0;
+      const min = val[4] || 0;
+      const sec = val[5] || 0;
+      const d = new Date(year, month, day, hour, min, sec);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    if (typeof val === 'string') {
+      const trimmed = val.trim();
+      const lower = trimmed.toLowerCase();
+      if (lower === 'just now' || lower === 'now' || lower === 'right now') {
+        return new Date();
+      }
+      if (lower === 'today') {
+        return new Date();
+      }
+      if (lower === 'yesterday') {
+        return new Date(Date.now() - 24 * 60 * 60 * 1000);
+      }
+
+      // Handle "yyyy-MM-dd hh:mm a" e.g. "2026-10-14 02:30 PM" or "2026-10-14 10:42 pm"
+      const ampmMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i);
+      if (ampmMatch) {
+        const year = parseInt(ampmMatch[1], 10);
+        const month = parseInt(ampmMatch[2], 10) - 1;
+        const day = parseInt(ampmMatch[3], 10);
+        let hour = parseInt(ampmMatch[4], 10);
+        const minute = parseInt(ampmMatch[5], 10);
+        const second = ampmMatch[6] ? parseInt(ampmMatch[6], 10) : 0;
+        const isPm = ampmMatch[7].toUpperCase() === 'PM';
+        if (isPm && hour < 12) hour += 12;
+        if (!isPm && hour === 12) hour = 0;
+        const d = new Date(year, month, day, hour, minute, second);
+        if (!isNaN(d.getTime())) return d;
+      }
+
+      // Handle standard ISO strings (e.g. "2026-10-14T22:42:44.669897")
+      let d = new Date(trimmed);
+      if (!isNaN(d.getTime())) return d;
+
+      // Handle "yyyy-MM-dd" or "yyyy-MM-dd HH:mm:ss"
+      const stdMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+      if (stdMatch) {
+        const year = parseInt(stdMatch[1], 10);
+        const month = parseInt(stdMatch[2], 10) - 1;
+        const day = parseInt(stdMatch[3], 10);
+        const hour = stdMatch[4] ? parseInt(stdMatch[4], 10) : 0;
+        const minute = stdMatch[5] ? parseInt(stdMatch[5], 10) : 0;
+        const second = stdMatch[6] ? parseInt(stdMatch[6], 10) : 0;
+        d = new Date(year, month, day, hour, minute, second);
+        if (!isNaN(d.getTime())) return d;
+      }
+    }
+    return null;
+  }
+
+  getTimeValue(notifOrDate?: any): number {
+    if (!notifOrDate) return 0;
+
+    let dateVal = notifOrDate;
+    let timeStr = '';
+
+    if (typeof notifOrDate === 'object') {
+      if ('createdAt' in notifOrDate) {
+        dateVal = notifOrDate.createdAt;
+      }
+      if ('time' in notifOrDate) {
+        timeStr = notifOrDate.time || '';
+      }
+    }
+
+    const d = this.parseDate(dateVal);
+    if (d) {
+      return d.getTime();
+    }
+
+    // Relative time string fallback so "Just now" always sorts highest
+    if (timeStr) {
+      const lower = timeStr.trim().toLowerCase();
+      if (lower === 'just now' || lower === 'now' || lower === 'recent') {
+        return Date.now();
+      }
+      const minMatch = lower.match(/^(\d+)\s*m\s*ago$/);
+      if (minMatch) {
+        return Date.now() - parseInt(minMatch[1], 10) * 60 * 1000;
+      }
+      const hrMatch = lower.match(/^(\d+)\s*h\s*ago$/);
+      if (hrMatch) {
+        return Date.now() - parseInt(hrMatch[1], 10) * 3600 * 1000;
+      }
+      const dayMatch = lower.match(/^(\d+)\s*d\s*ago$/);
+      if (dayMatch) {
+        return Date.now() - parseInt(dayMatch[1], 10) * 86400 * 1000;
+      }
+    }
+
+    return 0;
+  }
+
+  calculateGroup(dateVal?: any): 'Today' | 'Yesterday' | 'Earlier' {
+    const d = this.parseDate(dateVal);
+    if (!d) return 'Earlier';
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).getTime();
+    const time = d.getTime();
+
+    if (time >= startOfToday) {
+      return 'Today';
+    } else if (time >= startOfYesterday && time < startOfToday) {
+      return 'Yesterday';
+    } else {
+      return 'Earlier'; // 2+ days old -> disappears!
+    }
+  }
+
+  formatRelativeTime(dateVal?: any): string {
+    const d = this.parseDate(dateVal);
+    if (!d) return 'Just now';
+
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHours = Math.floor(diffMin / 60);
+
+    const group = this.calculateGroup(d);
+
+    if (group === 'Today') {
+      if (diffSec < 60) return 'Just now';
+      if (diffMin < 60) return `${diffMin}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      return 'Today';
+    }
+
+    if (group === 'Yesterday') {
+      const hours = d.getHours();
+      const minutes = d.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const formattedHours = hours % 12 || 12;
+      const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+      return `Yesterday, ${formattedHours}:${formattedMinutes} ${ampm}`;
+    }
+
+    return `${Math.floor(diffHours / 24)}d ago`;
+  }
+
+  private upsertNotification(item: AdminNotification) {
+    const rawDate = item.createdAt;
+    const group = this.calculateGroup(rawDate);
+
+    // If older than yesterday (group === 'Earlier'), it disappears completely
+    if (group === 'Earlier') {
+      this.notifications = this.notifications.filter((x) => x.id !== item.id);
+      return;
+    }
+
+    item.group = group;
+    item.time = this.formatRelativeTime(rawDate);
+
+    const index = this.notifications.findIndex((x) => x.id === item.id);
+    if (index === -1) {
+      this.notifications.unshift(item);
+    } else {
+      this.notifications[index].read = item.read;
+      this.notifications[index].group = item.group;
+      this.notifications[index].time = item.time;
+      this.notifications[index].title = item.title;
+      this.notifications[index].message = item.message;
+      this.notifications[index].createdAt = rawDate;
+      if (item.link) this.notifications[index].link = item.link;
+    }
+  }
+
+  private refreshNotificationGroups() {
+    this.notifications = this.notifications.filter((n) => {
+      const grp = this.calculateGroup(n.createdAt);
+      n.group = grp;
+      n.time = this.formatRelativeTime(n.createdAt);
+      return grp === 'Today' || grp === 'Yesterday';
+    });
+  }
+
   fetchRealNotifications() {
     const token = typeof window !== 'undefined' && typeof localStorage !== 'undefined'
       ? localStorage.getItem('token')
@@ -87,37 +291,43 @@ export class Sidebar implements OnInit, OnDestroy {
     const dismissedIds: string[] = JSON.parse(localStorage.getItem('admin_dismissed_notifs') || '[]');
     const readIds: string[] = JSON.parse(localStorage.getItem('admin_read_notifs') || '[]');
 
-    // Seed standard administrative status notifications if not dismissed
+    // Seed standard administrative operational status notifications at start of day (so real alerts sit on top)
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 1);
     const defaultNotifs: AdminNotification[] = [
       {
         id: 'sys-welcome',
         title: 'System Operational',
         message: 'ALCAS Academic Portal running normally. All services (Consultations, Attendance, Calendar) active.',
-        time: 'Just now',
+        time: 'Earlier today',
         read: readIds.includes('sys-welcome'),
         type: 'system',
         group: 'Today',
+        createdAt: startOfToday,
         link: '/admin/settings',
       },
       {
         id: 'sys-backup',
         title: 'Daily Data Audit',
         message: 'Daily consultation log backup and audit check completed successfully.',
-        time: '2h ago',
+        time: 'Earlier today',
         read: readIds.includes('sys-backup'),
         type: 'system',
         group: 'Today',
+        createdAt: startOfToday,
         link: '/admin/logs',
       }
     ];
 
     defaultNotifs.forEach((d) => {
-      if (!dismissedIds.includes(d.id) && !this.notifications.some((x) => x.id === d.id)) {
-        this.notifications.push(d);
+      if (!dismissedIds.includes(d.id)) {
+        this.upsertNotification(d);
       }
     });
 
     if (!token) {
+      this.refreshNotificationGroups();
+      this.cdr.detectChanges();
       return;
     }
 
@@ -131,22 +341,21 @@ export class Sidebar implements OnInit, OnDestroy {
           dbNotifs.forEach((n) => {
             const dbId = `db-${n.id}`;
             if (dismissedIds.includes(dbId)) return;
-            const exists = this.notifications.find((x) => x.id === dbId);
             const isRead = n.isRead || readIds.includes(dbId);
-            if (!exists) {
-              this.notifications.unshift({
-                id: dbId,
-                title: n.title || 'System Notification',
-                message: n.message || '',
-                time: this.formatRelativeTime(n.createdAt),
-                read: isRead,
-                type: (n.type || '').toLowerCase() === 'broadcast' ? 'broadcast' : 'system',
-                group: this.calculateGroup(n.createdAt),
-              });
-            } else {
-              exists.read = isRead;
-            }
+            const rawCreatedAt = n.createdAt;
+
+            this.upsertNotification({
+              id: dbId,
+              title: n.title || 'System Notification',
+              message: n.message || '',
+              time: this.formatRelativeTime(rawCreatedAt),
+              read: isRead,
+              type: (n.type || '').toLowerCase() === 'broadcast' ? 'broadcast' : 'system',
+              group: this.calculateGroup(rawCreatedAt),
+              createdAt: rawCreatedAt,
+            });
           });
+          this.refreshNotificationGroups();
           this.cdr.detectChanges();
         }
       },
@@ -157,7 +366,7 @@ export class Sidebar implements OnInit, OnDestroy {
     this.http.get<any[]>('http://localhost:8080/api/admin/consultations', { headers }).subscribe({
       next: (consultations) => {
         if (Array.isArray(consultations)) {
-          consultations.slice(0, 15).forEach((c) => {
+          consultations.forEach((c) => {
             const statusUpper = (c.status || '').toUpperCase();
             let notifId = '';
             let title = '';
@@ -186,22 +395,22 @@ export class Sidebar implements OnInit, OnDestroy {
             }
 
             if (notifId && !dismissedIds.includes(notifId)) {
-              const exists = this.notifications.find((x) => x.id === notifId);
               const isRead = readIds.includes(notifId);
-              if (!exists) {
-                this.notifications.unshift({
-                  id: notifId,
-                  title,
-                  message,
-                  time: c.scheduledDate ? `${c.scheduledDate}` : 'Recent',
-                  read: isRead,
-                  type,
-                  group: this.calculateGroup(c.createdAt || c.scheduledDate),
-                  link,
-                });
-              }
+              const rawCreatedAt = c.createdAt || c.scheduledDate;
+              this.upsertNotification({
+                id: notifId,
+                title,
+                message,
+                time: this.formatRelativeTime(rawCreatedAt),
+                read: isRead,
+                type,
+                group: this.calculateGroup(rawCreatedAt),
+                createdAt: rawCreatedAt,
+                link,
+              });
             }
           });
+          this.refreshNotificationGroups();
           this.cdr.detectChanges();
         }
       },
@@ -212,24 +421,28 @@ export class Sidebar implements OnInit, OnDestroy {
     this.http.get<any[]>('http://localhost:8080/api/admin/users', { headers }).subscribe({
       next: (users) => {
         if (Array.isArray(users)) {
-          users.slice(-8).reverse().forEach((u) => {
+          users.forEach((u) => {
             const notifId = `user-reg-${u.id}`;
             if (dismissedIds.includes(notifId)) return;
-            const exists = this.notifications.find((x) => x.id === notifId);
             const isRead = readIds.includes(notifId);
-            if (!exists) {
-              this.notifications.unshift({
-                id: notifId,
-                title: 'User Account Registered',
-                message: `${u.name} registered as ${u.role} (${u.email}) - Status: ${u.status}.`,
-                time: 'Recent User',
-                read: isRead,
-                type: 'user',
-                group: 'Today',
-                link: '/admin/users',
-              });
+            if (u.createdAt) {
+              const grp = this.calculateGroup(u.createdAt);
+              if (grp === 'Today' || grp === 'Yesterday') {
+                this.upsertNotification({
+                  id: notifId,
+                  title: 'User Account Registered',
+                  message: `${u.name} registered as ${u.role} (${u.email}) - Status: ${u.status}.`,
+                  time: this.formatRelativeTime(u.createdAt),
+                  read: isRead,
+                  type: 'user',
+                  group: grp,
+                  createdAt: u.createdAt,
+                  link: '/admin/users',
+                });
+              }
             }
           });
+          this.refreshNotificationGroups();
           this.cdr.detectChanges();
         }
       },
@@ -240,62 +453,30 @@ export class Sidebar implements OnInit, OnDestroy {
     this.http.get<any[]>('http://localhost:8080/api/admin/broadcasts', { headers }).subscribe({
       next: (broadcasts) => {
         if (Array.isArray(broadcasts)) {
-          broadcasts.slice(0, 5).forEach((b) => {
+          broadcasts.forEach((b) => {
             const notifId = `broadcast-${b.id}`;
             if (dismissedIds.includes(notifId)) return;
-            const exists = this.notifications.find((x) => x.id === notifId);
             const isRead = readIds.includes(notifId);
-            if (!exists) {
-              this.notifications.unshift({
-                id: notifId,
-                title: b.subject || 'Campus Announcement',
-                message: b.message || '',
-                time: 'Broadcast',
-                read: isRead,
-                type: 'broadcast',
-                group: this.calculateGroup(b.createdAt),
-                link: '/admin/broadcasts',
-              });
-            }
+            const rawCreatedAt = b.createdAt || b.date;
+
+            this.upsertNotification({
+              id: notifId,
+              title: b.subject || 'Campus Announcement',
+              message: b.message || '',
+              time: this.formatRelativeTime(rawCreatedAt),
+              read: isRead,
+              type: 'broadcast',
+              group: this.calculateGroup(rawCreatedAt),
+              createdAt: rawCreatedAt,
+              link: '/admin/broadcasts',
+            });
           });
+          this.refreshNotificationGroups();
           this.cdr.detectChanges();
         }
       },
       error: (err) => console.warn('Failed to load broadcasts for admin notifications:', err),
     });
-  }
-
-  calculateGroup(dateStr?: string): 'Today' | 'Yesterday' | 'Earlier' {
-    if (!dateStr) return 'Today';
-    try {
-      const d = new Date(dateStr);
-      const now = new Date();
-      const diffMs = now.getTime() - d.getTime();
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      if (diffDays <= 0) return 'Today';
-      if (diffDays === 1) return 'Yesterday';
-      return 'Earlier';
-    } catch {
-      return 'Today';
-    }
-  }
-
-  formatRelativeTime(dateStr?: string): string {
-    if (!dateStr) return 'Recent';
-    try {
-      const d = new Date(dateStr);
-      const now = new Date();
-      const diffMin = Math.floor((now.getTime() - d.getTime()) / 60000);
-      if (diffMin < 1) return 'Just now';
-      if (diffMin < 60) return `${diffMin}m ago`;
-      const diffHours = Math.floor(diffMin / 60);
-      if (diffHours < 24) return `${diffHours}h ago`;
-      const diffDays = Math.floor(diffHours / 24);
-      if (diffDays === 1) return 'Yesterday';
-      return `${diffDays}d ago`;
-    } catch {
-      return 'Recent';
-    }
   }
 
   @HostListener('document:keydown.escape', ['$event'])
