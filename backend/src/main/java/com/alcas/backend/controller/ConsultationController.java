@@ -74,15 +74,15 @@ public class ConsultationController {
                 = studentProfileRepository.findById(studentId)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Student profile not found"
-                        ));
+                                        "Student profile not found"
+                                ));
 
         LecturerProfile lecturer
                 = lecturerProfileRepository.findById(lecturerId)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Lecturer profile not found"
-                        ));
+                                        "Lecturer profile not found"
+                                ));
 
         Consultation consultation = new Consultation();
 
@@ -150,28 +150,28 @@ public class ConsultationController {
                 = consultations.stream()
                         .map(consultation
                                 -> new ConsultationResponse(
-                                consultation.getId(),
-                                consultation.getStudent().getUserId(),
-                                consultation.getLecturer().getUserId(),
-                                consultation.getLecturer().getUser().getFullName(),
-                                consultation.getLecturerRemarks(),
-                                consultation.getScheduledDate().toString(),
-                                consultation.getScheduledTime().toString(),
-                                consultation.getReason(),
-                                consultation.getReasonDetails(),
-                                consultation.getConsultationMode(),
-                                consultation.getLocation(),
-                                consultation.getStatus().name(),
-                                consultation.getProposedDate() != null
-                                ? consultation.getProposedDate().toString()
-                                : null,
-                                consultation.getProposedTime() != null
-                                ? consultation.getProposedTime().toString()
-                                : null,
-                                consultation.getRescheduleReason(),
-                                consultation.getRejectReason(),
-                                consultation.getCancelReason()
-                        )
+                                        consultation.getId(),
+                                        consultation.getStudent().getUserId(),
+                                        consultation.getLecturer().getUserId(),
+                                        consultation.getLecturer().getUser().getFullName(),
+                                        consultation.getLecturerRemarks(),
+                                        consultation.getScheduledDate().toString(),
+                                        consultation.getScheduledTime().toString(),
+                                        consultation.getReason(),
+                                        consultation.getReasonDetails(),
+                                        consultation.getConsultationMode(),
+                                        consultation.getLocation(),
+                                        consultation.getStatus().name(),
+                                        consultation.getProposedDate() != null
+                                        ? consultation.getProposedDate().toString()
+                                        : null,
+                                        consultation.getProposedTime() != null
+                                        ? consultation.getProposedTime().toString()
+                                        : null,
+                                        consultation.getRescheduleReason(),
+                                        consultation.getRejectReason(),
+                                        consultation.getCancelReason()
+                                )
                         )
                         .toList();
 
@@ -190,8 +190,8 @@ public class ConsultationController {
                 = userRepository.findByEmail(email)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Authenticated user not found"
-                        ))
+                                        "Authenticated user not found"
+                                ))
                         .getId();
 
         Consultation cancelled
@@ -248,32 +248,32 @@ public class ConsultationController {
                 = consultations.stream()
                         .map(consultation
                                 -> new ConsultationResponse(
-                                consultation.getId(),
-                                consultation.getStudent() != null ? consultation.getStudent().getUserId() : null,
-                                consultation.getStudent() != null && consultation.getStudent().getUser() != null
+                                        consultation.getId(),
+                                        consultation.getStudent() != null ? consultation.getStudent().getUserId() : null,
+                                        consultation.getStudent() != null && consultation.getStudent().getUser() != null
                                         ? consultation.getStudent().getUser().getFullName() : "Unknown Student",
-                                consultation.getStudent() != null ? consultation.getStudent().getMatricNumber() : null,
-                                consultation.getLecturer() != null ? consultation.getLecturer().getUserId() : null,
-                                consultation.getLecturer() != null && consultation.getLecturer().getUser() != null
+                                        consultation.getStudent() != null ? consultation.getStudent().getMatricNumber() : null,
+                                        consultation.getLecturer() != null ? consultation.getLecturer().getUserId() : null,
+                                        consultation.getLecturer() != null && consultation.getLecturer().getUser() != null
                                         ? consultation.getLecturer().getUser().getFullName() : "Unknown Lecturer",
-                                consultation.getLecturerRemarks(),
-                                consultation.getScheduledDate() != null ? consultation.getScheduledDate().toString() : "",
-                                consultation.getScheduledTime() != null ? consultation.getScheduledTime().toString() : "",
-                                consultation.getReason(),
-                                consultation.getReasonDetails(),
-                                consultation.getConsultationMode(),
-                                consultation.getLocation(),
-                                consultation.getStatus() != null ? consultation.getStatus().name() : "",
-                                consultation.getProposedDate() != null
-                                ? consultation.getProposedDate().toString()
-                                : null,
-                                consultation.getProposedTime() != null
-                                ? consultation.getProposedTime().toString()
-                                : null,
-                                consultation.getRescheduleReason(),
-                                consultation.getRejectReason(),
-                                consultation.getCancelReason()
-                        )
+                                        consultation.getLecturerRemarks(),
+                                        consultation.getScheduledDate() != null ? consultation.getScheduledDate().toString() : "",
+                                        consultation.getScheduledTime() != null ? consultation.getScheduledTime().toString() : "",
+                                        consultation.getReason(),
+                                        consultation.getReasonDetails(),
+                                        consultation.getConsultationMode(),
+                                        consultation.getLocation(),
+                                        consultation.getStatus() != null ? consultation.getStatus().name() : "",
+                                        consultation.getProposedDate() != null
+                                        ? consultation.getProposedDate().toString()
+                                        : null,
+                                        consultation.getProposedTime() != null
+                                        ? consultation.getProposedTime().toString()
+                                        : null,
+                                        consultation.getRescheduleReason(),
+                                        consultation.getRejectReason(),
+                                        consultation.getCancelReason()
+                                )
                         )
                         .toList();
 
@@ -283,8 +283,8 @@ public class ConsultationController {
     @PutMapping("/{consultationId}/approve")
     public ResponseEntity<ConsultationResponse> approveConsultation(
             @PathVariable String consultationId,
-            @RequestParam (required = false) String location,
-            @RequestParam (required = false) String remarks,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) String remarks,
             Authentication authentication) {
 
         String email = authentication.getName();
@@ -343,8 +343,8 @@ public class ConsultationController {
                 = userRepository.findByEmail(email)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Authenticated user not found"
-                        ))
+                                        "Authenticated user not found"
+                                ))
                         .getId();
 
         Consultation rejected
@@ -381,7 +381,6 @@ public class ConsultationController {
 
         return ResponseEntity.ok(response);
     }
-
 
     @PutMapping("/{consultationId}/reschedule")
     public ResponseEntity<ConsultationResponse> requestReschedule(
@@ -425,11 +424,11 @@ public class ConsultationController {
                 rescheduled.getLocation(),
                 rescheduled.getStatus().name(),
                 rescheduled.getProposedDate() != null
-                        ? rescheduled.getProposedDate().toString()
-                        : null,
+                ? rescheduled.getProposedDate().toString()
+                : null,
                 rescheduled.getProposedTime() != null
-                        ? rescheduled.getProposedTime().toString()
-                        : null,
+                ? rescheduled.getProposedTime().toString()
+                : null,
                 rescheduled.getRescheduleReason(),
                 rescheduled.getRejectReason(),
                 rescheduled.getCancelReason()
@@ -449,8 +448,8 @@ public class ConsultationController {
                 = userRepository.findByEmail(email)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Authenticated user not found"
-                        ))
+                                        "Authenticated user not found"
+                                ))
                         .getId();
 
         Consultation accepted
@@ -498,8 +497,8 @@ public class ConsultationController {
                 = userRepository.findByEmail(email)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Authenticated user not found"
-                        ))
+                                        "Authenticated user not found"
+                                ))
                         .getId();
 
         Consultation rejected

@@ -21,6 +21,7 @@ public class AdminUserResponse {
     private Integer schoolId;
     private Integer programId;
     private String phone;
+    private LocalDateTime createdAt;
 
     public AdminUserResponse(User user,
                              StudentProfileRepository studentProfileRepository,
@@ -32,6 +33,7 @@ public class AdminUserResponse {
         this.role = user.getRole().name();
         this.status = user.getStatus().name();
         this.lastLogin = user.getLastLogin();
+        this.createdAt = user.getCreatedAt();
 
         if (user.getRole() == User.Role.STUDENT) {
             StudentProfile profile = studentProfileRepository
@@ -119,5 +121,9 @@ public class AdminUserResponse {
 
     public String getPhone() {
         return phone;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 }
