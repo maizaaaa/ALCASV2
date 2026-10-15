@@ -60,6 +60,9 @@ export const routes: Routes = [
   { path: 'student', component: StudentDashboardComponent },
   { path: 'student/book', component: StudentBookingComponent },
   { path: 'student/history', component: StudentAppointmentsComponent },
+  { path: 'student/appointments', component: StudentAppointmentsComponent },
+  { path: 'student/student-appointment', redirectTo: 'student/appointments', pathMatch: 'full' },
+  { path: 'student/student-appointments', redirectTo: 'student/appointments', pathMatch: 'full' },
   { path: 'student/profile', component: StudentProfileComponent },
 
   // Add this at the very end to catch typos and redirect to login

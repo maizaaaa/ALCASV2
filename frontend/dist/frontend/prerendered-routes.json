@@ -20,9 +20,12 @@
     "/registration-success": {},
     "/reset-password": {},
     "/student": {},
+    "/student/appointments": {},
     "/student/book": {},
     "/student/history": {},
     "/student/profile": {},
+    "/student/student-appointment": {},
+    "/student/student-appointments": {},
     "/verification-code": {}
   }
 }

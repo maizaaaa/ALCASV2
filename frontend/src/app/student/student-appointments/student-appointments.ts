@@ -27,14 +27,19 @@ interface StudentAppointmentView {
   styleUrls: ['./student-appointments.css'],
 })
 export class StudentAppointmentsComponent implements OnInit {
-  activeTab: 'upcoming' | 'history' = 'upcoming';
+  activeTab: 'pending' | 'confirmed' | 'history' = 'pending';
 
   appointments: StudentAppointmentView[] = [];
 
   selectedAppointment: StudentAppointmentView | null = null;
   modalMode: 'view' | 'cancel' | 'reschedule' | null = null;
 
-  // Temporary compatibility with your existing HTML.
+  // Tab Filter States
+  pendingFilter: string = 'ALL';
+  confirmedFilter: string = 'ALL';
+  historyFilter: string = 'ALL';
+
+  // Temporary compatibility with existing HTML
   smartSuggestion = '';
   selectedNewSlot = '';
   cancelReason = '';
@@ -46,6 +51,8 @@ export class StudentAppointmentsComponent implements OnInit {
   successMessage = '';
   successType: 'success' | 'info' | 'warning' = 'success';
 
+  private isInitialLoad = true;
+
   constructor(
     private router: Router,
     private consultationService: ConsultationService,
@@ -55,8 +62,6 @@ export class StudentAppointmentsComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('StudentAppointmentsComponent initialized');
-    console.log('Initial activeTab:', this.activeTab);
-
     this.loadAppointments();
   }
 
@@ -72,6 +77,26 @@ export class StudentAppointmentsComponent implements OnInit {
     this.showSuccessModal = false;
     this.successTitle = '';
     this.successMessage = '';
+    this.cdr.detectChanges();
+  }
+
+  setTab(tab: 'pending' | 'confirmed' | 'history'): void {
+    this.activeTab = tab;
+    this.cdr.detectChanges();
+  }
+
+  setPendingFilter(filter: string): void {
+    this.pendingFilter = filter;
+    this.cdr.detectChanges();
+  }
+
+  setConfirmedFilter(filter: string): void {
+    this.confirmedFilter = filter;
+    this.cdr.detectChanges();
+  }
+
+  setHistoryFilter(filter: string): void {
+    this.historyFilter = filter;
     this.cdr.detectChanges();
   }
 
@@ -93,6 +118,18 @@ export class StudentAppointmentsComponent implements OnInit {
             rescheduleReason: c.rescheduleReason || '',
           }));
 
+          // Automatically direct student to Pending if they have pending requests to prevent overlooking
+          if (this.isInitialLoad) {
+            this.isInitialLoad = false;
+            if (this.pendingAppointments.length > 0) {
+              this.activeTab = 'pending';
+            } else if (this.confirmedAppointments.length > 0) {
+              this.activeTab = 'confirmed';
+            } else {
+              this.activeTab = 'pending';
+            }
+          }
+
           this.cdr.detectChanges();
           console.log('Student appointments loaded:', this.appointments);
         });
@@ -104,16 +141,84 @@ export class StudentAppointmentsComponent implements OnInit {
     });
   }
 
+  // --- APPOINTMENT CATEGORIES ---
+
+  // 1. Pending Section: Appointments awaiting lecturer review or reschedule proposals awaiting student response
+  get pendingAppointments(): StudentAppointmentView[] {
+    return this.appointments.filter((a) =>
+      ['PENDING', 'RESCHEDULE-PENDING'].includes(a.status),
+    );
+  }
+
+  // 2. Confirmed & Completed Section: Approved upcoming consultations and completed sessions
+  get confirmedAppointments(): StudentAppointmentView[] {
+    return this.appointments.filter((a) =>
+      ['CONFIRMED', 'UPCOMING', 'COMPLETED'].includes(a.status),
+    );
+  }
+
+  // 3. History Section: Archived past sessions (completed, cancelled, rejected, no-show)
+  get historyAppointments(): StudentAppointmentView[] {
+    return this.appointments.filter((a) =>
+      ['COMPLETED', 'CANCELLED', 'REJECTED', 'NO-SHOW'].includes(a.status),
+    );
+  }
+
+  // Compatibility getter
   get upcomingAppointments(): StudentAppointmentView[] {
     return this.appointments.filter((a) =>
       ['PENDING', 'UPCOMING', 'CONFIRMED', 'RESCHEDULE-PENDING'].includes(a.status),
     );
   }
 
-  get historyAppointments(): StudentAppointmentView[] {
-    return this.appointments.filter((a) =>
-      ['COMPLETED', 'CANCELLED', 'REJECTED', 'NO-SHOW'].includes(a.status),
-    );
+  // --- COUNTS FOR BADGES ---
+  get pendingCount(): number {
+    return this.appointments.filter((a) => a.status === 'PENDING').length;
+  }
+
+  get reschedulePendingCount(): number {
+    return this.appointments.filter((a) => a.status === 'RESCHEDULE-PENDING').length;
+  }
+
+  get confirmedCount(): number {
+    return this.appointments.filter((a) => a.status === 'CONFIRMED' || a.status === 'UPCOMING').length;
+  }
+
+  get completedCount(): number {
+    return this.appointments.filter((a) => a.status === 'COMPLETED').length;
+  }
+
+  get cancelledCount(): number {
+    return this.appointments.filter((a) => a.status === 'CANCELLED').length;
+  }
+
+  get rejectedCount(): number {
+    return this.appointments.filter((a) => a.status === 'REJECTED' || a.status === 'NO-SHOW').length;
+  }
+
+  // --- FILTERED LISTS ---
+  get filteredPendingAppointments(): StudentAppointmentView[] {
+    if (!this.pendingFilter || this.pendingFilter === 'ALL') {
+      return this.pendingAppointments;
+    }
+    return this.pendingAppointments.filter((a) => a.status === this.pendingFilter);
+  }
+
+  get filteredConfirmedAppointments(): StudentAppointmentView[] {
+    if (!this.confirmedFilter || this.confirmedFilter === 'ALL') {
+      return this.confirmedAppointments;
+    }
+    if (this.confirmedFilter === 'CONFIRMED') {
+      return this.confirmedAppointments.filter((a) => a.status === 'CONFIRMED' || a.status === 'UPCOMING');
+    }
+    return this.confirmedAppointments.filter((a) => a.status === this.confirmedFilter);
+  }
+
+  get filteredHistoryAppointments(): StudentAppointmentView[] {
+    if (!this.historyFilter || this.historyFilter === 'ALL') {
+      return this.historyAppointments;
+    }
+    return this.historyAppointments.filter((a) => a.status === this.historyFilter);
   }
 
   openModal(appointment: StudentAppointmentView, mode: 'view' | 'cancel' | 'reschedule'): void {
@@ -288,3 +393,5 @@ export class StudentAppointmentsComponent implements OnInit {
     });
   }
 }
+
+export { StudentAppointmentsComponent as StudentAppointments };

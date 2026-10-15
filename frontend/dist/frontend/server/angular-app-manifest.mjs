@@ -101,6 +101,20 @@ export default {
   },
   {
     "renderMode": 2,
+    "route": "/student/appointments"
+  },
+  {
+    "renderMode": 2,
+    "redirectTo": "/student/student/appointments",
+    "route": "/student/student-appointment"
+  },
+  {
+    "renderMode": 2,
+    "redirectTo": "/student/student/appointments",
+    "route": "/student/student-appointments"
+  },
+  {
+    "renderMode": 2,
     "route": "/student/profile"
   },
   {
@@ -111,30 +125,31 @@ export default {
 ],
   entryPointToBrowserMapping: undefined,
   assets: {
-    'index.csr.html': {size: 11359, hash: '7a48bf893d8625aa9135d7b772ce89dd413a02db66681f0e23cebb7e12fa440e', text: () => import('./assets-chunks/index_csr_html.mjs').then(m => m.default)},
-    'index.server.html': {size: 946, hash: '30fe6f484c677fb84b5f4ecd11c6d914ffa21a6853e621946e0bace02a156a4c', text: () => import('./assets-chunks/index_server_html.mjs').then(m => m.default)},
-    'forgot-password/index.html': {size: 32898, hash: 'd309956ac192a280bec37de6ec524ef7d6710c2fd935ac9badf0a6020e52d8af', text: () => import('./assets-chunks/forgot-password_index_html.mjs').then(m => m.default)},
-    'reset-password/index.html': {size: 32243, hash: '9334acae28684e4955485b6a69a28afe28ce8d7fcc702db4b7585767511df9a3', text: () => import('./assets-chunks/reset-password_index_html.mjs').then(m => m.default)},
-    'login/index.html': {size: 34246, hash: '36dfee69a1102e766860c8ad8f139e4533c8126b237e99bb46fc3ca2731ee851', text: () => import('./assets-chunks/login_index_html.mjs').then(m => m.default)},
-    'admin/index.html': {size: 88951, hash: '3e2237dc2d2f20fffbdb10a23c53f65d97cedcdc2469d2993f903a9087b25b23', text: () => import('./assets-chunks/admin_index_html.mjs').then(m => m.default)},
-    'lecturer/schedule/index.html': {size: 59363, hash: '5aa45f1876f62b332886824b9a29194c474e7092a48e7f95bb0cef164c647a19', text: () => import('./assets-chunks/lecturer_schedule_index_html.mjs').then(m => m.default)},
-    'admin/settings/index.html': {size: 80541, hash: 'f0e8b1767b4df523c504de90aca0b1b6edec2f4364a65c4380e3777841458579', text: () => import('./assets-chunks/admin_settings_index_html.mjs').then(m => m.default)},
-    'lecturer/history/index.html': {size: 70081, hash: '634996069f8cea6c75011a2b476abae39a2349eca5cb2768df87773e3fd35470', text: () => import('./assets-chunks/lecturer_history_index_html.mjs').then(m => m.default)},
-    'student/index.html': {size: 54249, hash: '4d172868b926764a77936c9cb088c1a354f195d33b813ee9995ed775e1e1d1cb', text: () => import('./assets-chunks/student_index_html.mjs').then(m => m.default)},
-    'student/history/index.html': {size: 57830, hash: 'd9cfa5518282857e46317d55a924243c3db6290128f809ab791617f6c6fa868b', text: () => import('./assets-chunks/student_history_index_html.mjs').then(m => m.default)},
-    'verification-code/index.html': {size: 33964, hash: '4a0b92b9f10bcbfba2da23f288c799e789f249a4e8fc357d4a519d329b41ae22', text: () => import('./assets-chunks/verification-code_index_html.mjs').then(m => m.default)},
-    'register/index.html': {size: 46050, hash: '80c851f3790f55812fab618adb01408235da1abd28a1941f6005c4b18d35ccd9', text: () => import('./assets-chunks/register_index_html.mjs').then(m => m.default)},
-    'admin/analytics/index.html': {size: 135001, hash: 'c1e3c42a507cd848853db5a23985e9a3a541ceb972bdea2743b87a2978722d80', text: () => import('./assets-chunks/admin_analytics_index_html.mjs').then(m => m.default)},
-    'lecturer/appointments/index.html': {size: 89562, hash: 'ac60c1251e844a78c29b44b71d443ae60e1edf3033d8d72c11bd7886c5df91b5', text: () => import('./assets-chunks/lecturer_appointments_index_html.mjs').then(m => m.default)},
-    'admin/broadcasts/index.html': {size: 67302, hash: '66745c2abe78be0cbdf322f47c30de57e2929bb2a5eea5c86c7e1da46be3cb5b', text: () => import('./assets-chunks/admin_broadcasts_index_html.mjs').then(m => m.default)},
-    'admin/logs/index.html': {size: 133445, hash: '4c865bae4d1c8136f2b53dba7f0fd85cffdb4004cd488419e7397f59ec5b0351', text: () => import('./assets-chunks/admin_logs_index_html.mjs').then(m => m.default)},
-    'registration-success/index.html': {size: 35116, hash: '6f6c4fae13a324d447a62be8b2fcd02b43b6ca25d29935aa6353cb5237d11205', text: () => import('./assets-chunks/registration-success_index_html.mjs').then(m => m.default)},
-    'student/book/index.html': {size: 53310, hash: 'e52c827ecda6a3c5650c804f4d422852b7dbe778c5992bd28070b7898d002c59', text: () => import('./assets-chunks/student_book_index_html.mjs').then(m => m.default)},
-    'student/profile/index.html': {size: 63403, hash: '24f7349e4314a003c60b72414dd87abf2644f10c39f89ebeaa58e8f6be952e9e', text: () => import('./assets-chunks/student_profile_index_html.mjs').then(m => m.default)},
-    'lecturer/profile/index.html': {size: 71312, hash: 'e390a9a15c02affd800b849015c5fe0b568340853789c7a8113d732a9217e2eb', text: () => import('./assets-chunks/lecturer_profile_index_html.mjs').then(m => m.default)},
-    'lecturer/index.html': {size: 72691, hash: '8a924953d8d4a65b1e56200f8e2dad48e9fd54ed23cb47dcd4e2f5f276be0dc1', text: () => import('./assets-chunks/lecturer_index_html.mjs').then(m => m.default)},
-    'admin/users/index.html': {size: 88501, hash: '0967a5f6288d18bbbd92d6c21ac71949e3efc5f8c766ca0e53545674c52fdfe6', text: () => import('./assets-chunks/admin_users_index_html.mjs').then(m => m.default)},
-    'admin/attendance/index.html': {size: 91547, hash: '7c8e60dac4ccd31dc6a27f4b710ad8cb99af586d946870f0d4af30b9b48d8dba', text: () => import('./assets-chunks/admin_attendance_index_html.mjs').then(m => m.default)},
-    'styles-HGZY7IV5.css': {size: 91117, hash: 'pArdPvcfMkE', text: () => import('./assets-chunks/styles-HGZY7IV5_css.mjs').then(m => m.default)}
+    'index.csr.html': {size: 11359, hash: '3d9b5188e6c0ff2eda806d94a504b7adafb7bed9ac055d92ce934987f6ed52ce', text: () => import('./assets-chunks/index_csr_html.mjs').then(m => m.default)},
+    'index.server.html': {size: 946, hash: 'faec373efcbabdb75e747d96edd7caefcdf456c8053a8dfad5f3d40874793f1b', text: () => import('./assets-chunks/index_server_html.mjs').then(m => m.default)},
+    'reset-password/index.html': {size: 32243, hash: '5ca8e1af9589097101b4c9311bf30e3c78a7c7b5adea501b370afe1ff2ef9ace', text: () => import('./assets-chunks/reset-password_index_html.mjs').then(m => m.default)},
+    'forgot-password/index.html': {size: 32898, hash: '9929c8da45239cc412b35bc0795c551346a5458cee5beb1402b2c72793cfc2b1', text: () => import('./assets-chunks/forgot-password_index_html.mjs').then(m => m.default)},
+    'login/index.html': {size: 34246, hash: 'ea110f62e945a48f43a0ccb927780e7015837b4ebeacd861b5718fe973f7fb1c', text: () => import('./assets-chunks/login_index_html.mjs').then(m => m.default)},
+    'admin/index.html': {size: 88951, hash: 'ad2631b1b6c9e88b750a6a531326c102b652e642073a7ee2763300eda4c2db90', text: () => import('./assets-chunks/admin_index_html.mjs').then(m => m.default)},
+    'lecturer/schedule/index.html': {size: 59363, hash: 'd6dc2b74fa5a5d48311216aed9205a9241e71124463181d1acf58eb728a1be97', text: () => import('./assets-chunks/lecturer_schedule_index_html.mjs').then(m => m.default)},
+    'admin/settings/index.html': {size: 80544, hash: '7b24aac671177ab1cfa1b0dca2bef605bd8847061c58bd8304581439b840031c', text: () => import('./assets-chunks/admin_settings_index_html.mjs').then(m => m.default)},
+    'lecturer/history/index.html': {size: 70081, hash: '662aa2587d5f1326cc2fd39bbdd95233b86ca0decaf8bd9f6d49325e2d4450d6', text: () => import('./assets-chunks/lecturer_history_index_html.mjs').then(m => m.default)},
+    'student/index.html': {size: 54249, hash: 'd83b4c73c907398e8a242128cfdc850c55c06972e4b221670b663b54fbbbfce5', text: () => import('./assets-chunks/student_index_html.mjs').then(m => m.default)},
+    'student/history/index.html': {size: 58736, hash: 'da2962290c6eef842e049607777a32eedb86ea575acc44badcb367f76eccba38', text: () => import('./assets-chunks/student_history_index_html.mjs').then(m => m.default)},
+    'registration-success/index.html': {size: 35116, hash: '38fee0e3d107d982818ab35c26adc91446933c0a77544aa77d168493067738d4', text: () => import('./assets-chunks/registration-success_index_html.mjs').then(m => m.default)},
+    'student/profile/index.html': {size: 63403, hash: 'c551d3b8d6c9d48bbe6005b4822f5cc6ece3fbc98d33470c81998cc1345a0b90', text: () => import('./assets-chunks/student_profile_index_html.mjs').then(m => m.default)},
+    'admin/analytics/index.html': {size: 136022, hash: '6a9ea73ab6d69887020650928a5431e8af000552b1dab2a6ffaaf70824f7ed8c', text: () => import('./assets-chunks/admin_analytics_index_html.mjs').then(m => m.default)},
+    'lecturer/index.html': {size: 72691, hash: 'ce545e29996e1e899ff69fa7473b7d488633a491baff3b98a35107268133edce', text: () => import('./assets-chunks/lecturer_index_html.mjs').then(m => m.default)},
+    'student/appointments/index.html': {size: 58736, hash: '64e3022ac0f36f45b796b14a5b4b1723e91f0cf283b844199f56fc1d8de47175', text: () => import('./assets-chunks/student_appointments_index_html.mjs').then(m => m.default)},
+    'admin/users/index.html': {size: 88894, hash: '5ce92d141b2c807c1e365c1643de8d32dadff39038c5631234f4cbaaf485d266', text: () => import('./assets-chunks/admin_users_index_html.mjs').then(m => m.default)},
+    'lecturer/profile/index.html': {size: 71312, hash: '010f82f260b18a9ceab71465559d743669ee8063ea76baed08307b92c4d7ccc4', text: () => import('./assets-chunks/lecturer_profile_index_html.mjs').then(m => m.default)},
+    'admin/attendance/index.html': {size: 91547, hash: '9f801b2b31bd43d61a47a4d05bb0a2de768d66c7394bfc51763fc499507b3659', text: () => import('./assets-chunks/admin_attendance_index_html.mjs').then(m => m.default)},
+    'verification-code/index.html': {size: 33964, hash: 'cb2f78e9d1a00a8d1aa8633385fd767ef2c133c9f1a33fb28bcbbf65f68f334b', text: () => import('./assets-chunks/verification-code_index_html.mjs').then(m => m.default)},
+    'admin/broadcasts/index.html': {size: 67961, hash: '024a52c5b9e8add8bd680b046d29a952ea01c6f649b80f005ef5710081722199', text: () => import('./assets-chunks/admin_broadcasts_index_html.mjs').then(m => m.default)},
+    'student/book/index.html': {size: 53310, hash: '9af16883611d81e607df24d08b2c961c5d74b38a16b847c7e89663fe3c713962', text: () => import('./assets-chunks/student_book_index_html.mjs').then(m => m.default)},
+    'lecturer/appointments/index.html': {size: 89562, hash: 'e7970d3b2b99111332e0aa7bd57d211c5ecac8ecea4217387148fd9de3d8e934', text: () => import('./assets-chunks/lecturer_appointments_index_html.mjs').then(m => m.default)},
+    'register/index.html': {size: 46050, hash: '3ca14d01436861275831ed56edad4ece5bd25f6202a473a339a492b2e431c983', text: () => import('./assets-chunks/register_index_html.mjs').then(m => m.default)},
+    'admin/logs/index.html': {size: 133452, hash: '3815932d444f32d221a212a4abd1e52d51cf707e16c53b96e774e6316e7ebf65', text: () => import('./assets-chunks/admin_logs_index_html.mjs').then(m => m.default)},
+    'styles-BD3YWWVQ.css': {size: 95318, hash: 'fA7lzPC/5K4', text: () => import('./assets-chunks/styles-BD3YWWVQ_css.mjs').then(m => m.default)}
   },
 };
