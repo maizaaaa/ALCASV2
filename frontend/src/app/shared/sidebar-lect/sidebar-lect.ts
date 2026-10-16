@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, inject, PLATFORM_ID, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { RouterLink, Router, RouterLinkActive } from '@angular/router';
-import { Subscription, interval } from 'rxjs';
+import { RouterLink, Router, RouterLinkActive, NavigationEnd } from '@angular/router';
+import { Subscription, interval, filter } from 'rxjs';
 import { ConsultationService, Consultation } from '../../services/consultation.service';
 
 export interface LecturerNotification {
@@ -41,6 +41,7 @@ export class SidebarLect implements OnInit, OnDestroy {
   notifications: LecturerNotification[] = [];
 
   private pollingSub!: Subscription;
+  private routerSub!: Subscription;
 
   get todayNotifications(): LecturerNotification[] {
     return this.notifications
@@ -63,6 +64,13 @@ export class SidebarLect implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.routerSub = this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.isNotificationOpen = false;
+      this.cdr.detectChanges();
+    });
+
     if (isPlatformBrowser(this.platformId)) {
       const savedTheme = localStorage.getItem('theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -90,6 +98,9 @@ export class SidebarLect implements OnInit, OnDestroy {
     // Stop the timer when the component is destroyed
     if (this.pollingSub) {
       this.pollingSub.unsubscribe();
+    }
+    if (this.routerSub) {
+      this.routerSub.unsubscribe();
     }
   }
 

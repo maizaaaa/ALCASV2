@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
 import { SystemSettingsService} from "../../services/system-settings.service";
+import { LecturerProfileService } from '../../services/lecturer-profile.service';
 
 @Component({
   selector: 'app-lecturer-schedule',
@@ -21,6 +22,8 @@ export class LecturerScheduleComponent implements OnInit {
   slotForm = { day: 'Monday', startTime: '', endTime: '', type: 'AVAILABLE', title: '' };
 
   weekDays: string[] = [];
+  rawWorkingDays: string[] = [];
+  blockedDays: string[] = [];
 
   blockOutDates: any[] = [];
 
@@ -72,6 +75,7 @@ export class LecturerScheduleComponent implements OnInit {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private systemSettingsService: SystemSettingsService,
+    private lecturerProfileService: LecturerProfileService,
   ) {}
 
   ngOnInit(): void {
@@ -81,22 +85,64 @@ export class LecturerScheduleComponent implements OnInit {
   }
 
   loadWorkingDays(): void {
+    // 1. Load system working days
     this.systemSettingsService.getWorkingDays().subscribe({
       next: (workingDays) => {
-        this.weekDays = workingDays.map((day) => day.charAt(0) + day.slice(1).toLowerCase());
-
-        if (this.weekDays.length > 0) {
-          this.slotForm.day = this.weekDays[0];
-        }
-
-        console.log('Working Days loaded for Lecturer Schedule:', this.weekDays);
-
-        this.cdr.detectChanges();
+        this.rawWorkingDays = workingDays.map((day) => day.charAt(0) + day.slice(1).toLowerCase());
+        this.updateVisibleWeekDays();
       },
       error: (error) => {
         console.error('Failed to load working days:', error);
+        this.rawWorkingDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        this.updateVisibleWeekDays();
       },
     });
+
+    // 2. Load lecturer's blocked days
+    this.lecturerProfileService.getMyProfile().subscribe({
+      next: (profile) => {
+        const rawBlockedDays = profile?.blockedDays;
+        if (rawBlockedDays === 'NONE' || rawBlockedDays === '') {
+          this.blockedDays = [];
+        } else if (typeof rawBlockedDays === 'string') {
+          this.blockedDays = rawBlockedDays
+            .split(',')
+            .map((d: string) => d.trim().toUpperCase())
+            .filter((d: string) => d.length > 0 && d !== 'NONE');
+        } else if (Array.isArray(rawBlockedDays)) {
+          this.blockedDays = rawBlockedDays.filter((d: string) => d !== 'NONE');
+        } else {
+          this.blockedDays = ['FRIDAY', 'SATURDAY'];
+        }
+        console.log('Lecturer blocked days loaded in Schedule:', this.blockedDays);
+        this.updateVisibleWeekDays();
+      },
+      error: (error) => {
+        console.error('Failed to load lecturer profile for blocked days:', error);
+        this.blockedDays = ['FRIDAY', 'SATURDAY'];
+        this.updateVisibleWeekDays();
+      },
+    });
+  }
+
+  updateVisibleWeekDays(): void {
+    const baseDays = this.rawWorkingDays.length > 0
+      ? this.rawWorkingDays
+      : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    const blocked = (this.blockedDays || []).map((d) => d.toUpperCase());
+
+    // Remove the box for any selected blocked day!
+    this.weekDays = baseDays.filter((day) => !blocked.includes(day.toUpperCase()));
+
+    if (this.weekDays.length > 0) {
+      if (!this.slotForm.day || blocked.includes(this.slotForm.day.toUpperCase())) {
+        this.slotForm.day = this.weekDays[0];
+      }
+    }
+
+    console.log('Visible weekDays after removing blocked days:', this.weekDays);
+    this.cdr.detectChanges();
   }
 
   loadSchedule(): void {

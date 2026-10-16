@@ -14,7 +14,7 @@
         </div>
       </div>
 
-      @if (true) {
+      @if (profile) {
       <div class="profile-layout">
 
         <div class="profile-sidebar">
@@ -268,6 +268,80 @@
                 </div>
                 <input type="checkbox" [(ngModel)]="preferences.autoApproveFyp" class="toggle-checkbox">
               </label>
+
+              <div class="pref-block-days-container">
+                <div class="pref-header-block">
+                  <div class="pref-text">
+                    <span class="pref-title">Block Consultation Days</span>
+                    <span class="pref-desc">Directly select specific days to block out so students cannot book consultation slots on those days:</span>
+                  </div>
+
+                  <div class="preset-pill-group">
+                    <button type="button" class="preset-pill"
+                            [class.active]="isPresetActive('SUN_THU')"
+                            (click)="applyPreset('SUN_THU')">
+                      Sunday – Thursday (Block Fri & Sat)
+                    </button>
+                    <button type="button" class="preset-pill"
+                            [class.active]="isPresetActive('MON_FRI')"
+                            (click)="applyPreset('MON_FRI')">
+                      Monday – Friday (Block Sat & Sun)
+                    </button>
+                    <button type="button" class="preset-pill"
+                            [class.active]="isPresetActive('NONE')"
+                            (click)="applyPreset('NONE')">
+                      No Days Blocked (All Available)
+                    </button>
+                  </div>
+                </div>
+
+                <div class="blocked-days-grid">
+                  <!-- Friday Box -->
+                  <label class="day-select-box" [class.blocked]="isDayBlocked('FRIDAY')">
+                    <div class="day-box-header">
+                      <span class="day-abbr">FRI</span>
+                      <input type="checkbox"
+                             [checked]="isDayBlocked('FRIDAY')"
+                             (change)="toggleBlockedDay('FRIDAY')"
+                             class="day-checkbox">
+                    </div>
+                    <div class="day-box-body">
+                      <span class="day-title">Friday</span>
+                      <span class="day-status">{{ isDayBlocked('FRIDAY') ? 'Blocked from booking' : 'Available for booking' }}</span>
+                    </div>
+                  </label>
+
+                  <!-- Saturday Box -->
+                  <label class="day-select-box" [class.blocked]="isDayBlocked('SATURDAY')">
+                    <div class="day-box-header">
+                      <span class="day-abbr">SAT</span>
+                      <input type="checkbox"
+                             [checked]="isDayBlocked('SATURDAY')"
+                             (change)="toggleBlockedDay('SATURDAY')"
+                             class="day-checkbox">
+                    </div>
+                    <div class="day-box-body">
+                      <span class="day-title">Saturday</span>
+                      <span class="day-status">{{ isDayBlocked('SATURDAY') ? 'Blocked from booking' : 'Available for booking' }}</span>
+                    </div>
+                  </label>
+
+                  <!-- Sunday Box -->
+                  <label class="day-select-box" [class.blocked]="isDayBlocked('SUNDAY')">
+                    <div class="day-box-header">
+                      <span class="day-abbr">SUN</span>
+                      <input type="checkbox"
+                             [checked]="isDayBlocked('SUNDAY')"
+                             (change)="toggleBlockedDay('SUNDAY')"
+                             class="day-checkbox">
+                    </div>
+                    <div class="day-box-body">
+                      <span class="day-title">Sunday</span>
+                      <span class="day-status">{{ isDayBlocked('SUNDAY') ? 'Blocked from booking' : 'Available for booking' }}</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
             </div>
 
             <div class="form-actions right mt-24">

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -24,6 +24,8 @@ export class LecturerProfileComponent implements OnInit {
     emailNotifications: true,
     autoReminder24h: true,
     autoApproveFyp: false,
+    blockNonWorkingDays: true,
+    blockedDays: ['FRIDAY', 'SATURDAY'] as string[],
   };
 
   // Password Form State
@@ -36,6 +38,7 @@ export class LecturerProfileComponent implements OnInit {
   constructor(
     private router: Router,
     private lecturerProfileService: LecturerProfileService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -51,11 +54,30 @@ export class LecturerProfileComponent implements OnInit {
 
         console.log('PROFILE AFTER ASSIGN:', this.profile);
 
+        const rawBlockedDays = data.blockedDays;
+        let parsedBlockedDays: string[] = [];
+        if (rawBlockedDays === 'NONE' || rawBlockedDays === '') {
+          parsedBlockedDays = [];
+        } else if (typeof rawBlockedDays === 'string') {
+          parsedBlockedDays = rawBlockedDays
+            .split(',')
+            .map((d: string) => d.trim().toUpperCase())
+            .filter((d: string) => d.length > 0 && d !== 'NONE');
+        } else if (Array.isArray(rawBlockedDays)) {
+          parsedBlockedDays = rawBlockedDays.filter((d: string) => d !== 'NONE');
+        } else {
+          parsedBlockedDays = ['FRIDAY', 'SATURDAY'];
+        }
+
         this.preferences = {
-          emailNotifications: data.emailNotifications,
-          autoReminder24h: data.autoReminder24h,
-          autoApproveFyp: data.autoApproveFyp,
+          emailNotifications: data.emailNotifications ?? true,
+          autoReminder24h: data.autoReminder24h ?? true,
+          autoApproveFyp: data.autoApproveFyp ?? false,
+          blockNonWorkingDays: data.blockNonWorkingDays ?? true,
+          blockedDays: parsedBlockedDays,
         };
+
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Failed to load lecturer profile:', error);
@@ -65,6 +87,7 @@ export class LecturerProfileComponent implements OnInit {
 
   setTab(tab: string) {
     this.activeTab = tab;
+    this.cdr.detectChanges();
   }
 
   onFileSelected(event: any): void {
@@ -95,6 +118,7 @@ export class LecturerProfileComponent implements OnInit {
       this.lecturerProfileService.updateMyProfile(this.profile).subscribe({
         next: (data) => {
           this.profile = data;
+          this.cdr.detectChanges();
           alert('Profile picture successfully updated!');
         },
         error: (error) => {
@@ -109,6 +133,7 @@ export class LecturerProfileComponent implements OnInit {
 
   changeProfilePicture(): void {
     this.showPhotoOptions = false;
+    this.cdr.detectChanges();
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
 
@@ -131,6 +156,7 @@ export class LecturerProfileComponent implements OnInit {
     this.lecturerProfileService.updateMyProfile(this.profile).subscribe({
       next: (data) => {
         this.profile = data;
+        this.cdr.detectChanges();
         alert('Profile picture removed successfully!');
       },
       error: (error) => {
@@ -149,7 +175,7 @@ export class LecturerProfileComponent implements OnInit {
     this.lecturerProfileService.updateMyProfile(this.profile).subscribe({
       next: (data) => {
         this.profile = data;
-
+        this.cdr.detectChanges();
         alert('Profile information successfully updated!');
       },
       error: (error) => {
@@ -165,17 +191,39 @@ export class LecturerProfileComponent implements OnInit {
     this.profile.emailNotifications = this.preferences.emailNotifications;
     this.profile.autoReminder24h = this.preferences.autoReminder24h;
     this.profile.autoApproveFyp = this.preferences.autoApproveFyp;
+    this.profile.blockNonWorkingDays = this.preferences.blockedDays.length > 0;
+    this.profile.blockedDays = this.preferences.blockedDays.length > 0
+      ? this.preferences.blockedDays.join(',')
+      : 'NONE';
 
     this.lecturerProfileService.updateMyProfile(this.profile).subscribe({
       next: (data) => {
         this.profile = data;
 
+        const rawBlockedDays = data.blockedDays;
+        let parsedBlockedDays: string[] = [];
+        if (rawBlockedDays === 'NONE' || rawBlockedDays === '') {
+          parsedBlockedDays = [];
+        } else if (typeof rawBlockedDays === 'string') {
+          parsedBlockedDays = rawBlockedDays
+            .split(',')
+            .map((d: string) => d.trim().toUpperCase())
+            .filter((d: string) => d.length > 0 && d !== 'NONE');
+        } else if (Array.isArray(rawBlockedDays)) {
+          parsedBlockedDays = rawBlockedDays.filter((d: string) => d !== 'NONE');
+        } else {
+          parsedBlockedDays = ['FRIDAY', 'SATURDAY'];
+        }
+
         this.preferences = {
-          emailNotifications: data.emailNotifications,
-          autoReminder24h: data.autoReminder24h,
-          autoApproveFyp: data.autoApproveFyp,
+          emailNotifications: data.emailNotifications ?? true,
+          autoReminder24h: data.autoReminder24h ?? true,
+          autoApproveFyp: data.autoApproveFyp ?? false,
+          blockNonWorkingDays: data.blockNonWorkingDays ?? true,
+          blockedDays: parsedBlockedDays,
         };
 
+        this.cdr.detectChanges();
         alert('Preference & Rules successfully updated!');
       },
       error: (error) => {
@@ -183,6 +231,46 @@ export class LecturerProfileComponent implements OnInit {
         alert('Failed to update preferences. Please try again.');
       },
     });
+  }
+
+  isDayBlocked(day: string): boolean {
+    return this.preferences.blockedDays ? this.preferences.blockedDays.includes(day) : false;
+  }
+
+  toggleBlockedDay(day: string): void {
+    if (!this.preferences.blockedDays) {
+      this.preferences.blockedDays = [];
+    }
+    const idx = this.preferences.blockedDays.indexOf(day);
+    if (idx > -1) {
+      this.preferences.blockedDays.splice(idx, 1);
+    } else {
+      this.preferences.blockedDays.push(day);
+    }
+  }
+
+  applyPreset(preset: 'SUN_THU' | 'MON_FRI' | 'NONE'): void {
+    if (preset === 'SUN_THU') {
+      this.preferences.blockedDays = ['FRIDAY', 'SATURDAY'];
+    } else if (preset === 'MON_FRI') {
+      this.preferences.blockedDays = ['SATURDAY', 'SUNDAY'];
+    } else if (preset === 'NONE') {
+      this.preferences.blockedDays = [];
+    }
+  }
+
+  isPresetActive(preset: 'SUN_THU' | 'MON_FRI' | 'NONE'): boolean {
+    const days = this.preferences.blockedDays || [];
+    if (preset === 'SUN_THU') {
+      return days.length === 2 && days.includes('FRIDAY') && days.includes('SATURDAY');
+    }
+    if (preset === 'MON_FRI') {
+      return days.length === 2 && days.includes('SATURDAY') && days.includes('SUNDAY');
+    }
+    if (preset === 'NONE') {
+      return days.length === 0;
+    }
+    return false;
   }
 
   updatePassword(): void {
