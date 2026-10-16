@@ -7,6 +7,7 @@ import { ConsultationService, Consultation } from '../../services/consultation.s
 
 interface StudentAppointmentView {
   id: string;
+  lecturerId?: number;
   lecturer: string;
   reason: string;
   date: string;
@@ -17,6 +18,8 @@ interface StudentAppointmentView {
   proposedDate: string;
   proposedTime: string;
   rescheduleReason: string;
+  rejectReason?: string;
+  cancelReason?: string;
 }
 
 @Component({
@@ -39,11 +42,25 @@ export class StudentAppointmentsComponent implements OnInit {
   confirmedFilter: string = 'ALL';
   historyFilter: string = 'ALL';
 
-  // Temporary compatibility with existing HTML
+  // Reschedule & Cancel Modal States
   smartSuggestion = '';
   selectedNewSlot = '';
+  selectedNewDate = '';
+  selectedNewTime = '';
   cancelReason = '';
   rescheduleReason = '';
+  isSubmittingReschedule = false;
+  isLoadingSmartSuggestion = false;
+  isLoadingSlots = false;
+  minDate = '';
+  smartSuggestions: Array<{
+    label: string;
+    formattedDate: string;
+    time: string;
+    date: string;
+    rawTime: string;
+  }> = [];
+  availableSlotsForSelectedDate: string[] = [];
 
   // Success Popup Modal State
   showSuccessModal = false;
@@ -62,6 +79,9 @@ export class StudentAppointmentsComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('StudentAppointmentsComponent initialized');
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    this.minDate = tomorrow.toISOString().split('T')[0];
     this.loadAppointments();
   }
 
@@ -106,6 +126,7 @@ export class StudentAppointmentsComponent implements OnInit {
         this.ngZone.run(() => {
           this.appointments = consultations.map((c) => ({
             id: c.id,
+            lecturerId: c.lecturerId,
             lecturer: c.lecturerName || 'Lecturer',
             reason: c.reasonDetails || c.reason || 'Consultation',
             date: this.formatDate(c.scheduledDate),
@@ -116,6 +137,8 @@ export class StudentAppointmentsComponent implements OnInit {
             proposedDate: c.proposedDate ? this.formatDate(c.proposedDate) : '',
             proposedTime: c.proposedTime ? this.formatTime(c.proposedTime) : '',
             rescheduleReason: c.rescheduleReason || '',
+            rejectReason: c.rejectReason || '',
+            cancelReason: c.cancelReason || '',
           }));
 
           // Automatically direct student to Pending if they have pending requests to prevent overlooking
@@ -136,7 +159,9 @@ export class StudentAppointmentsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load student appointments:', error);
-        alert('Unable to load your appointments. Please try again.');
+        if (typeof window !== 'undefined') {
+          alert('Unable to load your appointments. Please try again.');
+        }
       },
     });
   }
@@ -150,10 +175,10 @@ export class StudentAppointmentsComponent implements OnInit {
     );
   }
 
-  // 2. Confirmed & Completed Section: Approved upcoming consultations and completed sessions
+  // 2. Confirmed Section: Approved upcoming consultations
   get confirmedAppointments(): StudentAppointmentView[] {
     return this.appointments.filter((a) =>
-      ['CONFIRMED', 'UPCOMING', 'COMPLETED'].includes(a.status),
+      ['CONFIRMED', 'UPCOMING'].includes(a.status),
     );
   }
 
@@ -193,7 +218,37 @@ export class StudentAppointmentsComponent implements OnInit {
   }
 
   get rejectedCount(): number {
-    return this.appointments.filter((a) => a.status === 'REJECTED' || a.status === 'NO-SHOW').length;
+    return this.appointments.filter((a) => a.status === 'REJECTED').length;
+  }
+
+  get noShowCount(): number {
+    return this.appointments.filter((a) => a.status === 'NO-SHOW').length;
+  }
+
+  getHistoryReason(appt: StudentAppointmentView): string {
+    if (appt.status === 'REJECTED' || appt.rejectReason) {
+      return appt.rejectReason?.trim() || appt.remarks?.trim() || 'No rejection reason specified by lecturer.';
+    }
+    if (appt.status === 'CANCELLED' || appt.cancelReason) {
+      return appt.cancelReason?.trim() || appt.remarks?.trim() || 'No cancellation reason provided.';
+    }
+    if (appt.status === 'NO-SHOW') {
+      return appt.remarks?.trim() || 'Student was marked as absent / no-show for this consultation session.';
+    }
+    return '';
+  }
+
+  getHistoryReasonLabel(appt: StudentAppointmentView): string {
+    if (appt.status === 'REJECTED' || appt.rejectReason) {
+      return 'Reason for Rejection';
+    }
+    if (appt.status === 'CANCELLED' || appt.cancelReason) {
+      return 'Cancellation Reason';
+    }
+    if (appt.status === 'NO-SHOW') {
+      return 'No-Show Reason / Remarks';
+    }
+    return 'Reason';
   }
 
   // --- FILTERED LISTS ---
@@ -225,25 +280,253 @@ export class StudentAppointmentsComponent implements OnInit {
     this.selectedAppointment = appointment;
     this.modalMode = mode;
     this.selectedNewSlot = '';
+    this.selectedNewDate = '';
+    this.selectedNewTime = '';
     this.cancelReason = '';
     this.rescheduleReason = '';
+    this.availableSlotsForSelectedDate = [];
+    this.smartSuggestions = [];
+
+    if (mode === 'reschedule' && appointment.status !== 'RESCHEDULE-PENDING') {
+      this.loadSmartSuggestions(appointment);
+    }
     this.cdr.detectChanges();
   }
 
   closeModal(): void {
     this.selectedAppointment = null;
     this.modalMode = null;
+    this.selectedNewSlot = '';
+    this.selectedNewDate = '';
+    this.selectedNewTime = '';
+    this.cancelReason = '';
+    this.rescheduleReason = '';
+    this.availableSlotsForSelectedDate = [];
+    this.smartSuggestions = [];
+    this.isSubmittingReschedule = false;
     this.cdr.detectChanges();
   }
 
-  // Student rescheduling is disabled:
-  // only the lecturer can propose a new date and time.
+  setQuickReason(reason: string): void {
+    this.rescheduleReason = reason;
+    this.cdr.detectChanges();
+  }
+
+  selectSmartSuggestion(sug: any): void {
+    if (!sug) return;
+    this.selectedNewSlot = sug.label;
+    this.selectedNewDate = sug.date;
+    this.selectedNewTime = sug.rawTime || sug.time;
+
+    // Also populate manual slot picker so student sees the selected date & slot highlighted
+    if (this.selectedAppointment?.lecturerId && sug.date) {
+      this.consultationService.getLecturerAvailability(this.selectedAppointment.lecturerId, sug.date).subscribe({
+        next: (res) => {
+          this.ngZone.run(() => {
+            this.availableSlotsForSelectedDate = res.availableSlots || [];
+            this.cdr.detectChanges();
+          });
+        },
+      });
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  selectManualSlot(slot: string): void {
+    this.selectedNewTime = slot;
+    if (this.selectedNewDate) {
+      this.selectedNewSlot = `${this.formatDate(this.selectedNewDate)} at ${slot}`;
+    } else {
+      this.selectedNewSlot = slot;
+    }
+    this.cdr.detectChanges();
+  }
+
+  onDateChange(selectedDate: string): void {
+    this.selectedNewDate = selectedDate;
+    this.selectedNewTime = '';
+    this.selectedNewSlot = '';
+    this.availableSlotsForSelectedDate = [];
+
+    if (!selectedDate || !this.selectedAppointment?.lecturerId) {
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.isLoadingSlots = true;
+    this.consultationService.getLecturerAvailability(this.selectedAppointment.lecturerId, selectedDate).subscribe({
+      next: (res) => {
+        this.ngZone.run(() => {
+          this.isLoadingSlots = false;
+          this.availableSlotsForSelectedDate = res.availableSlots || [];
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        console.error('Failed to load slots for date:', err);
+        this.ngZone.run(() => {
+          this.isLoadingSlots = false;
+          this.availableSlotsForSelectedDate = [];
+          this.cdr.detectChanges();
+        });
+      },
+    });
+  }
+
+  private loadSmartSuggestions(appointment: StudentAppointmentView): void {
+    if (!appointment.lecturerId) {
+      this.smartSuggestions = [];
+      return;
+    }
+
+    this.isLoadingSmartSuggestion = true;
+    this.smartSuggestions = [];
+
+    const lecturerId = Number(appointment.lecturerId);
+
+    // 1. Fetch the lecturer's recurring consultation timetable to determine available days
+    this.consultationService.getLecturerSchedules(lecturerId).subscribe({
+      next: (schedules) => {
+        // Collect days where lecturer has AVAILABLE slots
+        const availableDayNames = (schedules || [])
+          .filter((s) => (s.slotType || '').toUpperCase() === 'AVAILABLE')
+          .map((s) => (s.dayOfWeek || '').toUpperCase());
+
+        // Prepare candidate dates across the next 14 calendar days
+        const candidateDates: string[] = [];
+        const base = new Date();
+        for (let i = 1; i <= 14; i++) {
+          const d = new Date();
+          d.setDate(base.getDate() + i);
+          const dayName = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+          if (availableDayNames.length > 0) {
+            if (availableDayNames.includes(dayName)) {
+              candidateDates.push(d.toISOString().split('T')[0]);
+            }
+          } else {
+            // If no specific AVAILABLE slotType records, check weekdays
+            if (d.getDay() !== 0 && d.getDay() !== 6) {
+              candidateDates.push(d.toISOString().split('T')[0]);
+            }
+          }
+        }
+
+        if (candidateDates.length === 0) {
+          for (let i = 1; i <= 7; i++) {
+            const d = new Date();
+            d.setDate(base.getDate() + i);
+            if (d.getDay() !== 0 && d.getDay() !== 6) {
+              candidateDates.push(d.toISOString().split('T')[0]);
+            }
+          }
+        }
+
+        this.scanCandidateDatesForSuggestions(lecturerId, candidateDates, 0, []);
+      },
+      error: () => {
+        // Fallback: scan next 7 weekdays
+        const candidateDates: string[] = [];
+        const base = new Date();
+        for (let i = 1; i <= 7; i++) {
+          const d = new Date();
+          d.setDate(base.getDate() + i);
+          if (d.getDay() !== 0 && d.getDay() !== 6) {
+            candidateDates.push(d.toISOString().split('T')[0]);
+          }
+        }
+        this.scanCandidateDatesForSuggestions(lecturerId, candidateDates, 0, []);
+      },
+    });
+  }
+
+  private scanCandidateDatesForSuggestions(
+    lecturerId: number,
+    dates: string[],
+    index: number,
+    collected: Array<{ label: string; formattedDate: string; time: string; date: string; rawTime: string }>
+  ): void {
+    // Collect up to 2 distinct slot suggestions
+    if (index >= dates.length || collected.length >= 2) {
+      this.ngZone.run(() => {
+        this.isLoadingSmartSuggestion = false;
+        this.smartSuggestions = collected;
+        this.cdr.detectChanges();
+      });
+      return;
+    }
+
+    const checkDate = dates[index];
+    this.consultationService.getLecturerAvailability(lecturerId, checkDate).subscribe({
+      next: (res) => {
+        if (res?.availableSlots && res.availableSlots.length > 0) {
+          const formatted = this.formatDate(checkDate);
+          // Pick up to 2 slots from this date
+          for (let i = 0; i < res.availableSlots.length && collected.length < 2; i++) {
+            const slot = res.availableSlots[i];
+            collected.push({
+              label: `${formatted} at ${slot}`,
+              formattedDate: formatted,
+              time: slot,
+              date: checkDate,
+              rawTime: slot,
+            });
+          }
+        }
+
+        if (collected.length >= 2) {
+          this.ngZone.run(() => {
+            this.isLoadingSmartSuggestion = false;
+            this.smartSuggestions = collected;
+            this.cdr.detectChanges();
+          });
+        } else {
+          this.scanCandidateDatesForSuggestions(lecturerId, dates, index + 1, collected);
+        }
+      },
+      error: () => {
+        this.scanCandidateDatesForSuggestions(lecturerId, dates, index + 1, collected);
+      },
+    });
+  }
+
   confirmReschedule(): void {
-    alert(
-      'Rescheduling must be initiated by your lecturer. ' +
-      'You can accept or reject the lecturer’s proposal when it appears here.',
-    );
-    this.closeModal();
+    if (!this.selectedAppointment) return;
+
+    if (!this.selectedNewDate || !this.selectedNewTime || !this.rescheduleReason.trim()) {
+      alert('Please select a preferred date, time slot, and reason for rescheduling.');
+      return;
+    }
+
+    this.isSubmittingReschedule = true;
+    const appointmentId = this.selectedAppointment.id;
+    const proposedDate = this.selectedNewDate;
+    const proposedTime = this.selectedNewTime;
+    const reason = this.rescheduleReason.trim();
+
+    this.consultationService.requestReschedule(appointmentId, proposedDate, proposedTime, reason).subscribe({
+      next: () => {
+        this.ngZone.run(() => {
+          this.isSubmittingReschedule = false;
+          this.closeModal();
+          this.showSuccessPopup(
+            'Reschedule Request Sent',
+            'Your reschedule request has been submitted to your lecturer for review.',
+            'success',
+          );
+          this.loadAppointments();
+          this.cdr.detectChanges();
+        });
+      },
+      error: (error) => {
+        console.error('Failed to submit reschedule request:', error);
+        this.ngZone.run(() => {
+          this.isSubmittingReschedule = false;
+          this.cdr.detectChanges();
+        });
+        alert(error.error?.message || 'Unable to submit reschedule request. Please try again.');
+      },
+    });
   }
 
   acceptReschedule(appointment: StudentAppointmentView): void {
@@ -355,9 +638,6 @@ export class StudentAppointmentsComponent implements OnInit {
     });
   }
 
-  selectSmartSuggestion(): void {
-    // Student-initiated rescheduling is disabled.
-  }
 
   onLogout(): void {
     this.router.navigate(['/login']);
@@ -393,5 +673,3 @@ export class StudentAppointmentsComponent implements OnInit {
     });
   }
 }
-
-export { StudentAppointmentsComponent as StudentAppointments };

@@ -51,7 +51,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            Completed / Confirmed
+            Confirmed
             <span *ngIf="confirmedAppointments.length > 0"
               class="ml-1 px-2 py-0.5 text-xs rounded-full bg-white/20 text-white font-black">
               {{ confirmedAppointments.length }}
@@ -74,59 +74,12 @@
           </button>
         </div>
 
-        <!-- Persistent Pending Attention Notice: Shown when student is on Confirmed or History so pending appointments are NEVER overlooked -->
-        <div *ngIf="pendingAppointments.length > 0 && activeTab !== 'pending'"
-          class="w-full mt-5 p-3.5 sm:p-4 bg-gradient-to-r from-amber-50 via-amber-100/40 to-orange-50 dark:from-amber-950/40 dark:via-amber-900/20 dark:to-orange-950/20 border border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 dark:text-amber-200 shadow-sm animate-fade-in text-left">
-          <div class="flex items-center gap-3">
-            <span class="flex h-3 w-3 relative shrink-0">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
-            </span>
-            <p class="text-xs sm:text-sm font-bold">
-              You have <span class="underline decoration-amber-400 font-extrabold">{{ pendingAppointments.length }} pending appointment request{{ pendingAppointments.length > 1 ? 's' : '' }}</span> awaiting lecturer confirmation.
-            </p>
-          </div>
-          <button (click)="setTab('pending')"
-            class="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shadow-xs transition-all shrink-0 cursor-pointer flex items-center gap-1.5">
-            Review Pending Requests
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-          </button>
-        </div>
-
       </div>
 
       <!-- ========================================== -->
       <!-- 1. PENDING SECTION CONTENT                -->
       <!-- ========================================== -->
       <div class="space-y-4" *ngIf="activeTab === 'pending'">
-
-        <!-- Information & Action Header Banner for Pending Tab -->
-        <div class="p-4 bg-gradient-to-r from-amber-50 via-amber-100/50 to-orange-50 dark:from-amber-950/50 dark:via-amber-900/30 dark:to-orange-950/30 border border-amber-200 dark:border-amber-800/60 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-          <div class="flex items-start gap-3">
-            <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                </path>
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-sm font-extrabold text-amber-900 dark:text-amber-200">Pending Consultation Requests</h3>
-              <p class="text-xs text-amber-800/80 dark:text-amber-300/80 mt-0.5">
-                These requests are awaiting lecturer acceptance or require your action. Room details will be assigned once confirmed.
-              </p>
-            </div>
-          </div>
-          <a routerLink="/student/book"
-            class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Book New Session
-          </a>
-        </div>
 
         <!-- Status Filter Pills for Pending Appointments -->
         <div
@@ -138,7 +91,8 @@
                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
               </path>
             </svg>
-            <span class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Filter Pending:</span>
+            <span class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Filter
+              Pending:</span>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
@@ -156,7 +110,6 @@
             <button type="button" (click)="setPendingFilter('PENDING')"
               [ngClass]="pendingFilter === 'PENDING' ? 'bg-amber-600 text-white shadow-sm font-extrabold' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
-              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
               Awaiting Approval
               <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
                 {{ pendingCount }}
@@ -167,9 +120,9 @@
             <button type="button" (click)="setPendingFilter('RESCHEDULE-PENDING')"
               [ngClass]="pendingFilter === 'RESCHEDULE-PENDING' ? 'bg-cyan-600 text-white shadow-sm font-extrabold' : 'bg-cyan-50 text-cyan-800 hover:bg-cyan-100 dark:bg-cyan-950/60 dark:text-cyan-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
-              <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
               Reschedule Proposed
-              <span *ngIf="reschedulePendingCount > 0" class="px-1.5 py-0.2 text-[10px] rounded-md bg-cyan-500 text-white font-black animate-pulse">
+              <span *ngIf="reschedulePendingCount > 0"
+                class="px-1.5 py-0.2 text-[10px] rounded-md bg-cyan-500 text-white font-black animate-pulse">
                 {{ reschedulePendingCount }}
               </span>
             </button>
@@ -188,7 +141,8 @@
           </div>
           <h3 class="text-lg font-bold text-slate-700 dark:text-slate-300">No Pending Appointments</h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-            You don't have any pending requests awaiting lecturer confirmation. Any new consultation you book will appear here.
+            You don't have any pending requests awaiting lecturer confirmation. Any new consultation you book will
+            appear here.
           </p>
           <a routerLink="/student/book"
             class="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer">
@@ -227,13 +181,11 @@
                     <!-- Status Tags -->
                     <span *ngIf="appt.status === 'PENDING'"
                       class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800/60">
-                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                       Awaiting Approval
                     </span>
 
                     <span *ngIf="appt.status === 'RESCHEDULE-PENDING'"
                       class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-100 text-cyan-800 border border-cyan-300 dark:bg-cyan-950 dark:text-cyan-300 dark:border-cyan-800">
-                      <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
                       Reschedule Proposed
                     </span>
                   </div>
@@ -243,18 +195,12 @@
                     {{ appt.reason }}
                   </p>
 
-                  <!-- Venue status snippet -->
-                  <div class="mt-2 flex items-center gap-2">
-                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-200 dark:border-amber-900/40">
-                      ⏳ Venue: Awaiting lecturer confirmation
-                    </span>
-                  </div>
-
                   <!-- Reschedule proposal highlight if present -->
                   <div *ngIf="appt.status === 'RESCHEDULE-PENDING'"
                     class="mt-2 text-xs font-medium text-cyan-800 dark:text-cyan-300 bg-cyan-50/90 dark:bg-cyan-950/40 p-2.5 rounded-xl border border-cyan-200 dark:border-cyan-900/40 flex items-start gap-1.5">
                     <span class="shrink-0">🔄</span>
-                    <span>Lecturer suggested new slot: <strong>{{ appt.proposedDate }} at {{ appt.proposedTime }}</strong></span>
+                    <span>Lecturer suggested new slot: <strong>{{ appt.proposedDate }} at {{ appt.proposedTime
+                        }}</strong></span>
                   </div>
 
                   <!-- Remarks snippet if present -->
@@ -339,57 +285,9 @@
       </div>
 
       <!-- ========================================== -->
-      <!-- 2. COMPLETED / CONFIRMED SECTION CONTENT  -->
+      <!-- 2. CONFIRMED SECTION CONTENT              -->
       <!-- ========================================== -->
       <div class="space-y-4" *ngIf="activeTab === 'confirmed'">
-
-        <!-- Status Filter Pills for Confirmed / Completed -->
-        <div
-          class="flex flex-wrap items-center justify-between gap-3 mb-6 p-3.5 bg-white dark:bg-[#071317] border border-slate-200/80 dark:border-teal-900/40 rounded-2xl shadow-sm">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-              </path>
-            </svg>
-            <span class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Filter Sessions:</span>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-2">
-            <!-- All Button -->
-            <button type="button" (click)="setConfirmedFilter('ALL')"
-              [ngClass]="confirmedFilter === 'ALL' ? 'bg-teal-700 text-white shadow-sm font-extrabold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 font-bold'"
-              class="px-3.5 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
-              All
-              <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-white/20 dark:bg-black/20 font-black">
-                {{ confirmedAppointments.length }}
-              </span>
-            </button>
-
-            <!-- Confirmed / Upcoming Filter -->
-            <button type="button" (click)="setConfirmedFilter('CONFIRMED')"
-              [ngClass]="confirmedFilter === 'CONFIRMED' ? 'bg-emerald-600 text-white shadow-sm font-extrabold' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-teal-950/60 dark:text-teal-300 font-bold'"
-              class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-              Confirmed
-              <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
-                {{ confirmedCount }}
-              </span>
-            </button>
-
-            <!-- Completed Filter -->
-            <button type="button" (click)="setConfirmedFilter('COMPLETED')"
-              [ngClass]="confirmedFilter === 'COMPLETED' ? 'bg-slate-700 text-white shadow-sm font-extrabold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 font-bold'"
-              class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
-              <span class="w-2 h-2 rounded-full bg-slate-500"></span>
-              Completed
-              <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
-                {{ completedCount }}
-              </span>
-            </button>
-          </div>
-        </div>
 
         <!-- Confirmed Empty State -->
         <div *ngIf="filteredConfirmedAppointments.length === 0"
@@ -401,20 +299,16 @@
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </div>
-          <h3 class="text-lg font-bold text-slate-700 dark:text-slate-300">No Confirmed or Completed Appointments</h3>
+          <h3 class="text-lg font-bold text-slate-700 dark:text-slate-300">No Confirmed Appointments</h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-            You don't have any confirmed consultation sessions scheduled or completed at this time.
+            You don't have any confirmed consultation sessions scheduled at this time.
           </p>
         </div>
 
-        <!-- Confirmed / Completed Cards Loop -->
+        <!-- Confirmed Cards Loop -->
         <ng-container *ngFor="let appt of filteredConfirmedAppointments">
           <div
-            class="student-card bg-white dark:bg-[#071317] border border-slate-200 dark:border-teal-900/40 shadow-md rounded-[2rem] p-6 transition-all duration-200 relative overflow-hidden"
-            [ngClass]="{
-              'border-l-4 border-l-emerald-500': appt.status === 'CONFIRMED' || appt.status === 'UPCOMING',
-              'border-l-4 border-l-teal-600 dark:border-l-teal-500': appt.status === 'COMPLETED'
-            }">
+            class="student-card bg-white dark:bg-[#071317] border border-slate-200 dark:border-teal-900/40 shadow-md rounded-[2rem] p-6 transition-all duration-200 relative overflow-hidden border-l-4 border-l-emerald-500">
 
             <!-- Card Header & Main Info Row -->
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -433,14 +327,9 @@
                     </h3>
 
                     <!-- Status Tags -->
-                    <span *ngIf="appt.status === 'CONFIRMED' || appt.status === 'UPCOMING'"
+                    <span
                       class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800/60">
                       Confirmed
-                    </span>
-
-                    <span *ngIf="appt.status === 'COMPLETED'"
-                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
-                      Completed
                     </span>
                   </div>
 
@@ -506,10 +395,22 @@
                     </svg>
                   </button>
 
-                  <!-- Cancel Button (Only for Confirmed/Upcoming, not Completed) -->
-                  <button *ngIf="appt.status === 'CONFIRMED' || appt.status === 'UPCOMING'"
-                    type="button" (click)="openModal(appt, 'cancel')" class="action-icon-btn btn-cancel"
-                    title="Cancel Appointment" aria-label="Cancel Appointment">
+                  <!-- Reschedule Button (For Confirmed/Upcoming in emergency) -->
+                  <button *ngIf="appt.status === 'CONFIRMED' || appt.status === 'UPCOMING'" type="button"
+                    (click)="openModal(appt, 'reschedule')" class="action-icon-btn btn-reschedule"
+                    title="Reschedule Appointment" aria-label="Reschedule Appointment">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                      </path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2 2 4-4"></path>
+                    </svg>
+                  </button>
+
+                  <!-- Cancel / Delete Button (Only for Confirmed/Upcoming, not Completed) -->
+                  <button *ngIf="appt.status === 'CONFIRMED' || appt.status === 'UPCOMING'" type="button"
+                    (click)="openModal(appt, 'cancel')" class="action-icon-btn btn-cancel" title="Cancel Appointment"
+                    aria-label="Cancel Appointment">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
@@ -541,7 +442,8 @@
                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
               </path>
             </svg>
-            <span class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Filter History:</span>
+            <span class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Filter
+              History:</span>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
@@ -559,7 +461,6 @@
             <button type="button" (click)="setHistoryFilter('COMPLETED')"
               [ngClass]="historyFilter === 'COMPLETED' ? 'bg-slate-700 text-white shadow-sm font-extrabold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
-              <span class="w-2 h-2 rounded-full bg-slate-500"></span>
               Completed
               <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
                 {{ completedCount }}
@@ -568,9 +469,8 @@
 
             <!-- Cancelled Filter -->
             <button type="button" (click)="setHistoryFilter('CANCELLED')"
-              [ngClass]="historyFilter === 'CANCELLED' ? 'bg-rose-600 text-white shadow-sm font-extrabold' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 font-bold'"
+              [ngClass]="historyFilter === 'CANCELLED' ? 'bg-amber-600 text-white shadow-sm font-extrabold' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
-              <span class="w-2 h-2 rounded-full bg-rose-500"></span>
               Cancelled
               <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
                 {{ cancelledCount }}
@@ -579,12 +479,21 @@
 
             <!-- Rejected Filter -->
             <button type="button" (click)="setHistoryFilter('REJECTED')"
-              [ngClass]="historyFilter === 'REJECTED' ? 'bg-red-600 text-white shadow-sm font-extrabold' : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/60 dark:text-red-300 font-bold'"
+              [ngClass]="historyFilter === 'REJECTED' ? 'bg-rose-600 text-white shadow-sm font-extrabold' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
-              <span class="w-2 h-2 rounded-full bg-red-500"></span>
               Rejected
               <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
                 {{ rejectedCount }}
+              </span>
+            </button>
+
+            <!-- No-Show Filter -->
+            <button type="button" (click)="setHistoryFilter('NO-SHOW')"
+              [ngClass]="historyFilter === 'NO-SHOW' ? 'bg-red-700 text-white shadow-sm font-extrabold' : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/60 dark:text-red-300 font-bold'"
+              class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
+              No-Show
+              <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
+                {{ noShowCount }}
               </span>
             </button>
           </div>
@@ -609,49 +518,129 @@
         <!-- History Cards Loop -->
         <ng-container *ngFor="let appt of filteredHistoryAppointments">
           <div
-            class="student-card bg-white dark:bg-[#071317] border border-slate-200 dark:border-teal-900/20 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-5 opacity-90 transition-all">
+            class="student-card bg-white dark:bg-[#071317] border border-slate-200 dark:border-teal-900/20 rounded-[2rem] p-6 flex flex-col gap-4 opacity-90 hover:opacity-100 transition-all">
 
-            <div class="flex items-center gap-4 w-full md:w-auto">
-              <div class="lecturer-avatar shrink-0">
-                {{ appt.lecturer.charAt(0) || 'L' }}
-              </div>
-              <div>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <h3 class="lecturer-name text-slate-800 dark:text-slate-200 font-bold text-base">{{ appt.lecturer }}
-                  </h3>
-                  <span
-                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border"
-                    [ngClass]="appt.status === 'COMPLETED' ? 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800' : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/50'">
-                    {{ appt.status }}
-                  </span>
+            <!-- Top Row: Lecturer Info, Status & Scheduled Date/Time -->
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 w-full">
+              <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="lecturer-avatar shrink-0">
+                  {{ appt.lecturer.charAt(0) || 'L' }}
                 </div>
-                <p class="consultation-reason text-slate-500 dark:text-slate-400 text-sm mt-0.5">{{ appt.reason }}</p>
-                <div class="mt-1.5" *ngIf="appt.location">
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="lecturer-name text-slate-800 dark:text-slate-200 font-bold text-base">{{ appt.lecturer }}
+                    </h3>
+                    <span
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border"
+                      [ngClass]="{
+                        'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800': appt.status === 'COMPLETED',
+                        'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/50': appt.status === 'CANCELLED',
+                        'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/50': appt.status === 'REJECTED',
+                        'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900/50': appt.status === 'NO-SHOW'
+                      }">
+                      {{ appt.status }}
+                    </span>
+                  </div>
+                  <p class="consultation-reason text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+                    <span class="text-slate-400 dark:text-slate-500 text-xs font-semibold mr-1">Topic:</span>{{
+                    appt.reason }}
+                  </p>
+                  <div class="mt-1.5" *ngIf="appt.location">
+                    <span
+                      class="location-pill inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-xs font-medium">
+                      📍 {{ appt.location }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="flex items-center justify-between md:justify-end gap-5 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-teal-900/20">
+                <div class="text-left md:text-right">
+                  <p class="date-text text-slate-600 dark:text-slate-400 font-bold text-sm">{{ appt.date }}</p>
+                  <p class="time-text text-slate-400 dark:text-slate-500 text-xs mt-0.5">{{ appt.time }}</p>
+                </div>
+
+                <button type="button" (click)="openModal(appt, 'view')" class="action-icon-btn btn-view"
+                  title="View Details" aria-label="View Details">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                    </path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- 1. Completed Session: Lecturer Remarks Callout -->
+            <div *ngIf="appt.status === 'COMPLETED'"
+              class="w-full pt-3 border-t border-slate-100 dark:border-teal-900/20">
+              <div
+                class="rounded-2xl p-3.5 flex items-start gap-3 border text-xs transition-all bg-emerald-50/70 border-emerald-200/80 text-emerald-900 dark:bg-emerald-950/30 dark:border-emerald-900/40 dark:text-emerald-200">
+                <div class="mt-0.5 shrink-0">
+                  <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
                   <span
-                    class="location-pill inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-xs font-medium">
-                    📍 {{ appt.location }}
+                    class="font-extrabold uppercase tracking-wider text-[10px] block opacity-80 text-emerald-700 dark:text-emerald-300">
+                    Lecturer Remarks
                   </span>
+                  <p class="font-medium mt-0.5 text-xs leading-relaxed italic">
+                    "{{ appt.remarks || 'Consultation session completed successfully.' }}"
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div
-              class="flex items-center justify-between md:justify-end gap-5 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-teal-900/20">
-              <div class="text-left md:text-right">
-                <p class="date-text text-slate-600 dark:text-slate-400 font-bold text-sm">{{ appt.date }}</p>
-                <p class="time-text text-slate-400 dark:text-slate-500 text-xs mt-0.5">{{ appt.time }}</p>
-              </div>
+            <!-- 2. Non-Completed Sessions: Reason Callout (Rejected, Cancelled, No-Show) -->
+            <div *ngIf="appt.status !== 'COMPLETED'"
+              class="w-full pt-3 border-t border-slate-100 dark:border-teal-900/20">
+              <div class="rounded-2xl p-3.5 flex items-start gap-3 border text-xs transition-all" [ngClass]="{
+                  'bg-rose-50/70 border-rose-200/80 text-rose-900 dark:bg-rose-950/30 dark:border-rose-900/40 dark:text-rose-200': appt.status === 'REJECTED' || appt.rejectReason,
+                  'bg-amber-50/70 border-amber-200/80 text-amber-900 dark:bg-amber-950/30 dark:border-amber-900/40 dark:text-amber-200': appt.status === 'CANCELLED' || appt.cancelReason,
+                  'bg-red-50/70 border-red-200/80 text-red-900 dark:bg-red-950/30 dark:border-red-900/40 dark:text-red-200': appt.status === 'NO-SHOW' && !appt.cancelReason && !appt.rejectReason
+                }">
 
-              <button type="button" (click)="openModal(appt, 'view')" class="action-icon-btn btn-view"
-                title="View Details" aria-label="View Details">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                  </path>
-                </svg>
-              </button>
+                <!-- Status Icon -->
+                <div class="mt-0.5 shrink-0">
+                  <svg *ngIf="appt.status === 'REJECTED' || appt.rejectReason"
+                    class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <svg *ngIf="appt.status === 'CANCELLED' || appt.cancelReason"
+                    class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <svg *ngIf="appt.status === 'NO-SHOW' && !appt.cancelReason && !appt.rejectReason"
+                    class="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
+                    </path>
+                  </svg>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <span class="font-extrabold uppercase tracking-wider text-[10px] block opacity-80">
+                    {{ (appt.status === 'CANCELLED' || appt.cancelReason) ? 'Cancellation Reason' :
+                    getHistoryReasonLabel(appt) }}
+                  </span>
+                  <p class="font-medium mt-0.5 text-xs leading-relaxed italic">
+                    "{{ (appt.status === 'CANCELLED' && appt.cancelReason) ? appt.cancelReason : getHistoryReason(appt)
+                    }}"
+                  </p>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -711,9 +700,11 @@
             <p class="modal-label text-slate-400 dark:text-slate-500 mb-1">Status</p>
             <span class="status-pill text-xs font-black uppercase px-2.5 py-1 rounded-lg border inline-block" [ngClass]="{
                 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800': selectedAppointment.status === 'CONFIRMED' || selectedAppointment.status === 'UPCOMING',
-                'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800': selectedAppointment.status === 'PENDING',
+                'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800': selectedAppointment.status === 'PENDING' || selectedAppointment.status === 'CANCELLED',
                 'bg-cyan-100 text-cyan-800 border-cyan-300 dark:bg-cyan-950 dark:text-cyan-300 dark:border-cyan-800': selectedAppointment.status === 'RESCHEDULE-PENDING',
-                'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800': selectedAppointment.status === 'CANCELLED' || selectedAppointment.status === 'REJECTED'
+                'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800': selectedAppointment.status === 'COMPLETED',
+                'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800': selectedAppointment.status === 'REJECTED',
+                'bg-red-100 text-red-800 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-800': selectedAppointment.status === 'NO-SHOW'
               }">
               {{ (selectedAppointment.status === 'UPCOMING' || selectedAppointment.status === 'CONFIRMED') ? 'CONFIRMED'
               : selectedAppointment.status }}
@@ -738,9 +729,10 @@
             class="p-3.5 bg-emerald-50 dark:bg-teal-950/60 border border-emerald-200 dark:border-teal-800/60 rounded-xl">
             <p class="modal-val text-emerald-900 dark:text-teal-200 font-bold flex items-center gap-2">
               📍 {{ selectedAppointment.location }}
+              <small class="text-emerald-700 dark:text-teal-400 block mt-1 font-medium text-xs">Assigned room by
+                lecturer
+                for your consultation session.</small>
             </p>
-            <small class="text-emerald-700 dark:text-teal-400 block mt-1 font-medium text-xs">Assigned room by lecturer
-              for your consultation session.</small>
           </div>
 
           <div *ngIf="selectedAppointment.status === 'PENDING'"
@@ -758,8 +750,74 @@
             selectedAppointment.reason }}</p>
         </div>
 
-        <!-- Lecturer Notes -->
-        <div class="pt-2" *ngIf="selectedAppointment.remarks">
+        <!-- Cancellation Reason (Displayed explicitly for Cancelled sessions) -->
+        <div class="pt-2" *ngIf="selectedAppointment.status === 'CANCELLED' || selectedAppointment.cancelReason">
+          <p class="modal-label font-bold text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Cancellation Reason
+          </p>
+          <div
+            class="p-3.5 rounded-xl border border-amber-200 bg-amber-50/80 text-amber-900 dark:bg-amber-950/40 dark:border-amber-900/50 dark:text-amber-200 text-xs leading-relaxed">
+            <p class="font-semibold italic">"{{ selectedAppointment.cancelReason ||
+              getHistoryReason(selectedAppointment) }}"</p>
+          </div>
+        </div>
+
+        <!-- Rejection Reason (Displayed explicitly for Rejected sessions) -->
+        <div class="pt-2" *ngIf="selectedAppointment.status === 'REJECTED' || selectedAppointment.rejectReason">
+          <p class="modal-label font-bold text-rose-600 dark:text-rose-400 mb-1 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Reason for Rejection
+          </p>
+          <div
+            class="p-3.5 rounded-xl border border-rose-200 bg-rose-50/80 text-rose-900 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-200 text-xs leading-relaxed">
+            <p class="font-semibold italic">"{{ selectedAppointment.rejectReason ||
+              getHistoryReason(selectedAppointment) }}"</p>
+          </div>
+        </div>
+
+        <!-- No-Show Reason / Remarks (Displayed explicitly for No-Show sessions) -->
+        <div class="pt-2"
+          *ngIf="selectedAppointment.status === 'NO-SHOW' && !selectedAppointment.cancelReason && !selectedAppointment.rejectReason">
+          <p class="modal-label font-bold text-red-600 dark:text-red-400 mb-1 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
+              </path>
+            </svg>
+            No-Show Reason / Remarks
+          </p>
+          <div
+            class="p-3.5 rounded-xl border border-red-200 bg-red-50/80 text-red-900 dark:bg-red-950/40 dark:border-red-900/50 dark:text-red-200 text-xs leading-relaxed">
+            <p class="font-semibold italic">"{{ getHistoryReason(selectedAppointment) }}"</p>
+          </div>
+        </div>
+
+        <!-- Lecturer Remarks for Completed Sessions -->
+        <div class="pt-2" *ngIf="selectedAppointment.status === 'COMPLETED'">
+          <p class="modal-label font-bold text-emerald-600 dark:text-emerald-400 mb-1 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Lecturer Remarks
+          </p>
+          <div
+            class="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/80 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-200 text-xs leading-relaxed">
+            <p class="font-semibold italic">"{{ selectedAppointment.remarks || 'Consultation session completed
+              successfully.' }}"</p>
+          </div>
+        </div>
+
+        <!-- Lecturer Notes for Active Sessions -->
+        <div class="pt-2"
+          *ngIf="selectedAppointment.remarks && selectedAppointment.status !== 'NO-SHOW' && selectedAppointment.status !== 'COMPLETED' && selectedAppointment.status !== 'CANCELLED' && selectedAppointment.status !== 'REJECTED'">
           <p class="modal-label text-teal-600 dark:text-teal-400 mb-1">Lecturer Notes & Instructions</p>
           <p
             class="text-xs font-semibold italic text-slate-700 dark:text-slate-300 bg-teal-50/80 dark:bg-teal-950/50 p-3.5 rounded-xl border border-teal-200 dark:border-teal-900/40">
@@ -816,7 +874,7 @@
       <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Reason for
         Cancellation <span class="text-rose-500">*</span></label>
       <textarea [(ngModel)]="cancelReason" rows="3" placeholder="Please state your reason for cancelling..."
-        class="w-full p-4 mb-6 bg-white dark:bg-slate-900/80 border border-slate-300 dark:border-teal-900/40 rounded-2xl outline-none focus:ring-2 focus:ring-rose-400 transition-all text-sm font-medium text-slate-800 dark:text-slate-100 resize-none shadow-xs"></textarea>
+        class="reschedule-textarea w-full box-border p-4 mb-6 bg-white dark:bg-slate-900/80 border border-slate-300 dark:border-teal-900/40 rounded-2xl outline-none focus:ring-2 focus:ring-rose-400 transition-all text-sm font-medium text-slate-800 dark:text-slate-100 resize-none shadow-xs"></textarea>
 
       <div class="flex gap-3">
         <button (click)="closeModal()"
@@ -850,18 +908,31 @@
         </div>
         <div class="flex-1">
           <div class="flex items-center gap-2">
-            <h2 class="modal-section-title text-slate-900 dark:text-white text-xl font-extrabold">Reschedule Proposal
+            <h2 class="modal-section-title text-slate-900 dark:text-white text-xl font-extrabold">
+              {{ selectedAppointment.status === 'RESCHEDULE-PENDING' ? 'Reschedule Proposal' : 'Reschedule Appointment'
+              }}
             </h2>
             <span *ngIf="selectedAppointment.status === 'RESCHEDULE-PENDING'"
               class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
               Action Required
             </span>
+            <span *ngIf="selectedAppointment.status !== 'RESCHEDULE-PENDING'"
+              class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 border border-teal-300 dark:border-teal-800">
+              Reschedule Request
+            </span>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Review date change proposed by <strong>{{
-              selectedAppointment.lecturer }}</strong></p>
+          <p *ngIf="selectedAppointment.status === 'RESCHEDULE-PENDING'"
+            class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Review date change proposed by <strong>{{ selectedAppointment.lecturer }}</strong>
+          </p>
+          <p *ngIf="selectedAppointment.status !== 'RESCHEDULE-PENDING'"
+            class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Request an alternative slot with <strong>{{ selectedAppointment.lecturer }}</strong>.
+          </p>
         </div>
       </div>
 
+      <!-- A. REVIEW LECTURER PROPOSAL (When status is RESCHEDULE-PENDING) -->
       <ng-container *ngIf="selectedAppointment.status === 'RESCHEDULE-PENDING'">
 
         <div
@@ -919,7 +990,7 @@
           class="mb-5 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-teal-900/30">
           <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">Reason
             from Lecturer</p>
-          <p class="text-xs font-medium italic text-slate-700 dark:text-slate-300 leading-relaxed">
+          <p class="text-xs font-medium italic text-slate-700 dark:text-slate-300 leading-relaxed break-words">
             "{{ selectedAppointment.rescheduleReason }}"
           </p>
         </div>
@@ -943,29 +1014,284 @@
 
       </ng-container>
 
+      <!-- B. STUDENT RESCHEDULE (For Confirmed & Upcoming Appointments) -->
+
+
       <ng-container *ngIf="selectedAppointment.status !== 'RESCHEDULE-PENDING'">
+
+        <!-- Notice Banner -->
         <div
-          class="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-teal-900/30 text-center space-y-4 my-2">
-          <div
-            class="w-12 h-12 mx-auto rounded-2xl bg-teal-100 dark:bg-teal-950 text-teal-600 dark:text-teal-400 flex items-center justify-center">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+          class="p-3.5 mb-5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+          <p class="leading-relaxed font-medium">
+            Rescheduling notifies your lecturer immediately. Please select an alternative slot based on
+            availability and provide your reason.
+          </p>
+        </div>
+
+        <!-- 1. APPOINTMENT DETAILS CARD -->
+        <div
+          class="mb-5 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-teal-900/40">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-teal-900/30 mb-3">
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Lecturer</p>
+              <p class="font-extrabold text-slate-800 dark:text-slate-200 text-sm mt-0.5">
+                {{ selectedAppointment.lecturer }}
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Current
+                Status</p>
+              <span
+                class="text-[11px] font-black uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/50">
+                {{ selectedAppointment.status }}
+              </span>
+            </div>
           </div>
-          <div>
-            <h4 class="font-extrabold text-slate-800 dark:text-slate-200 text-base">Lecturer-Initiated Rescheduling</h4>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto leading-relaxed">
-              Consultation rescheduling is managed by your lecturer. If your lecturer proposes a new time for your
-              appointment, you will see a notification card here to accept or reject it.
-            </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <!-- Part 1: Current Schedule -->
+            <div
+              class="p-3 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-teal-900/30">
+              <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
+                Current Schedule
+              </p>
+              <p class="text-xs font-extrabold text-teal-700 dark:text-teal-300 flex items-center gap-1.5">
+                📅 {{ selectedAppointment.date }}
+              </p>
+              <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
+                ⏰ {{ selectedAppointment.time }}
+              </p>
+            </div>
+
+            <!-- Part 2: Reason -->
+            <div
+              class="p-3 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-teal-900/30">
+              <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
+                Reason
+              </p>
+              <p class="text-xs font-medium text-slate-700 dark:text-slate-300 leading-snug break-words">
+                {{ selectedAppointment.reason }}
+              </p>
+            </div>
+
+            <!-- Part 3: Room -->
+            <div
+              class="p-3 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-teal-900/30">
+              <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
+                Room
+              </p>
+              <p *ngIf="selectedAppointment.location"
+                class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                📍 Room: {{ selectedAppointment.location }}
+              </p>
+              <p *ngIf="!selectedAppointment.location"
+                class="text-xs font-medium text-slate-400 dark:text-slate-500 italic">
+                Room not assigned yet
+              </p>
+            </div>
           </div>
         </div>
 
-        <button (click)="closeModal()"
-          class="w-full mt-4 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-teal-700 dark:hover:bg-teal-600 text-white font-extrabold transition-all text-sm">
-          Got It
-        </button>
+        <!-- 2. COMBINED SCHEDULE PICKER (Smart Suggestion + Date & Time Picker) -->
+        <div
+          class="mb-5 p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-teal-900/40 space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-teal-900/30">
+            <div>
+              <h3
+                class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                📅 Select New Date & Time
+              </h3>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Choose a suggested slot or pick another preferred date and time.
+              </p>
+            </div>
+          </div>
+
+          <!-- Smart Suggestion Sub-section -->
+          <div
+            class="p-3.5 rounded-xl bg-gradient-to-br from-teal-50/80 via-cyan-50/50 to-emerald-50/60 dark:from-teal-950/30 dark:via-cyan-950/20 dark:to-slate-900/60 border border-teal-200/80 dark:border-teal-800/50">
+            <div class="flex items-center justify-between mb-2">
+              <span
+                class="text-[11px] font-extrabold text-teal-800 dark:text-teal-300 uppercase tracking-wide flex items-center gap-1.5">
+                Smart Suggestion
+              </span>
+              <span class="text-[10px] font-bold text-teal-700/80 dark:text-teal-400/80">
+                Lecturer's Timetable
+              </span>
+            </div>
+
+            <p class="text-xs text-slate-600 dark:text-slate-300 mb-2.5 leading-relaxed">
+              Suggested slot based on <strong>{{ selectedAppointment.lecturer }}</strong>'s open consultation timetable:
+            </p>
+
+            <!-- Shimmer / Loading State -->
+            <div *ngIf="isLoadingSmartSuggestion" class="py-3 text-center">
+              <div class="inline-flex items-center gap-2 text-xs font-bold text-teal-700 dark:text-teal-300">
+                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                Scanning lecturer's open slots...
+              </div>
+            </div>
+
+            <!-- Smart Suggestions List -->
+            <div *ngIf="!isLoadingSmartSuggestion && smartSuggestions.length > 0" class="space-y-2">
+              <div *ngFor="let sug of smartSuggestions" (click)="selectSmartSuggestion(sug)"
+                [ngClass]="selectedNewSlot === sug.label ? 'ring-2 ring-teal-600 bg-white dark:bg-teal-900/50 shadow-sm border-teal-500' : 'bg-white/90 hover:bg-white dark:bg-slate-900/80 dark:hover:bg-slate-900 border-teal-200 dark:border-teal-800'"
+                class="p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                  <div
+                    [ngClass]="selectedNewSlot === sug.label ? 'bg-teal-600 text-white' : 'bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300'"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-black">
+                    ✓
+                  </div>
+                  <div>
+                    <p class="text-xs font-black text-slate-800 dark:text-slate-100">{{ sug.formattedDate }}</p>
+                    <p class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">⏰ {{ sug.time }}</p>
+                  </div>
+                </div>
+                <span
+                  [ngClass]="selectedNewSlot === sug.label ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
+                  class="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg transition-all">
+                  {{ selectedNewSlot === sug.label ? 'Selected' : 'Use Slot' }}
+                </span>
+              </div>
+            </div>
+
+            <div *ngIf="!isLoadingSmartSuggestion && smartSuggestions.length === 0"
+              class="text-xs text-slate-500 dark:text-slate-400 py-1">
+              No automatic slot found for this lecturer. Please select a date below.
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="flex items-center gap-3">
+            <hr class="flex-1 border-slate-200 dark:border-teal-900/30">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              Or Choose Another Date & Time
+            </span>
+            <hr class="flex-1 border-slate-200 dark:border-teal-900/30">
+          </div>
+
+          <!-- Manual Date & Time Picker Sub-section -->
+          <div class="space-y-3">
+            <div>
+              <label
+                class="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                1. Choose Preferred Date:
+              </label>
+              <input type="date" [(ngModel)]="selectedNewDate" (change)="onDateChange(selectedNewDate)" [min]="minDate"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-teal-900/50 bg-white dark:bg-[#071317] text-slate-800 dark:text-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-teal-500 transition-all cursor-pointer">
+            </div>
+
+            <div>
+              <label
+                class="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                2. Available Time Slots:
+              </label>
+
+              <div *ngIf="isLoadingSlots" class="py-3 text-center text-xs text-teal-600 dark:text-teal-400 font-bold">
+                Checking availability...
+              </div>
+
+              <div *ngIf="!isLoadingSlots && (!selectedNewDate || availableSlotsForSelectedDate.length === 0)"
+                class="p-3 rounded-xl bg-white dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-xs text-center font-medium border border-slate-200/80 dark:border-teal-900/30">
+                {{ !selectedNewDate ? 'Please choose a date above to check available slots.' : 'No open slots for this
+                date. Please choose another date or select the Smart Suggestion above.' }}
+              </div>
+
+              <div *ngIf="!isLoadingSlots && availableSlotsForSelectedDate.length > 0"
+                class="flex flex-wrap gap-2 pt-1">
+                <button *ngFor="let slot of availableSlotsForSelectedDate" type="button"
+                  (click)="selectManualSlot(slot)"
+                  [ngClass]="selectedNewTime === slot ? 'bg-teal-600 text-white font-extrabold shadow-sm ring-2 ring-teal-400' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 font-bold'"
+                  class="px-3 py-2 rounded-xl text-xs transition-all cursor-pointer">
+                  {{ slot }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Selected Replacement Slot Summary -->
+            <div *ngIf="selectedNewSlot"
+              class="mt-2 p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 flex items-center justify-between text-xs">
+              <span class="text-teal-800 dark:text-teal-300 font-bold">🎯 Selected Slot:</span>
+              <span class="font-black text-teal-950 dark:text-teal-100">{{ selectedNewSlot }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. RESCHEDULE REASON CARD -->
+        <div
+          class="mb-5 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-teal-900/40 reschedule-card">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-sm">📝</span>
+              <label class="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Reason for Rescheduling
+              </label>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                {{ rescheduleReason.length }}/500
+              </span>
+              <span
+                class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50">
+                Required
+              </span>
+            </div>
+          </div>
+
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-2.5 leading-relaxed">
+            Please provide a brief explanation so your lecturer understands the reason for the reschedule.
+          </p>
+
+          <!-- Quick Suggestion Reason Tags -->
+          <div class="flex flex-wrap gap-1.5 mb-2.5">
+            <button type="button" (click)="setQuickReason('Medical emergency')"
+              class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:text-teal-600 dark:hover:border-teal-400 dark:hover:text-teal-300 transition-all cursor-pointer">
+              🩺 Medical Emergency
+            </button>
+            <button type="button" (click)="setQuickReason('Transport breakdown')"
+              class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:text-teal-600 dark:hover:border-teal-400 dark:hover:text-teal-300 transition-all cursor-pointer">
+              🚗 Transport Breakdown
+            </button>
+            <button type="button" (click)="setQuickReason('Urgent family matter')"
+              class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:text-teal-600 dark:hover:border-teal-400 dark:hover:text-teal-300 transition-all cursor-pointer">
+              🚨 Family Matter
+            </button>
+            <button type="button" (click)="setQuickReason('Academic conflict')"
+              class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:text-teal-600 dark:hover:border-teal-400 dark:hover:text-teal-300 transition-all cursor-pointer">
+              ⚠️ Academic Conflict
+            </button>
+          </div>
+
+          <div class="w-full">
+            <textarea [(ngModel)]="rescheduleReason" rows="3" maxlength="500"
+              placeholder="State the reason for rescheduling (e.g. Sudden medical emergency, transport breakdown, urgent personal conflict)..."
+              class="reschedule-textarea w-full box-border p-3.5 bg-white dark:bg-slate-950/70 border border-slate-200 dark:border-teal-900/50 rounded-xl outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all font-medium text-xs text-slate-800 dark:text-slate-200 resize-none"></textarea>
+          </div>
+        </div>
+
+        <!-- 5. ACTION BUTTONS -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button type="button" (click)="closeModal()"
+            class="flex-1 py-3.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-extrabold text-sm transition-all flex items-center justify-center cursor-pointer">
+            Keep Current Appointment
+          </button>
+
+          <button type="button" (click)="confirmReschedule()"
+            [disabled]="!selectedNewDate || !selectedNewTime || !rescheduleReason.trim() || isSubmittingReschedule"
+            [ngClass]="(!selectedNewDate || !selectedNewTime || !rescheduleReason.trim() || isSubmittingReschedule) ? 'opacity-50 cursor-not-allowed bg-slate-400 dark:bg-slate-700' : 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 cursor-pointer shadow-md shadow-teal-600/20'"
+            class="flex-1 py-3.5 px-4 rounded-xl text-white font-extrabold text-sm transition-all flex items-center justify-center gap-2">
+            <svg *ngIf="isSubmittingReschedule" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span>{{ isSubmittingReschedule ? 'Sending Request...' : 'Send Reschedule Request' }}</span>
+          </button>
+        </div>
+
       </ng-container>
 
     </div>
@@ -992,8 +1318,7 @@
     </button>
 
     <!-- Icon Container -->
-    <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center shadow-md"
-      [ngClass]="{
+    <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center shadow-md" [ngClass]="{
         'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700': successType === 'success',
         'bg-cyan-100 text-cyan-600 dark:bg-cyan-950/80 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-700': successType === 'info',
         'bg-amber-100 text-amber-600 dark:bg-amber-950/80 dark:text-amber-400 border border-amber-300 dark:border-amber-700': successType === 'warning'
@@ -1025,7 +1350,7 @@
     <!-- Close Action Button -->
     <button (click)="closeSuccessModal()"
       class="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-extrabold text-sm shadow-md transition-all cursor-pointer">
-      Got It!
+      Done
     </button>
   </div>
 </div>

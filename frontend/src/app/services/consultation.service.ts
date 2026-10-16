@@ -30,7 +30,7 @@ export interface Consultation {
 export class ConsultationService {
   private apiUrl = 'http://localhost:8080/api/consultations';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   private getAuthHeaders(): HttpHeaders {
     const token = typeof window !== 'undefined' && typeof localStorage !== 'undefined'
@@ -49,37 +49,23 @@ export class ConsultationService {
   }
 
   getLecturerConsultations(): Observable<Consultation[]> {
-    const token = localStorage.getItem('token');
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`,
+    return this.http.get<Consultation[]>(`${this.apiUrl}/lecturer`, {
+      headers: this.getAuthHeaders(),
     });
-
-    return this.http.get<Consultation[]>(`${this.apiUrl}/lecturer`, { headers });
   }
 
   getStudentConsultations(): Observable<Consultation[]> {
-    const token = localStorage.getItem('token');
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`,
+    return this.http.get<Consultation[]>(`${this.apiUrl}/student`, {
+      headers: this.getAuthHeaders(),
     });
-
-    return this.http.get<Consultation[]>(`${this.apiUrl}/student`, { headers });
   }
 
   cancelConsultation(consultationId: string, cancelReason: string): Observable<Consultation> {
-    const token = localStorage.getItem('token');
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-    });
-
     return this.http.put<Consultation>(
       `${this.apiUrl}/${consultationId}/cancel`,
       {},
       {
-        headers,
+        headers: this.getAuthHeaders(),
         params: {
           cancelReason,
         },
@@ -92,18 +78,11 @@ export class ConsultationService {
     location: string,
     remarks: string,
   ): Observable<Consultation> {
-    const token = localStorage.getItem('token');
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-    });
-
-    // We pass location and remarks as query params, matching your reject/reschedule methods
     return this.http.put<Consultation>(
       `${this.apiUrl}/${consultationId}/approve`,
       {},
       {
-        headers,
+        headers: this.getAuthHeaders(),
         params: {
           location: location,
           remarks: remarks,
@@ -113,17 +92,11 @@ export class ConsultationService {
   }
 
   rejectConsultation(consultationId: string, rejectReason: string): Observable<Consultation> {
-    const token = localStorage.getItem('token');
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-    });
-
     return this.http.put<Consultation>(
       `${this.apiUrl}/${consultationId}/reject`,
       {},
       {
-        headers,
+        headers: this.getAuthHeaders(),
         params: {
           rejectReason: rejectReason,
         },
@@ -137,17 +110,11 @@ export class ConsultationService {
     proposedTime: string,
     rescheduleReason: string,
   ): Observable<Consultation> {
-    const token = localStorage.getItem('token');
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-    });
-
     return this.http.put<Consultation>(
       `${this.apiUrl}/${consultationId}/reschedule`,
       {},
       {
-        headers,
+        headers: this.getAuthHeaders(),
         params: {
           proposedDate,
           proposedTime,
@@ -157,32 +124,49 @@ export class ConsultationService {
     );
   }
 
-
   acceptReschedule(consultationId: string): Observable<Consultation> {
-    const token = localStorage.getItem('token');
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
-
     return this.http.put<Consultation>(
-        `${this.apiUrl}/${consultationId}/reschedule/accept`,
-        {},
-        { headers }
+      `${this.apiUrl}/${consultationId}/reschedule/accept`,
+      {},
+      { headers: this.getAuthHeaders() }
     );
   }
 
   rejectReschedule(consultationId: string): Observable<Consultation> {
-    const token = localStorage.getItem('token');
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
-
     return this.http.put<Consultation>(
-        `${this.apiUrl}/${consultationId}/reschedule/reject`,
-        {},
-        { headers }
+      `${this.apiUrl}/${consultationId}/reschedule/reject`,
+      {},
+      { headers: this.getAuthHeaders() }
     );
+  }
+
+  getLecturerAvailability(lecturerId: number, date: string): Observable<{
+    lecturerId: number;
+    date: string;
+    dayOfWeek: string;
+    availableSlots: string[];
+  }> {
+    return this.http.get<{
+      lecturerId: number;
+      date: string;
+      dayOfWeek: string;
+      availableSlots: string[];
+    }>(`http://localhost:8080/api/lecturer-availability?lecturerId=${lecturerId}&date=${date}`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  getLecturerSchedules(lecturerId: number): Observable<Array<{
+    id: number;
+    lecturerId: number;
+    dayOfWeek: string;
+    startTime: string;
+    endTime: string;
+    slotType: string;
+    title: string;
+  }>> {
+    return this.http.get<any[]>(`http://localhost:8080/api/lecturer-availability/schedule/${lecturerId}`, {
+      headers: this.getAuthHeaders(),
+    });
   }
 }

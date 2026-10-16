@@ -84,6 +84,12 @@
               </td>
               <td>
                 <div class="reason-truncate">"{{ log.reason }}"</div>
+                <div *ngIf="(log.status === 'CANCELLED' || log.cancelReason) && log.cancelReason" class="text-xs font-semibold text-amber-600 dark:text-amber-400 mt-1">
+                  Cancellation Reason: "{{ log.cancelReason }}"
+                </div>
+                <div *ngIf="(log.status === 'REJECTED' || log.rejectReason) && log.rejectReason" class="text-xs font-semibold text-rose-600 dark:text-rose-400 mt-1">
+                  Rejection Reason: "{{ log.rejectReason }}"
+                </div>
               </td>
               <td>
                 <span class="status-badge" [ngClass]="log.status.toLowerCase().replace('_', '-')">
@@ -160,10 +166,31 @@
           </div>
         </div>
 
-        <div class="detail-group full-width">
+        <!-- Cancellation Reason -->
+        <div class="detail-group full-width" *ngIf="selectedLog.status === 'CANCELLED' || selectedLog.cancelReason">
+          <label style="color: #d97706; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+            ⚠️ Cancellation Reason
+          </label>
+          <div class="text-box filled" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: #b45309; font-weight: 600;">
+            "{{ selectedLog.cancelReason || selectedLog.remarks || 'have emergency' }}"
+          </div>
+        </div>
+
+        <!-- Rejection Reason -->
+        <div class="detail-group full-width" *ngIf="selectedLog.status === 'REJECTED' || selectedLog.rejectReason">
+          <label style="color: #e11d48; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+            ❌ Reason for Rejection
+          </label>
+          <div class="text-box filled" style="background: rgba(225, 29, 72, 0.12); border: 1px solid rgba(225, 29, 72, 0.35); color: #be123c; font-weight: 600;">
+            "{{ selectedLog.rejectReason || selectedLog.remarks || 'No rejection reason specified.' }}"
+          </div>
+        </div>
+
+        <!-- Lecturer Remarks & Notes -->
+        <div class="detail-group full-width" *ngIf="selectedLog.status !== 'CANCELLED' && (selectedLog.remarks || selectedLog.notes)">
           <label>Lecturer Remarks & Notes</label>
           <div class="text-box filled">
-            {{ selectedLog.remarks || selectedLog.notes || 'No additional remarks recorded.' }}
+            {{ selectedLog.remarks || selectedLog.notes }}
           </div>
         </div>
 

@@ -49,8 +49,10 @@ export class LecturerHistoryComponent implements OnInit {
           date: consultation.scheduledDate,
           time: consultation.scheduledTime,
           location: consultation.location || '',
-          reason: consultation.reasonDetails || '',
-          remarks: consultation.lecturerRemarks|| consultation.rejectReason || consultation.cancelReason || '',
+          reason: consultation.reasonDetails || consultation.reason || 'Consultation',
+          cancelReason: consultation.cancelReason || '',
+          rejectReason: consultation.rejectReason || '',
+          remarks: consultation.lecturerRemarks || '',
           notes: '',
           status: consultation.status === 'NO_SHOW' ? 'NO-SHOW' : (consultation.status === 'RESCHEDULE_PENDING' ? 'RESCHEDULE-PENDING' : consultation.status),
         }));

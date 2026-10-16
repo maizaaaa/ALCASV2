@@ -215,9 +215,28 @@
   color: #b91c1c;
 }
 
-:host-context(.dark) .action-icon-btn.btn-cancel:hover {
-  background-color: rgba(127, 29, 29, 0.6);
-  color: #fecaca;
+/* Reschedule Reason Card & Textarea Styling */
+.reschedule-card {
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.reschedule-textarea {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: pre-wrap !important;
+  overflow-y: auto !important;
+  line-height: 1.5 !important;
+  font-family: inherit !important;
+}
+
+.reschedule-textarea:focus {
+  border-color: #0d9488 !important;
 }
 
 
