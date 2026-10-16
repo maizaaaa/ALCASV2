@@ -214,19 +214,54 @@ public class LecturerAvailabilityController {
                         .filter(day -> !day.isEmpty())
                         .toList();
 
-        if (!workingDays.contains(dayName.toUpperCase())) {
+        LecturerProfile lecturer =
+                lecturerProfileRepository.findById(lecturerId).orElse(null);
 
-            AvailabilityResponse response =
-                    new AvailabilityResponse(
-                            lecturerId,
-                            selectedDate.format(
-                                    DateTimeFormatter.ISO_LOCAL_DATE
-                            ),
-                            dayName,
-                            List.of()
-                    );
+        // Check if lecturer has custom blocked days (e.g. Friday, Saturday, Sunday)
+        if (lecturer != null && lecturer.getBlockedDays() != null) {
+            String rawBlocked = lecturer.getBlockedDays().trim().toUpperCase();
+            if ("NONE".equals(rawBlocked) || rawBlocked.isEmpty()) {
+                // Lecturer explicitly has NO blocked days! All days remain open for consultation.
+            } else {
+                List<String> lecturerBlockedDays = java.util.Arrays.stream(rawBlocked.split(","))
+                        .map(String::trim)
+                        .filter(day -> !day.isEmpty() && !"NONE".equals(day))
+                        .toList();
 
-            return ResponseEntity.ok(response);
+                if (lecturerBlockedDays.contains(dayName.toUpperCase())) {
+                    AvailabilityResponse response =
+                            new AvailabilityResponse(
+                                    lecturerId,
+                                    selectedDate.format(
+                                            DateTimeFormatter.ISO_LOCAL_DATE
+                                    ),
+                                    dayName,
+                                    List.of()
+                            );
+
+                    return ResponseEntity.ok(response);
+                }
+            }
+        } else if (lecturer != null && Boolean.FALSE.equals(lecturer.getBlockNonWorkingDays())) {
+            // Lecturer explicitly disabled blocking non-working days
+        } else {
+            boolean shouldBlockNonWorkingDays =
+                    (lecturer == null || lecturer.getBlockNonWorkingDays() == null || lecturer.getBlockNonWorkingDays());
+
+            if (shouldBlockNonWorkingDays && !workingDays.contains(dayName.toUpperCase())) {
+
+                AvailabilityResponse response =
+                        new AvailabilityResponse(
+                                lecturerId,
+                                selectedDate.format(
+                                        DateTimeFormatter.ISO_LOCAL_DATE
+                                ),
+                                dayName,
+                                List.of()
+                        );
+
+                return ResponseEntity.ok(response);
+            }
         }
 
         // Check Academic Calendar boundaries

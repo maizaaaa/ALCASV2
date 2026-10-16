@@ -76,6 +76,12 @@ public class LecturerProfileController {
         profile.setEmailNotifications(updatedProfile.getEmailNotifications());
         profile.setAutoReminder24h(updatedProfile.getAutoReminder24h());
         profile.setAutoApproveFyp(updatedProfile.getAutoApproveFyp());
+        if (updatedProfile.getBlockNonWorkingDays() != null) {
+            profile.setBlockNonWorkingDays(updatedProfile.getBlockNonWorkingDays());
+        }
+        if (updatedProfile.getBlockedDays() != null) {
+            profile.setBlockedDays(updatedProfile.getBlockedDays());
+        }
 
         userRepository.save(user);
         lecturerProfileService.save(profile);

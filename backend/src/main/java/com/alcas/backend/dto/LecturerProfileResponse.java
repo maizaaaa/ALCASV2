@@ -16,6 +16,10 @@ public class LecturerProfileResponse {
     private Boolean emailNotifications;
     private Boolean autoReminder24h;
     private Boolean autoApproveFyp;
+    private Boolean blockNonWorkingDays;
+    private String blockedDays;
+
+    public LecturerProfileResponse() {}
 
     public LecturerProfileResponse(
             Integer userId,
@@ -47,6 +51,28 @@ public class LecturerProfileResponse {
         this.emailNotifications = emailNotifications;
         this.autoReminder24h = autoReminder24h;
         this.autoApproveFyp = autoApproveFyp;
+        this.blockNonWorkingDays = true;
+    }
+
+    public LecturerProfileResponse(
+            Integer userId,
+            String staffNumber,
+            String fullName,
+            String email,
+            Integer schoolId,
+            String phone,
+            String officeRoom,
+            String officeHours,
+            String virtualRoomUrl,
+            String bio,
+            String avatarUrl,
+            Boolean emailNotifications,
+            Boolean autoReminder24h,
+            Boolean autoApproveFyp,
+            Boolean blockNonWorkingDays) {
+
+        this(userId, staffNumber, fullName, email, schoolId, phone, officeRoom, officeHours, virtualRoomUrl, bio, avatarUrl, emailNotifications, autoReminder24h, autoApproveFyp);
+        this.blockNonWorkingDays = blockNonWorkingDays;
     }
 
     public Integer getUserId() {
@@ -103,5 +129,21 @@ public class LecturerProfileResponse {
 
     public Boolean getAutoApproveFyp() {
         return autoApproveFyp;
+    }
+
+    public Boolean getBlockNonWorkingDays() {
+        return blockNonWorkingDays != null ? blockNonWorkingDays : true;
+    }
+
+    public void setBlockNonWorkingDays(Boolean blockNonWorkingDays) {
+        this.blockNonWorkingDays = blockNonWorkingDays;
+    }
+
+    public String getBlockedDays() {
+        return blockedDays != null ? blockedDays : "FRIDAY,SATURDAY";
+    }
+
+    public void setBlockedDays(String blockedDays) {
+        this.blockedDays = blockedDays;
     }
 }

@@ -49,6 +49,12 @@ public class LecturerProfile {
     @Column(name = "auto_approve_fyp")
     private Boolean autoApproveFyp = false;
 
+    @Column(name = "block_non_working_days")
+    private Boolean blockNonWorkingDays = true;
+
+    @Column(name = "blocked_days", length = 100)
+    private String blockedDays = "FRIDAY,SATURDAY";
+
     // Getters and Setters
 
     public Integer getUserId() {
@@ -153,5 +159,21 @@ public class LecturerProfile {
 
     public void setAutoApproveFyp(Boolean autoApproveFyp) {
         this.autoApproveFyp = autoApproveFyp;
+    }
+
+    public Boolean getBlockNonWorkingDays() {
+        return blockNonWorkingDays != null ? blockNonWorkingDays : true;
+    }
+
+    public void setBlockNonWorkingDays(Boolean blockNonWorkingDays) {
+        this.blockNonWorkingDays = blockNonWorkingDays;
+    }
+
+    public String getBlockedDays() {
+        return blockedDays != null ? blockedDays : "FRIDAY,SATURDAY";
+    }
+
+    public void setBlockedDays(String blockedDays) {
+        this.blockedDays = blockedDays;
     }
 }
