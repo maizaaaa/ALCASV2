@@ -62,7 +62,8 @@ public class ConsultationService {
                             "Booking is not allowed before the academic semester start date (" + start + ")."
                     );
                 }
-            } catch (java.time.format.DateTimeParseException ignored) {}
+            } catch (java.time.format.DateTimeParseException ignored) {
+            }
         }
 
         if (semesterEnd != null && !semesterEnd.trim().isEmpty()) {
@@ -73,7 +74,8 @@ public class ConsultationService {
                             "Booking is not allowed after the academic semester end date (" + end + ")."
                     );
                 }
-            } catch (java.time.format.DateTimeParseException ignored) {}
+            } catch (java.time.format.DateTimeParseException ignored) {
+            }
         }
 
         // 2. Validate Global Block-Out Dates (Holidays / Special Breaks)
@@ -111,8 +113,8 @@ public class ConsultationService {
                 = schedules.stream()
                         .filter(schedule
                                 -> "AVAILABLE".equalsIgnoreCase(
-                                schedule.getSlotType()
-                        )
+                                        schedule.getSlotType()
+                                )
                         )
                         .anyMatch(schedule -> {
 
@@ -139,11 +141,11 @@ public class ConsultationService {
                 = schedules.stream()
                         .filter(schedule
                                 -> "CLASS".equalsIgnoreCase(
-                                schedule.getSlotType()
-                        )
-                        || "BUSY".equalsIgnoreCase(
-                                schedule.getSlotType()
-                        )
+                                        schedule.getSlotType()
+                                )
+                                || "BUSY".equalsIgnoreCase(
+                                        schedule.getSlotType()
+                                )
                         )
                         .anyMatch(schedule -> {
 
@@ -213,8 +215,8 @@ public class ConsultationService {
                 = userRepository.findByEmail(email)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Authenticated user not found"
-                        ));
+                                        "Authenticated user not found"
+                                ));
 
         if (!authenticatedUser.getId().equals(studentId)) {
             throw new UnauthorizedException(
@@ -239,8 +241,8 @@ public class ConsultationService {
                 = userRepository.findByEmail(email)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Authenticated user not found"
-                        ));
+                                        "Authenticated user not found"
+                                ));
 
         if (!authenticatedUser.getId().equals(lecturerId)) {
             throw new UnauthorizedException(
@@ -269,8 +271,8 @@ public class ConsultationService {
                 = userRepository.findByEmail(email)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Authenticated user not found"
-                        ));
+                                        "Authenticated user not found"
+                                ));
 
         if (!authenticatedUser.getId().equals(lecturerId)) {
             throw new UnauthorizedException(
@@ -282,8 +284,8 @@ public class ConsultationService {
                 = consultationRepository.findById(consultationId)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Consultation not found"
-                        ));
+                                        "Consultation not found"
+                                ));
 
         // Make sure this consultation belongs to this lecturer
         if (!consultation.getLecturer().getUserId().equals(lecturerId)) {
@@ -292,11 +294,21 @@ public class ConsultationService {
             );
         }
 
-        // Only PENDING consultations can be approved
-        if (consultation.getStatus() != Consultation.Status.PENDING) {
+        // Only PENDING or RESCHEDULE_PENDING consultations can be approved
+        if (consultation.getStatus() != Consultation.Status.PENDING
+                && consultation.getStatus() != Consultation.Status.RESCHEDULE_PENDING) {
             throw new RuntimeException(
                     "Only pending consultations can be approved."
             );
+        }
+
+        if (consultation.getProposedDate() != null) {
+            consultation.setScheduledDate(consultation.getProposedDate());
+            consultation.setProposedDate(null);
+        }
+        if (consultation.getProposedTime() != null) {
+            consultation.setScheduledTime(consultation.getProposedTime());
+            consultation.setProposedTime(null);
         }
 
         consultation.setLocation(location);
@@ -327,8 +339,8 @@ public class ConsultationService {
                 = userRepository.findByEmail(email)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Authenticated user not found"
-                        ));
+                                        "Authenticated user not found"
+                                ));
 
         if (!authenticatedUser.getId().equals(lecturerId)) {
             throw new UnauthorizedException(
@@ -340,8 +352,8 @@ public class ConsultationService {
                 = consultationRepository.findById(consultationId)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Consultation not found"
-                        ));
+                                        "Consultation not found"
+                                ));
 
         // Make sure this consultation belongs to this lecturer
         if (!consultation.getLecturer().getUserId().equals(lecturerId)) {
@@ -372,10 +384,38 @@ public class ConsultationService {
 
     public Consultation requestReschedule(
             String consultationId,
-            Integer lecturerId,
+            Integer userId,
             LocalDate proposedDate,
             LocalTime proposedTime,
             String rescheduleReason) {
+
+        Consultation consultation
+                = consultationRepository.findById(consultationId)
+                        .orElseThrow(()
+                                -> new RuntimeException(
+                                        "Consultation not found"
+                                ));
+
+        boolean isLecturer = consultation.getLecturer() != null
+                && consultation.getLecturer().getUserId().equals(userId);
+        boolean isStudent = consultation.getStudent() != null
+                && consultation.getStudent().getUserId().equals(userId);
+
+        if (!isLecturer && !isStudent) {
+            throw new UnauthorizedException(
+                    "You are not allowed to reschedule this consultation."
+            );
+        }
+
+        // Only CONFIRMED or PENDING consultations can be rescheduled
+        if (consultation.getStatus() != Consultation.Status.CONFIRMED
+                && consultation.getStatus() != Consultation.Status.PENDING) {
+            throw new RuntimeException(
+                    "Only confirmed or pending consultations can be rescheduled."
+            );
+        }
+
+        Integer lecturerId = consultation.getLecturer().getUserId();
 
         // Get the day of the proposed date
         DayOfWeek dayOfWeek
@@ -387,7 +427,7 @@ public class ConsultationService {
                         Locale.ENGLISH
                 );
 
-// Get lecturer's schedule for that day
+        // Get lecturer's schedule for that day
         List<LecturerSchedule> schedules
                 = lecturerScheduleRepository
                         .findByLecturerUserIdAndDayOfWeek(
@@ -395,102 +435,34 @@ public class ConsultationService {
                                 dayName
                         );
 
-// Check whether the proposed 30-minute slot
-// is inside an AVAILABLE schedule
-        boolean insideAvailableSchedule
-                = schedules.stream()
-                        .filter(schedule
-                                -> "AVAILABLE".equalsIgnoreCase(
-                                schedule.getSlotType()
-                        )
-                        )
-                        .anyMatch(schedule -> {
-
-                            LocalTime proposedEnd
-                                    = proposedTime.plusMinutes(30);
-
-                            return !proposedTime.isBefore(
-                                    schedule.getStartTime()
+        if (!schedules.isEmpty()) {
+            boolean overlapsUnavailableSchedule
+                    = schedules.stream()
+                            .filter(schedule
+                                    -> "CLASS".equalsIgnoreCase(
+                                            schedule.getSlotType()
+                                    )
+                                    || "BUSY".equalsIgnoreCase(
+                                            schedule.getSlotType()
+                                    )
                             )
-                                    && !proposedEnd.isAfter(
-                                            schedule.getEndTime()
-                                    );
-                        });
+                            .anyMatch(schedule -> {
+                                LocalTime proposedEnd
+                                        = proposedTime.plusMinutes(30);
 
-        if (!insideAvailableSchedule) {
-            throw new BookingConflictException(
-                    "The proposed time is not available for consultation."
-            );
-        }
+                                return proposedTime.isBefore(
+                                        schedule.getEndTime()
+                                )
+                                        && proposedEnd.isAfter(
+                                                schedule.getStartTime()
+                                        );
+                            });
 
-// Check whether the proposed slot overlaps
-// CLASS or BUSY schedules
-        boolean overlapsUnavailableSchedule
-                = schedules.stream()
-                        .filter(schedule
-                                -> "CLASS".equalsIgnoreCase(
-                                schedule.getSlotType()
-                        )
-                        || "BUSY".equalsIgnoreCase(
-                                schedule.getSlotType()
-                        )
-                        )
-                        .anyMatch(schedule -> {
-
-                            LocalTime proposedEnd
-                                    = proposedTime.plusMinutes(30);
-
-                            return proposedTime.isBefore(
-                                    schedule.getEndTime()
-                            )
-                                    && proposedEnd.isAfter(
-                                            schedule.getStartTime()
-                                    );
-                        });
-
-        if (overlapsUnavailableSchedule) {
-            throw new BookingConflictException(
-                    "The proposed time is not available for consultation."
-            );
-        }
-
-        String email = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
-
-        User authenticatedUser
-                = userRepository.findByEmail(email)
-                        .orElseThrow(()
-                                -> new RuntimeException(
-                                "Authenticated user not found"
-                        ));
-
-        if (!authenticatedUser.getId().equals(lecturerId)) {
-            throw new UnauthorizedException(
-                    "You are not allowed to reschedule consultations for another lecturer"
-            );
-        }
-
-        Consultation consultation
-                = consultationRepository.findById(consultationId)
-                        .orElseThrow(()
-                                -> new RuntimeException(
-                                "Consultation not found"
-                        ));
-
-        // Make sure this consultation belongs to this lecturer
-        if (!consultation.getLecturer().getUserId().equals(lecturerId)) {
-            throw new UnauthorizedException(
-                    "You are not allowed to reschedule this consultation."
-            );
-        }
-
-        // Only CONFIRMED consultations can be rescheduled
-        if (consultation.getStatus() != Consultation.Status.CONFIRMED) {
-            throw new RuntimeException(
-                    "Only confirmed consultations can be rescheduled."
-            );
+            if (overlapsUnavailableSchedule) {
+                throw new BookingConflictException(
+                        "The proposed time is not available for consultation."
+                );
+            }
         }
 
         consultation.setProposedDate(proposedDate);
@@ -510,35 +482,21 @@ public class ConsultationService {
 
     public Consultation acceptReschedule(
             String consultationId,
-            Integer studentId) {
-
-        String email = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
-
-        User authenticatedUser
-                = userRepository.findByEmail(email)
-                        .orElseThrow(()
-                                -> new RuntimeException(
-                                "Authenticated user not found"
-                        ));
-
-        if (!authenticatedUser.getId().equals(studentId)) {
-            throw new UnauthorizedException(
-                    "You are not allowed to accept reschedules for another student"
-            );
-        }
+            Integer userId) {
 
         Consultation consultation
                 = consultationRepository.findById(consultationId)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Consultation not found"
-                        ));
+                                        "Consultation not found"
+                                ));
 
-        // Make sure this consultation belongs to this student
-        if (!consultation.getStudent().getUserId().equals(studentId)) {
+        boolean isStudent = consultation.getStudent() != null
+                && consultation.getStudent().getUserId().equals(userId);
+        boolean isLecturer = consultation.getLecturer() != null
+                && consultation.getLecturer().getUserId().equals(userId);
+
+        if (!isStudent && !isLecturer) {
             throw new UnauthorizedException(
                     "You are not allowed to accept this reschedule."
             );
@@ -585,35 +543,21 @@ public class ConsultationService {
 
     public Consultation rejectReschedule(
             String consultationId,
-            Integer studentId) {
-
-        String email = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
-
-        User authenticatedUser
-                = userRepository.findByEmail(email)
-                        .orElseThrow(()
-                                -> new RuntimeException(
-                                "Authenticated user not found"
-                        ));
-
-        if (!authenticatedUser.getId().equals(studentId)) {
-            throw new UnauthorizedException(
-                    "You are not allowed to reject reschedules for another student"
-            );
-        }
+            Integer userId) {
 
         Consultation consultation
                 = consultationRepository.findById(consultationId)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Consultation not found"
-                        ));
+                                        "Consultation not found"
+                                ));
 
-        // Make sure this consultation belongs to this student
-        if (!consultation.getStudent().getUserId().equals(studentId)) {
+        boolean isStudent = consultation.getStudent() != null
+                && consultation.getStudent().getUserId().equals(userId);
+        boolean isLecturer = consultation.getLecturer() != null
+                && consultation.getLecturer().getUserId().equals(userId);
+
+        if (!isStudent && !isLecturer) {
             throw new UnauthorizedException(
                     "You are not allowed to reject this reschedule."
             );
@@ -656,8 +600,8 @@ public class ConsultationService {
                 = userRepository.findByEmail(email)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Authenticated user not found"
-                        ));
+                                        "Authenticated user not found"
+                                ));
 
         if (!authenticatedUser.getId().equals(studentId)) {
             throw new UnauthorizedException(
@@ -669,8 +613,8 @@ public class ConsultationService {
                 = consultationRepository.findById(consultationId)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                "Consultation not found"
-                        ));
+                                        "Consultation not found"
+                                ));
 
         // Make sure the consultation belongs to this student
         if (!consultation.getStudent().getUserId().equals(studentId)) {

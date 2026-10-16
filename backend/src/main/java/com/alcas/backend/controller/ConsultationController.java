@@ -396,17 +396,14 @@ public class ConsultationController {
                 .orElseThrow(() -> new RuntimeException(
                         "Authenticated user not found"));
 
-        // Verify that the authenticated user is a lecturer.
-        LecturerProfile lecturer = lecturerProfileRepository
-                .findById(authenticatedUser.getId())
-                .orElseThrow(() -> new UnauthorizedException(
-                        "Only lecturers can propose a new consultation time"));
+        LocalTime parsedTime = parseTimeSafe(proposedTime);
+        LocalDate parsedDate = LocalDate.parse(proposedDate);
 
         Consultation rescheduled = consultationService.requestReschedule(
                 consultationId,
-                lecturer.getUserId(),
-                LocalDate.parse(proposedDate),
-                LocalTime.parse(proposedTime),
+                authenticatedUser.getId(),
+                parsedDate,
+                parsedTime,
                 rescheduleReason
         );
 
@@ -533,5 +530,25 @@ public class ConsultationController {
                 );
 
         return ResponseEntity.ok(response);
+    }
+
+    private LocalTime parseTimeSafe(String timeStr) {
+        if (timeStr == null || timeStr.trim().isEmpty()) {
+            return LocalTime.of(9, 0);
+        }
+        String trimmed = timeStr.trim();
+        try {
+            return LocalTime.parse(trimmed);
+        } catch (Exception e1) {
+            try {
+                return LocalTime.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("h:mm a", java.util.Locale.ENGLISH));
+            } catch (Exception e2) {
+                try {
+                    return LocalTime.parse(trimmed, java.time.format.DateTimeFormatter.ofPattern("hh:mm a", java.util.Locale.ENGLISH));
+                } catch (Exception e3) {
+                    return LocalTime.of(9, 0);
+                }
+            }
+        }
     }
 }

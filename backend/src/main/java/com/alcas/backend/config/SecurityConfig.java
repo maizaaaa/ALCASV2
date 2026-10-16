@@ -40,8 +40,8 @@ public class SecurityConfig {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
 
-        DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider(customUserDetailsService);
+        DaoAuthenticationProvider provider
+                = new DaoAuthenticationProvider(customUserDetailsService);
 
         provider.setPasswordEncoder(passwordEncoder());
 
@@ -62,15 +62,14 @@ public class SecurityConfig {
             throws Exception {
 
         http
-                .cors(cors -> {})
+                .cors(cors -> {
+                })
                 .csrf(csrf -> csrf.disable())
-
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
+                .sessionManagement(session
+                        -> session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
-
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
@@ -94,7 +93,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/system-settings/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
