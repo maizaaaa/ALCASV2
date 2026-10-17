@@ -58,6 +58,9 @@ public class Consultation {
     @Column(name = "reschedule_reason", columnDefinition = "TEXT")
     private String rescheduleReason;
 
+    @Column(name = "reschedule_initiator", length = 20)
+    private String rescheduleInitiator;
+
     @Column(name = "proposed_date")
     private LocalDate proposedDate;
 
@@ -216,6 +219,14 @@ public class Consultation {
 
     public void setRescheduleReason(String rescheduleReason) {
         this.rescheduleReason = rescheduleReason;
+    }
+
+    public String getRescheduleInitiator() {
+        return rescheduleInitiator;
+    }
+
+    public void setRescheduleInitiator(String rescheduleInitiator) {
+        this.rescheduleInitiator = rescheduleInitiator;
     }
 
     public LocalDateTime getCreatedAt() {

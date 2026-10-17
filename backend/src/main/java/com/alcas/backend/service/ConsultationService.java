@@ -14,11 +14,15 @@ import org.springframework.stereotype.Service;
 
 import com.alcas.backend.entity.Consultation;
 import com.alcas.backend.entity.LecturerSchedule;
+import com.alcas.backend.entity.Notification;
+import com.alcas.backend.entity.StudentClassSchedule;
 import com.alcas.backend.entity.User;
 import com.alcas.backend.exception.BookingConflictException;
 import com.alcas.backend.exception.UnauthorizedException;
 import com.alcas.backend.repository.ConsultationRepository;
 import com.alcas.backend.repository.LecturerScheduleRepository;
+import com.alcas.backend.repository.NotificationRepository;
+import com.alcas.backend.repository.StudentClassScheduleRepository;
 import com.alcas.backend.repository.UserRepository;
 
 @Service
@@ -27,17 +31,23 @@ public class ConsultationService {
     private final ConsultationRepository consultationRepository;
     private final UserRepository userRepository;
     private final LecturerScheduleRepository lecturerScheduleRepository;
+    private final StudentClassScheduleRepository studentClassScheduleRepository;
+    private final NotificationRepository notificationRepository;
     private final SystemSettingService systemSettingService;
 
     public ConsultationService(
             ConsultationRepository consultationRepository,
             UserRepository userRepository,
             LecturerScheduleRepository lecturerScheduleRepository,
+            StudentClassScheduleRepository studentClassScheduleRepository,
+            NotificationRepository notificationRepository,
             SystemSettingService systemSettingService) {
 
         this.consultationRepository = consultationRepository;
         this.userRepository = userRepository;
         this.lecturerScheduleRepository = lecturerScheduleRepository;
+        this.studentClassScheduleRepository = studentClassScheduleRepository;
+        this.notificationRepository = notificationRepository;
         this.systemSettingService = systemSettingService;
     }
 
@@ -98,6 +108,30 @@ public class ConsultationService {
                         TextStyle.FULL,
                         Locale.ENGLISH
                 );
+
+        // 3. Validate student's class schedule (no clash with student's class)
+        if (consultation.getStudent() != null && consultation.getStudent().getUserId() != null) {
+            Integer studentUserId = consultation.getStudent().getUserId();
+            List<StudentClassSchedule> studentSchedules =
+                    studentClassScheduleRepository.findByStudentUserId(studentUserId);
+
+            boolean clashesWithClass = studentSchedules.stream()
+                    .filter(s -> s.getDayOfWeek() != null && s.getDayOfWeek().equalsIgnoreCase(dayName))
+                    .anyMatch(s -> {
+                        LocalTime classStart = parseTimeSlot(s.getTimeSlot());
+                        if (classStart == null) return false;
+                        LocalTime classEnd = classStart.plusMinutes(60);
+                        LocalTime slotEnd = scheduledTime.plusMinutes(30);
+
+                        return scheduledTime.isBefore(classEnd) && slotEnd.isAfter(classStart);
+                    });
+
+            if (clashesWithClass) {
+                throw new BookingConflictException(
+                        "Clash with class time: You cannot book a consultation during your scheduled class."
+                );
+            }
+        }
 
 // Get lecturer's schedule for that day
         List<LecturerSchedule> schedules
@@ -201,7 +235,28 @@ public class ConsultationService {
         consultation.setCreatedAt(now);
         consultation.setUpdatedAt(now);
 
-        return consultationRepository.save(consultation);
+        Consultation saved = consultationRepository.save(consultation);
+
+        try {
+            if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
+                Notification notif = new Notification();
+                notif.setUser(saved.getStudent().getUser());
+                notif.setTitle("Booking Submitted Successfully");
+                String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                        ? saved.getLecturer().getUser().getFullName()
+                        : "Lecturer";
+                notif.setMessage("Your consultation request with " + lecturerName + " for "
+                        + saved.getScheduledDate() + " at " + saved.getScheduledTime() + " has been submitted.");
+                notif.setType("BOOKING");
+                notif.setIsRead(false);
+                notif.setConsultation(saved);
+                notif.setCreatedAt(now);
+                notificationRepository.save(notif);
+            }
+        } catch (Exception ignored) {
+        }
+
+        return saved;
     }
 
     public List<Consultation> findByStudentId(Integer studentId) {
@@ -317,6 +372,7 @@ public class ConsultationService {
         consultation.setStatus(
                 Consultation.Status.CONFIRMED
         );
+        consultation.setRescheduleInitiator(null);
 
         consultation.setUpdatedAt(
                 LocalDateTime.now()
@@ -372,6 +428,7 @@ public class ConsultationService {
         consultation.setStatus(
                 Consultation.Status.REJECTED
         );
+        consultation.setRescheduleInitiator(null);
 
         consultation.setRejectReason(rejectReason);
 
@@ -396,10 +453,13 @@ public class ConsultationService {
                                         "Consultation not found"
                                 ));
 
-        boolean isLecturer = consultation.getLecturer() != null
-                && consultation.getLecturer().getUserId().equals(userId);
-        boolean isStudent = consultation.getStudent() != null
-                && consultation.getStudent().getUserId().equals(userId);
+        User authenticatedUser = userRepository.findById(userId).orElse(null);
+        boolean isLecturer = (authenticatedUser != null && authenticatedUser.getRole() == User.Role.LECTURER)
+                || (consultation.getLecturer() != null && consultation.getLecturer().getUserId() != null && consultation.getLecturer().getUserId().equals(userId))
+                || (consultation.getLecturer() != null && consultation.getLecturer().getUser() != null && consultation.getLecturer().getUser().getId().equals(userId));
+        boolean isStudent = (authenticatedUser != null && authenticatedUser.getRole() == User.Role.STUDENT)
+                || (consultation.getStudent() != null && consultation.getStudent().getUserId() != null && consultation.getStudent().getUserId().equals(userId))
+                || (consultation.getStudent() != null && consultation.getStudent().getUser() != null && consultation.getStudent().getUser().getId().equals(userId));
 
         if (!isLecturer && !isStudent) {
             throw new UnauthorizedException(
@@ -469,15 +529,46 @@ public class ConsultationService {
         consultation.setProposedTime(proposedTime);
         consultation.setRescheduleReason(rescheduleReason);
 
-        consultation.setStatus(
-                Consultation.Status.RESCHEDULE_PENDING
-        );
+        if (isStudent) {
+            consultation.setStatus(Consultation.Status.PENDING);
+            consultation.setRescheduleInitiator("STUDENT");
+        } else {
+            consultation.setStatus(Consultation.Status.RESCHEDULE_PENDING);
+            consultation.setRescheduleInitiator("LECTURER");
+        }
 
         consultation.setUpdatedAt(
                 LocalDateTime.now()
         );
 
-        return consultationRepository.save(consultation);
+        Consultation saved = consultationRepository.save(consultation);
+
+        try {
+            if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
+                Notification notif = new Notification();
+                notif.setUser(saved.getStudent().getUser());
+                String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                        ? saved.getLecturer().getUser().getFullName()
+                        : "Lecturer";
+                if (isStudent) {
+                    notif.setTitle("Reschedule Requested Successfully");
+                    notif.setMessage("Your request to reschedule consultation with " + lecturerName + " to "
+                            + saved.getProposedDate() + " at " + saved.getProposedTime() + " has been submitted.");
+                } else {
+                    notif.setTitle("Reschedule Proposed by Lecturer");
+                    notif.setMessage(lecturerName + " has proposed a new time for your consultation: "
+                            + saved.getProposedDate() + " at " + saved.getProposedTime() + ".");
+                }
+                notif.setType("RESCHEDULE");
+                notif.setIsRead(false);
+                notif.setConsultation(saved);
+                notif.setCreatedAt(LocalDateTime.now());
+                notificationRepository.save(notif);
+            }
+        } catch (Exception ignored) {
+        }
+
+        return saved;
     }
 
     public Consultation acceptReschedule(
@@ -502,9 +593,9 @@ public class ConsultationService {
             );
         }
 
-        // Only RESCHEDULE_PENDING consultations can be accepted
-        if (consultation.getStatus()
-                != Consultation.Status.RESCHEDULE_PENDING) {
+        // Only RESCHEDULE_PENDING consultations (or student-initiated PENDING) can be accepted
+        if (consultation.getStatus() != Consultation.Status.RESCHEDULE_PENDING
+                && !(consultation.getStatus() == Consultation.Status.PENDING && "STUDENT".equals(consultation.getRescheduleInitiator()))) {
 
             throw new RuntimeException(
                     "This consultation does not have a pending reschedule."
@@ -529,6 +620,7 @@ public class ConsultationService {
 
         consultation.setProposedDate(null);
         consultation.setProposedTime(null);
+        consultation.setRescheduleInitiator(null);
 
         consultation.setStatus(
                 Consultation.Status.CONFIRMED
@@ -538,7 +630,28 @@ public class ConsultationService {
                 LocalDateTime.now()
         );
 
-        return consultationRepository.save(consultation);
+        Consultation saved = consultationRepository.save(consultation);
+
+        try {
+            if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
+                Notification notif = new Notification();
+                notif.setUser(saved.getStudent().getUser());
+                notif.setTitle("Reschedule Confirmed");
+                String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                        ? saved.getLecturer().getUser().getFullName()
+                        : "Lecturer";
+                notif.setMessage("You accepted the proposed consultation time with " + lecturerName
+                        + ". Your session is now confirmed for " + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ".");
+                notif.setType("RESCHEDULE");
+                notif.setIsRead(false);
+                notif.setConsultation(saved);
+                notif.setCreatedAt(LocalDateTime.now());
+                notificationRepository.save(notif);
+            }
+        } catch (Exception ignored) {
+        }
+
+        return saved;
     }
 
     public Consultation rejectReschedule(
@@ -563,9 +676,9 @@ public class ConsultationService {
             );
         }
 
-        // Only RESCHEDULE_PENDING consultations can be rejected
-        if (consultation.getStatus()
-                != Consultation.Status.RESCHEDULE_PENDING) {
+        // Only RESCHEDULE_PENDING consultations (or student-initiated PENDING) can be rejected
+        if (consultation.getStatus() != Consultation.Status.RESCHEDULE_PENDING
+                && !(consultation.getStatus() == Consultation.Status.PENDING && "STUDENT".equals(consultation.getRescheduleInitiator()))) {
 
             throw new RuntimeException(
                     "This consultation does not have a pending reschedule."
@@ -574,6 +687,7 @@ public class ConsultationService {
 
         consultation.setProposedDate(null);
         consultation.setProposedTime(null);
+        consultation.setRescheduleInitiator(null);
 
         consultation.setStatus(
                 Consultation.Status.CONFIRMED
@@ -583,7 +697,28 @@ public class ConsultationService {
                 LocalDateTime.now()
         );
 
-        return consultationRepository.save(consultation);
+        Consultation saved = consultationRepository.save(consultation);
+
+        try {
+            if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
+                Notification notif = new Notification();
+                notif.setUser(saved.getStudent().getUser());
+                notif.setTitle("Reschedule Proposal Rejected");
+                String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                        ? saved.getLecturer().getUser().getFullName()
+                        : "Lecturer";
+                notif.setMessage("You rejected the proposed reschedule time with " + lecturerName
+                        + ". Your appointment remains confirmed for " + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ".");
+                notif.setType("RESCHEDULE");
+                notif.setIsRead(false);
+                notif.setConsultation(saved);
+                notif.setCreatedAt(LocalDateTime.now());
+                notificationRepository.save(notif);
+            }
+        } catch (Exception ignored) {
+        }
+
+        return saved;
     }
 
     public Consultation cancelConsultation(
@@ -642,6 +777,43 @@ public class ConsultationService {
                 LocalDateTime.now()
         );
 
-        return consultationRepository.save(consultation);
+        Consultation saved = consultationRepository.save(consultation);
+
+        try {
+            if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
+                Notification notif = new Notification();
+                notif.setUser(saved.getStudent().getUser());
+                notif.setTitle("Consultation Cancelled");
+                String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                        ? saved.getLecturer().getUser().getFullName()
+                        : "Lecturer";
+                notif.setMessage("Your consultation session with " + lecturerName + " on "
+                        + saved.getScheduledDate() + " at " + saved.getScheduledTime() + " has been successfully cancelled.");
+                notif.setType("CANCELLATION");
+                notif.setIsRead(false);
+                notif.setConsultation(saved);
+                notif.setCreatedAt(LocalDateTime.now());
+                notificationRepository.save(notif);
+            }
+        } catch (Exception ignored) {
+        }
+
+        return saved;
+    }
+
+    private LocalTime parseTimeSlot(String timeStr) {
+        if (timeStr == null || timeStr.trim().isEmpty()) {
+            return null;
+        }
+        String clean = timeStr.trim().toUpperCase();
+        try {
+            java.time.format.DateTimeFormatter dtf = new java.time.format.DateTimeFormatterBuilder()
+                    .parseCaseInsensitive()
+                    .appendPattern("[hh:mm a][h:mm a][HH:mm][H:mm]")
+                    .toFormatter(Locale.ENGLISH);
+            return LocalTime.parse(clean, dtf);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

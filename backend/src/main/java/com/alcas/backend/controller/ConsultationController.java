@@ -170,7 +170,8 @@ public class ConsultationController {
                                         : null,
                                         consultation.getRescheduleReason(),
                                         consultation.getRejectReason(),
-                                        consultation.getCancelReason()
+                                        consultation.getCancelReason(),
+                                        consultation.getRescheduleInitiator()
                                 )
                         )
                         .toList();
@@ -272,7 +273,8 @@ public class ConsultationController {
                                         : null,
                                         consultation.getRescheduleReason(),
                                         consultation.getRejectReason(),
-                                        consultation.getCancelReason()
+                                        consultation.getCancelReason(),
+                                        consultation.getRescheduleInitiator()
                                 )
                         )
                         .toList();
@@ -428,7 +430,8 @@ public class ConsultationController {
                 : null,
                 rescheduled.getRescheduleReason(),
                 rescheduled.getRejectReason(),
-                rescheduled.getCancelReason()
+                rescheduled.getCancelReason(),
+                rescheduled.getRescheduleInitiator()
         );
 
         return ResponseEntity.ok(response);

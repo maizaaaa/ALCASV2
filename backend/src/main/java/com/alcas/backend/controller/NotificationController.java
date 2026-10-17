@@ -62,4 +62,49 @@ public class NotificationController {
         }
         return ResponseEntity.ok(Map.of("success", true));
     }
+
+    @PutMapping("/read-all")
+    @Transactional
+    public ResponseEntity<?> markAllAsRead(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.ok(Map.of("success", false));
+        }
+        User user = userRepository.findByEmail(authentication.getName()).orElse(null);
+        if (user != null) {
+            List<Notification> list = notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+            for (Notification n : list) {
+                n.setIsRead(true);
+            }
+            notificationRepository.saveAll(list);
+        }
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> deleteNotification(@PathVariable Long id, Authentication authentication) {
+        Notification notification = notificationRepository.findById(id).orElse(null);
+        if (notification != null) {
+            if (authentication != null && notification.getUser() != null
+                    && !notification.getUser().getEmail().equalsIgnoreCase(authentication.getName())) {
+                return ResponseEntity.status(403).body(Map.of("message", "Unauthorized"));
+            }
+            notificationRepository.delete(notification);
+        }
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    @DeleteMapping
+    @Transactional
+    public ResponseEntity<?> clearAllNotifications(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.ok(Map.of("success", false));
+        }
+        User user = userRepository.findByEmail(authentication.getName()).orElse(null);
+        if (user != null) {
+            List<Notification> list = notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+            notificationRepository.deleteAll(list);
+        }
+        return ResponseEntity.ok(Map.of("success", true));
+    }
 }
