@@ -22,6 +22,7 @@ export interface Consultation {
   rescheduleReason?: string | null;
   rejectReason?: string | null;
   cancelReason?: string | null;
+  rescheduleInitiator?: string | null;
 }
 
 @Injectable({

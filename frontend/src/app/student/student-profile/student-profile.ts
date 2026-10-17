@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, PLATFORM_ID, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, NgZone, ChangeDetectorRef, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { NavbarStudent } from '../../shared/navbar-student/navbar-student';
 import { StudentService, StudentProfile, StudentClassSchedule } from '../../services/student.service';
 import { SystemSettingsService } from '../../services/system-settings.service';
+import { StudentNotificationService } from '../../services/student-notification.service';
 
 @Component({
   selector: 'app-student-profile',
@@ -77,6 +78,7 @@ export class StudentProfileComponent implements OnInit {
   // Notification Settings
   emailNotifications = true;
   autoReminder24h = true;
+  private studentNotificationService = inject(StudentNotificationService, { optional: true });
 
   constructor(
     private router: Router,
@@ -232,6 +234,12 @@ export class StudentProfileComponent implements OnInit {
 
             this.closeSlotModal();
             this.successMessage = msg;
+            this.studentNotificationService?.triggerRefresh();
+            this.studentNotificationService?.showToast(
+              'Schedule Updated',
+              `${this.selectedSlotDay} at ${this.selectedSlotTime} (${this.selectedSlotCategory}) saved.`,
+              'info'
+            );
             this.loadStudentSchedule();
             this.cdr.detectChanges();
           });
@@ -266,6 +274,12 @@ export class StudentProfileComponent implements OnInit {
           this.isSavingSlot = false;
           this.closeSlotModal();
           this.successMessage = 'Class slot removed successfully!';
+          this.studentNotificationService?.triggerRefresh();
+          this.studentNotificationService?.showToast(
+            'Schedule Slot Removed',
+            'Your class timetable has been updated.',
+            'info'
+          );
           this.loadStudentSchedule();
           this.cdr.detectChanges();
         });

@@ -1,9 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NavbarStudent } from '../../shared/navbar-student/navbar-student';
 import { ConsultationService, Consultation } from '../../services/consultation.service';
+import { StudentNotificationService } from '../../services/student-notification.service';
 
 interface StudentAppointmentView {
   id: string;
@@ -12,12 +13,15 @@ interface StudentAppointmentView {
   reason: string;
   date: string;
   time: string;
+  rawDate: string;
+  rawTime: string;
   location: string;
   remarks: string;
   status: string;
   proposedDate: string;
   proposedTime: string;
   rescheduleReason: string;
+  rescheduleInitiator?: string;
   rejectReason?: string;
   cancelReason?: string;
 }
@@ -69,6 +73,8 @@ export class StudentAppointmentsComponent implements OnInit {
   successType: 'success' | 'info' | 'warning' = 'success';
 
   private isInitialLoad = true;
+
+  private studentNotificationService = inject(StudentNotificationService, { optional: true });
 
   constructor(
     private router: Router,
@@ -124,22 +130,33 @@ export class StudentAppointmentsComponent implements OnInit {
     this.consultationService.getStudentConsultations().subscribe({
       next: (consultations: Consultation[]) => {
         this.ngZone.run(() => {
-          this.appointments = consultations.map((c) => ({
-            id: c.id,
-            lecturerId: c.lecturerId,
-            lecturer: c.lecturerName || 'Lecturer',
-            reason: c.reasonDetails || c.reason || 'Consultation',
-            date: this.formatDate(c.scheduledDate),
-            time: this.formatTime(c.scheduledTime),
-            location: c.location || '',
-            remarks: c.lecturerRemarks || '',
-            status: (c.status || '').toUpperCase().replace(/_/g, '-'),
-            proposedDate: c.proposedDate ? this.formatDate(c.proposedDate) : '',
-            proposedTime: c.proposedTime ? this.formatTime(c.proposedTime) : '',
-            rescheduleReason: c.rescheduleReason || '',
-            rejectReason: c.rejectReason || '',
-            cancelReason: c.cancelReason || '',
-          }));
+          this.appointments = consultations.map((c) => {
+            let mappedStatus = (c.status || '').toUpperCase().replace(/_/g, '-');
+            // The 'reschedule proposed' status should only be used for lecturer-initiated requests.
+            if (mappedStatus === 'RESCHEDULE-PENDING' && c.rescheduleInitiator !== 'LECTURER') {
+              mappedStatus = 'PENDING';
+            }
+
+            return {
+              id: c.id,
+              lecturerId: c.lecturerId,
+              lecturer: c.lecturerName || 'Lecturer',
+              reason: c.reasonDetails || c.reason || 'Consultation',
+              date: this.formatDate(c.scheduledDate),
+              time: this.formatTime(c.scheduledTime),
+              rawDate: c.scheduledDate || '',
+              rawTime: c.scheduledTime || '',
+              location: c.location || '',
+              remarks: c.lecturerRemarks || '',
+              status: mappedStatus,
+              proposedDate: c.proposedDate ? this.formatDate(c.proposedDate) : '',
+              proposedTime: c.proposedTime ? this.formatTime(c.proposedTime) : '',
+              rescheduleReason: c.rescheduleReason || '',
+              rescheduleInitiator: c.rescheduleInitiator || '',
+              rejectReason: c.rejectReason || '',
+              cancelReason: c.cancelReason || '',
+            };
+          });
 
           // Automatically direct student to Pending if they have pending requests to prevent overlooking
           if (this.isInitialLoad) {
@@ -182,11 +199,17 @@ export class StudentAppointmentsComponent implements OnInit {
     );
   }
 
-  // 3. History Section: Archived past sessions (completed, cancelled, rejected, no-show)
+  // 3. History Section: Archived past sessions (completed, cancelled, rejected, no-show), sorted from most recent date to oldest
   get historyAppointments(): StudentAppointmentView[] {
-    return this.appointments.filter((a) =>
-      ['COMPLETED', 'CANCELLED', 'REJECTED', 'NO-SHOW'].includes(a.status),
-    );
+    return this.appointments
+      .filter((a) =>
+        ['COMPLETED', 'CANCELLED', 'REJECTED', 'NO-SHOW'].includes(a.status),
+      )
+      .sort((a, b) => {
+        const dateTimeA = `${a.rawDate || ''}T${a.rawTime || '00:00'}`;
+        const dateTimeB = `${b.rawDate || ''}T${b.rawTime || '00:00'}`;
+        return dateTimeB.localeCompare(dateTimeA);
+      });
   }
 
   // Compatibility getter
@@ -509,10 +532,19 @@ export class StudentAppointmentsComponent implements OnInit {
         this.ngZone.run(() => {
           this.isSubmittingReschedule = false;
           this.closeModal();
+          this.activeTab = 'pending';
+          this.pendingFilter = 'ALL';
           this.showSuccessPopup(
             'Reschedule Request Sent',
             'Your reschedule request has been submitted to your lecturer for review.',
             'success',
+          );
+          // Trigger real-time notification update
+          this.studentNotificationService?.triggerRefresh();
+          this.studentNotificationService?.showToast(
+            'Reschedule Request Sent',
+            `Proposed new time: ${proposedDate} at ${proposedTime}`,
+            'info'
           );
           this.loadAppointments();
           this.cdr.detectChanges();
@@ -554,6 +586,14 @@ export class StudentAppointmentsComponent implements OnInit {
             'success'
           );
 
+          // Trigger real-time notification update
+          this.studentNotificationService?.triggerRefresh();
+          this.studentNotificationService?.showToast(
+            'Reschedule Confirmed',
+            `Confirmed with ${appointment.lecturer} for ${appointment.date} at ${appointment.time}.`,
+            'success'
+          );
+
           this.loadAppointments();
           this.cdr.detectChanges();
         });
@@ -584,6 +624,14 @@ export class StudentAppointmentsComponent implements OnInit {
           this.showSuccessPopup(
             'Proposal Rejected',
             `You have rejected the proposed reschedule time. Your appointment with ${appointment.lecturer} remains CONFIRMED at the original date and time.`,
+            'info'
+          );
+
+          // Trigger real-time notification update
+          this.studentNotificationService?.triggerRefresh();
+          this.studentNotificationService?.showToast(
+            'Proposal Rejected',
+            `Appointment with ${appointment.lecturer} remains at original time.`,
             'info'
           );
 
@@ -621,6 +669,14 @@ export class StudentAppointmentsComponent implements OnInit {
           this.showSuccessPopup(
             'Appointment Cancelled',
             `Your consultation session with ${lecturerName} has been cancelled.`,
+            'warning'
+          );
+
+          // Trigger real-time notification update
+          this.studentNotificationService?.triggerRefresh();
+          this.studentNotificationService?.showToast(
+            'Appointment Cancelled',
+            `Consultation with ${lecturerName} has been cancelled.`,
             'warning'
           );
 

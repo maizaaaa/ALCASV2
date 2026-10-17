@@ -1,10 +1,12 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NavbarStudent } from '../../shared/navbar-student/navbar-student';
 import { SystemSettingsService } from '../../services/system-settings.service';
+import { StudentService, StudentClassSchedule } from '../../services/student.service';
+import { StudentNotificationService } from '../../services/student-notification.service';
 
 interface School {
   id: number;
@@ -36,7 +38,22 @@ interface BlockOutDate {
   templateUrl: './student-booking.html',
 })
 export class StudentBookingComponent implements OnInit {
+  private studentNotificationService = inject(StudentNotificationService, { optional: true });
+
   studentName = 'Jason Lee';
+  currentStudentId: number | null = null;
+  studentSchedule: StudentClassSchedule[] = [];
+  isLoadingStudentSchedule = false;
+
+  // Clash with Class Time Modal State
+  showClashModal = false;
+  clashSlotTime = '';
+  clashClassInfo: {
+    dayOfWeek: string;
+    timeSlot: string;
+    category: string;
+  } | null = null;
+  clashMessage = '';
 
   // --- CALENDAR STATE ---
   weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -146,6 +163,7 @@ export class StudentBookingComponent implements OnInit {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private systemSettingsService: SystemSettingsService,
+    private studentService: StudentService,
   ) {}
 
   ngOnInit(): void {
@@ -153,6 +171,38 @@ export class StudentBookingComponent implements OnInit {
     this.loadSchools();
     this.loadSystemSettings();
     this.loadAllLecturers();
+    this.loadStudentProfileAndSchedule();
+  }
+
+  loadStudentProfileAndSchedule(): void {
+    this.isLoadingStudentSchedule = true;
+    this.studentService.getMyProfile().subscribe({
+      next: (profile) => {
+        if (profile?.fullName) {
+          this.studentName = profile.fullName;
+        }
+        if (profile?.userId) {
+          this.currentStudentId = profile.userId;
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load student profile for booking:', err);
+      },
+    });
+
+    this.studentService.getMySchedule().subscribe({
+      next: (schedules) => {
+        this.isLoadingStudentSchedule = false;
+        this.studentSchedule = schedules || [];
+        console.log('Student class schedule loaded:', this.studentSchedule);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isLoadingStudentSchedule = false;
+        console.error('Failed to load student schedule for booking:', err);
+      },
+    });
   }
 
   loadSystemSettings(): void {
@@ -201,7 +251,7 @@ export class StudentBookingComponent implements OnInit {
   }
 
   loadAllLecturers(): void {
-    const token = localStorage.getItem('token');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     const headers: Record<string, string> = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -453,11 +503,12 @@ export class StudentBookingComponent implements OnInit {
   }
 
   loadLecturerAvailability(lecturerId: number, date: string): void {
-    const token = localStorage.getItem('token');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-    const headers = {
-      Authorization: `Bearer ${token}`,
-    };
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
 
     this.http
       .get<{
@@ -505,12 +556,119 @@ export class StudentBookingComponent implements OnInit {
     this.searchQuery = ''; // Clear search so they can start fresh
   }
 
+  // Helper to convert time strings (e.g., '08:30 AM', '14:00') into total minutes from midnight
+  timeToMinutes(time: string): number {
+    if (!time) return Number.MAX_SAFE_INTEGER;
+    const match = time
+      .trim()
+      .toUpperCase()
+      .match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/);
+
+    if (!match) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
+    let hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    const period = match[3];
+
+    if (period === 'AM' && hours === 12) {
+      hours = 0;
+    } else if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    }
+
+    return hours * 60 + minutes;
+  }
+
+  // Returns the scheduled class that clashes with the chosen consultation slot, if any
+  getClashingClassForSlot(slotTime: string): StudentClassSchedule | undefined {
+    if (!slotTime || !this.selectedDateValue || !this.studentSchedule.length) {
+      return undefined;
+    }
+
+    const [year, month, day] = this.selectedDateValue.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const selectedDayName = dayNames[date.getDay()].toLowerCase();
+
+    const consultStart = this.timeToMinutes(slotTime);
+    const consultEnd = consultStart + 30; // Consultation slot duration is 30 mins
+
+    return this.studentSchedule.find((cls) => {
+      if (!cls.dayOfWeek || cls.dayOfWeek.toLowerCase() !== selectedDayName) {
+        return false;
+      }
+
+      const classStart = this.timeToMinutes(cls.timeSlot);
+      const classEnd = classStart + 60; // Class duration on timetable is 1 hour
+
+      return consultStart < classEnd && consultEnd > classStart;
+    });
+  }
+
+  isSlotClashing(slotTime: string): boolean {
+    return !!this.getClashingClassForSlot(slotTime);
+  }
+
+  onTimeSelected(slotTime: string): void {
+    if (!slotTime) return;
+
+    const clash = this.getClashingClassForSlot(slotTime);
+    if (clash) {
+      this.triggerClashPopup(slotTime, clash);
+      this.selectedTime = '';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.selectedTime = slotTime;
+  }
+
+  triggerClashPopup(slotTime: string, clash?: StudentClassSchedule): void {
+    const clashingClass = clash || this.getClashingClassForSlot(slotTime);
+    this.clashSlotTime = slotTime;
+
+    if (clashingClass) {
+      this.clashClassInfo = {
+        dayOfWeek: clashingClass.dayOfWeek,
+        timeSlot: clashingClass.timeSlot,
+        category: clashingClass.category || 'Class',
+      };
+      this.clashMessage = `You cannot book this slot because it clashes with your class schedule on ${clashingClass.dayOfWeek} at ${clashingClass.timeSlot} (${clashingClass.category || 'Class'}).`;
+    } else {
+      this.clashClassInfo = null;
+      this.clashMessage = `You cannot book this consultation session because it clashes with your class schedule.`;
+    }
+
+    this.showClashModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeClashModal(): void {
+    this.showClashModal = false;
+    this.clashSlotTime = '';
+    this.clashClassInfo = null;
+    this.clashMessage = '';
+    this.selectedTime = '';
+    this.cdr.detectChanges();
+  }
+
   // Step 1 -> Step 2
   goToReview() {
     if (!this.selectedLecturerId || !this.selectedTime || !this.reasonForVisit) {
       alert('Please fill in all required fields.');
       return;
     }
+
+    // Verify no clash with student class schedule
+    const clash = this.getClashingClassForSlot(this.selectedTime);
+    if (clash) {
+      this.triggerClashPopup(this.selectedTime, clash);
+      this.selectedTime = '';
+      return;
+    }
+
     if (this.reasonForVisit === 'Other' && !this.otherReasonText.trim()) {
       alert('Please specify your reason in the text box.');
       return;
@@ -535,6 +693,15 @@ export class StudentBookingComponent implements OnInit {
       return;
     }
 
+    // Double check clash before sending
+    const clash = this.getClashingClassForSlot(this.selectedTime);
+    if (clash) {
+      this.triggerClashPopup(this.selectedTime, clash);
+      this.bookingStep = 1;
+      this.selectedTime = '';
+      return;
+    }
+
     if (this.isSubmitting) {
       return;
     }
@@ -543,8 +710,10 @@ export class StudentBookingComponent implements OnInit {
 
     const time24Hour = this.convertTimeTo24Hour(this.selectedTime);
 
+    const studentIdParam = this.currentStudentId ? this.currentStudentId.toString() : '2';
+
     const params = new HttpParams()
-      .set('studentId', '2')
+      .set('studentId', studentIdParam)
       .set('lecturerId', this.selectedLecturerId.toString())
       .set('date', this.selectedDateValue)
       .set('time', time24Hour)
@@ -558,6 +727,20 @@ export class StudentBookingComponent implements OnInit {
         this.bookingStep = 3;
         this.isSubmitting = false;
 
+        // Safely trigger real-time notifications refresh and live toast
+        try {
+          if (this.studentNotificationService) {
+            this.studentNotificationService.triggerRefresh();
+            this.studentNotificationService.showToast(
+              'Booking Submitted Successfully',
+              `Your consultation on ${this.selectedDateValue} at ${this.selectedTime} has been submitted!`,
+              'success'
+            );
+          }
+        } catch (notifErr) {
+          console.warn('Could not trigger notification toast:', notifErr);
+        }
+
         this.cdr.detectChanges();
 
         console.log('bookingStep is now:', this.bookingStep);
@@ -568,13 +751,19 @@ export class StudentBookingComponent implements OnInit {
 
         this.isSubmitting = false;
 
-        if (error.status === 409) {
-          alert('This time slot is already booked. Please choose another time.');
+        const errorMsg = error.error?.message || '';
+        if (errorMsg.toLowerCase().includes('clash with class') || errorMsg.toLowerCase().includes('class schedule')) {
+          this.triggerClashPopup(this.selectedTime);
+          this.bookingStep = 1;
+          this.selectedTime = '';
+        } else if (error.status === 409) {
+          alert(errorMsg || 'This time slot is already booked. Please choose another time.');
         } else if (error.status === 403) {
           alert('Your session has expired. Please log in again.');
         } else {
           alert('Failed to create booking. Please try again.');
         }
+        this.cdr.detectChanges();
       },
     });
   }

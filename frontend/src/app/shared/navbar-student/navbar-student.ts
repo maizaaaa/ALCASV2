@@ -1,19 +1,45 @@
-import { Component, OnInit, inject, PLATFORM_ID, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  PLATFORM_ID,
+  ElementRef,
+  HostListener,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink, Router, RouterLinkActive } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { ConsultationService, Consultation } from '../../services/consultation.service';
 import { SystemSettingsService } from '../../services/system-settings.service';
 import { StudentService } from '../../services/student.service';
+import { BroadcastService, BroadcastItem } from '../../services/broadcast.service';
+import {
+  StudentNotificationService,
+  ToastMessage,
+} from '../../services/student-notification.service';
+
+export type StudentNotifType =
+  | 'maintenance'
+  | 'booking'
+  | 'cancellation'
+  | 'reschedule'
+  | 'broadcast'
+  | 'reminder'
+  | 'system';
 
 export interface NotificationItem {
   id: string;
+  dbId?: number;
   title: string;
   message: string;
   time: string;
   read: boolean;
-  type: 'appointment' | 'reminder' | 'system';
+  type: StudentNotifType;
   link?: string;
+  createdAtRaw?: string;
 }
 
 @Component({
@@ -23,7 +49,7 @@ export interface NotificationItem {
   templateUrl: './navbar-student.html',
   styleUrl: './navbar-student.css',
 })
-export class NavbarStudent implements OnInit {
+export class NavbarStudent implements OnInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
   private document = inject(DOCUMENT);
   private router = inject(Router);
@@ -32,6 +58,8 @@ export class NavbarStudent implements OnInit {
   private consultationService = inject(ConsultationService);
   private systemSettingsService = inject(SystemSettingsService);
   private studentService = inject(StudentService);
+  private broadcastService = inject(BroadcastService);
+  private studentNotificationService = inject(StudentNotificationService);
   private cdr = inject(ChangeDetectorRef);
 
   isDarkMode: boolean = false;
@@ -40,12 +68,23 @@ export class NavbarStudent implements OnInit {
   notificationsEnabled: boolean = true;
   studentName: string = 'Student';
 
+  // Filter Tabs: ALL, SYSTEM (Maintenance/Broadcasts), BOOKINGS, ALERTS
+  activeFilter: 'ALL' | 'SYSTEM' | 'BOOKINGS' | 'ALERTS' = 'ALL';
+
   notifications: NotificationItem[] = [];
   private dbNotifications: NotificationItem[] = [];
   private consultationNotifications: NotificationItem[] = [];
+  private broadcastNotifications: NotificationItem[] = [];
   private systemNotifications: NotificationItem[] = [];
   private readNotifIds: Set<string> = new Set();
   private dismissedNotifIds: Set<string> = new Set();
+
+  // Real-time Toast Alert State
+  toastMessage: ToastMessage | null = null;
+  private toastTimer: any = null;
+  private pollInterval: any = null;
+  private refreshSub: Subscription | null = null;
+  private toastSub: Subscription | null = null;
 
   get unreadCount(): number {
     return this.notifications.filter((n) => !n.read).length;
@@ -53,6 +92,24 @@ export class NavbarStudent implements OnInit {
 
   get studentInitial(): string {
     return this.studentName ? this.studentName.charAt(0) : 'S';
+  }
+
+  get filteredNotifications(): NotificationItem[] {
+    if (this.activeFilter === 'SYSTEM') {
+      return this.notifications.filter(
+        (n) => n.type === 'maintenance' || n.type === 'broadcast' || n.type === 'system',
+      );
+    }
+    if (this.activeFilter === 'BOOKINGS') {
+      return this.notifications.filter(
+        (n) =>
+          n.type === 'booking' || n.type === 'reschedule' || n.type === 'cancellation',
+      );
+    }
+    if (this.activeFilter === 'ALERTS') {
+      return this.notifications.filter((n) => n.type === 'reminder');
+    }
+    return this.notifications;
   }
 
   ngOnInit() {
@@ -74,7 +131,84 @@ export class NavbarStudent implements OnInit {
       this.loadSavedNotifState();
       this.loadStudentProfileName();
       this.loadNotifications();
+
+      // Subscribe to real-time action refresh events
+      this.refreshSub = this.studentNotificationService.refresh$.subscribe(() => {
+        this.loadNotifications();
+      });
+
+      // Subscribe to real-time Toast messages
+      this.toastSub = this.studentNotificationService.toast$.subscribe((toast) => {
+        this.showToastPopup(toast);
+      });
+
+      // Polling for background real-time updates every 10 seconds
+      this.pollInterval = setInterval(() => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+          this.loadNotifications();
+        }
+      }, 10000);
     }
+  }
+
+  ngOnDestroy() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
+    if (this.refreshSub) {
+      this.refreshSub.unsubscribe();
+      this.refreshSub = null;
+    }
+    if (this.toastSub) {
+      this.toastSub.unsubscribe();
+      this.toastSub = null;
+    }
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+      this.toastTimer = null;
+    }
+  }
+
+  @HostListener('window:student-notification-refresh')
+  onStudentActionRefresh(): void {
+    this.loadNotifications();
+  }
+
+  @HostListener('window:focus')
+  onWindowFocus(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadNotifications();
+    }
+  }
+
+  setFilter(filter: 'ALL' | 'SYSTEM' | 'BOOKINGS' | 'ALERTS', event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.activeFilter = filter;
+    this.cdr.detectChanges();
+  }
+
+  showToastPopup(toast: ToastMessage): void {
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
+    this.toastMessage = toast;
+    this.cdr.detectChanges();
+
+    this.toastTimer = setTimeout(() => {
+      this.toastMessage = null;
+      this.cdr.detectChanges();
+    }, 4500);
+  }
+
+  dismissToast(): void {
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
+    this.toastMessage = null;
+    this.cdr.detectChanges();
   }
 
   private loadSavedNotifState(): void {
@@ -94,8 +228,14 @@ export class NavbarStudent implements OnInit {
 
   private saveNotifState(): void {
     try {
-      localStorage.setItem('student_read_notif_ids', JSON.stringify(Array.from(this.readNotifIds)));
-      localStorage.setItem('student_dismissed_notif_ids', JSON.stringify(Array.from(this.dismissedNotifIds)));
+      localStorage.setItem(
+        'student_read_notif_ids',
+        JSON.stringify(Array.from(this.readNotifIds)),
+      );
+      localStorage.setItem(
+        'student_dismissed_notif_ids',
+        JSON.stringify(Array.from(this.dismissedNotifIds)),
+      );
     } catch (e) {
       console.error('Failed to save notification state:', e);
     }
@@ -109,22 +249,87 @@ export class NavbarStudent implements OnInit {
           this.cdr.detectChanges();
         }
       },
-      error: () => { },
+      error: () => {},
     });
   }
 
   loadNotifications(): void {
-    // 1. Fetch Student Consultations for Confirmed, Upcoming, and Reschedule Pending
+    // 1. Fetch Real Database Notifications (Bookings, Cancellations, Reschedules, Broadcasts, Maintenance)
+    this.studentNotificationService.getMyNotifications().subscribe({
+      next: (dbNotifs) => {
+        if (Array.isArray(dbNotifs)) {
+          this.dbNotifications = dbNotifs.map((n) => {
+            const rawTitle = (n.title || '').trim();
+            const rawMsg = (n.message || '').trim();
+            const rawType = (n.type || '').toUpperCase();
+
+            let inferredType: StudentNotifType = 'system';
+
+            const lowerCombo = `${rawTitle} ${rawMsg}`.toLowerCase();
+
+            if (
+              rawType === 'MAINTENANCE' ||
+              lowerCombo.includes('maintenance') ||
+              lowerCombo.includes('server update') ||
+              lowerCombo.includes('downtime')
+            ) {
+              inferredType = 'maintenance';
+            } else if (
+              rawType === 'BOOKING' ||
+              lowerCombo.includes('booking') ||
+              lowerCombo.includes('booked')
+            ) {
+              inferredType = 'booking';
+            } else if (
+              rawType === 'CANCELLATION' ||
+              lowerCombo.includes('cancel') ||
+              lowerCombo.includes('cancelled')
+            ) {
+              inferredType = 'cancellation';
+            } else if (
+              rawType === 'RESCHEDULE' ||
+              lowerCombo.includes('reschedule') ||
+              lowerCombo.includes('proposed')
+            ) {
+              inferredType = 'reschedule';
+            } else if (rawType === 'BROADCAST' || lowerCombo.includes('announcement')) {
+              inferredType = 'broadcast';
+            } else if (rawType === 'REMINDER' || lowerCombo.includes('reminder') || lowerCombo.includes('no-show')) {
+              inferredType = 'reminder';
+            }
+
+            const notifId = `db-${n.id}`;
+            const timeAgo = n.createdAt ? this.calculateTimeAgo(n.createdAt) : 'Notice';
+
+            return {
+              id: notifId,
+              dbId: n.id,
+              title: n.title,
+              message: n.message,
+              time: timeAgo,
+              read: n.isRead || this.readNotifIds.has(notifId),
+              type: inferredType,
+              link: n.consultationId ? '/student/history' : '/student',
+              createdAtRaw: n.createdAt,
+            };
+          });
+          this.combineNotifications();
+        }
+      },
+      error: () => {},
+    });
+
+    // 2. Fetch Active Student Consultations for Confirmed, Upcoming, and Reschedule Proposals
     this.consultationService.getStudentConsultations().subscribe({
       next: (consultations: Consultation[]) => {
         this.buildConsultationNotifications(consultations);
       },
       error: (err) => {
-        console.error('Failed to load student notifications:', err);
+        console.error('Failed to load student consultations for notifications:', err);
       },
     });
 
-    // 2. Fetch System Announcement from Admin Settings
+    // 3. Fetch System Announcement from Admin Settings
     this.systemSettingsService.getSetting('SYSTEM_ANNOUNCEMENT').subscribe({
       next: (setting) => {
         if (setting && setting.settingValue && setting.settingValue.trim()) {
@@ -138,31 +343,37 @@ export class NavbarStudent implements OnInit {
       },
     });
 
-    // 3. Fetch Real Notifications from Backend (e.g. Warning alerts issued by admin)
-    const token = typeof window !== 'undefined' && typeof localStorage !== 'undefined'
-      ? localStorage.getItem('token')
-      : null;
-    if (token) {
-      this.http.get<any[]>('http://localhost:8080/api/notifications', {
-        headers: { Authorization: `Bearer ${token}` },
-      }).subscribe({
-        next: (dbNotifs) => {
-          if (Array.isArray(dbNotifs)) {
-            this.dbNotifications = dbNotifs.map((n) => ({
-              id: `db-${n.id}`,
-              title: n.title,
-              message: n.message,
-              time: 'Notice',
-              read: n.isRead || this.readNotifIds.has(`db-${n.id}`),
-              type: 'reminder' as const,
-              link: '/student/history',
-            }));
-            this.combineNotifications();
-          }
-        },
-        error: () => {},
-      });
-    }
+    // 4. Fetch Broadcasts from Admin
+    this.broadcastService.getBroadcasts().subscribe({
+      next: (broadcasts: BroadcastItem[]) => {
+        if (Array.isArray(broadcasts)) {
+          const studentBroadcasts = broadcasts.filter((b) => {
+            const aud = (b.audience || '').toUpperCase();
+            return aud === 'ALL' || aud === 'STUDENTS' || aud === 'STUDENT';
+          });
+
+          this.broadcastNotifications = studentBroadcasts.map((b) => {
+            const isMaint =
+              (b.subject || '').toLowerCase().includes('maintenance') ||
+              (b.message || '').toLowerCase().includes('maintenance');
+
+            const notifId = `bc-${b.id}`;
+            return {
+              id: notifId,
+              title: b.subject || 'Campus Announcement',
+              message: b.message || 'New broadcast message from administration.',
+              time: b.date || 'Broadcast',
+              read: this.readNotifIds.has(notifId),
+              type: isMaint ? ('maintenance' as const) : ('broadcast' as const),
+              link: '/student',
+              createdAtRaw: b.createdAt,
+            };
+          });
+          this.combineNotifications();
+        }
+      },
+      error: () => {},
+    });
   }
 
   private buildConsultationNotifications(consultations: Consultation[]): void {
@@ -173,7 +384,7 @@ export class NavbarStudent implements OnInit {
       const formattedTime = this.formatTime(c.scheduledTime);
       const timeAgo = this.calculateTimeAgo(c.scheduledDate);
 
-      // 1. Confirmation Appointment
+      // 1. Confirmed Appointment Notification
       if (statusUpper === 'CONFIRMED') {
         const notifId = `conf-${c.id}`;
         list.push({
@@ -182,16 +393,16 @@ export class NavbarStudent implements OnInit {
           message: `Your consultation session with ${c.lecturerName || 'Lecturer'} on ${c.scheduledDate} at ${formattedTime} has been confirmed.`,
           time: timeAgo,
           read: this.readNotifIds.has(notifId),
-          type: 'appointment',
+          type: 'booking',
           link: '/student/history',
         });
 
-        // 2. Upcoming Session Reminder
+        // 2. Upcoming Session Reminder (Within active window)
         if (this.isUpcoming(c.scheduledDate)) {
           const reminderId = `upc-${c.id}`;
           list.push({
             id: reminderId,
-            title: 'Upcoming Session',
+            title: 'Upcoming Consultation Session',
             message: `Reminder: Consultation with ${c.lecturerName || 'Lecturer'} is scheduled for ${c.scheduledDate} at ${formattedTime}.`,
             time: 'Upcoming',
             read: this.readNotifIds.has(reminderId),
@@ -201,7 +412,7 @@ export class NavbarStudent implements OnInit {
         }
       }
 
-      // 3. Reschedule Pending
+      // 3. Reschedule Proposal from Lecturer Pending Student Review
       if (
         statusUpper === 'RESCHEDULED' ||
         statusUpper === 'RESCHEDULE_PENDING' ||
@@ -216,22 +427,22 @@ export class NavbarStudent implements OnInit {
 
         list.push({
           id: reschId,
-          title: 'Reschedule Request Pending',
+          title: 'Reschedule Proposal Awaiting Review',
           message: msg,
           time: timeAgo,
           read: this.readNotifIds.has(reschId),
-          type: 'appointment',
+          type: 'reschedule',
           link: '/student/history',
         });
       }
 
-      // 4. Consultation No-Show Alert for Student
+      // 4. Consultation No-Show Alert
       if (statusUpper === 'NO_SHOW' || statusUpper === 'NO-SHOW') {
         const noShowId = `noshow-${c.id}`;
         list.push({
           id: noShowId,
           title: 'Attendance Alert: Missed Consultation',
-          message: `Notice: You were recorded as a NO-SHOW for your consultation with ${c.lecturerName || 'Lecturer'} on ${c.scheduledDate} at ${formattedTime}. Please review this attendance issue.`,
+          message: `Notice: You were recorded as a NO-SHOW for your consultation with ${c.lecturerName || 'Lecturer'} on ${c.scheduledDate} at ${formattedTime}.`,
           time: timeAgo,
           read: this.readNotifIds.has(noShowId),
           type: 'reminder',
@@ -245,15 +456,16 @@ export class NavbarStudent implements OnInit {
   }
 
   private addSystemAnnouncement(announcementText: string): void {
+    const isMaint = announcementText.toLowerCase().includes('maintenance');
     const sysId = 'sys-announcement';
     this.systemNotifications = [
       {
         id: sysId,
-        title: 'System Announcement',
+        title: isMaint ? 'System Maintenance Notice' : 'System Announcement',
         message: announcementText,
         time: 'Admin Notice',
         read: this.readNotifIds.has(sysId),
-        type: 'system',
+        type: isMaint ? 'maintenance' : 'system',
       },
     ];
     this.combineNotifications();
@@ -265,7 +477,8 @@ export class NavbarStudent implements OnInit {
       {
         id: sysId,
         title: 'System Announcement',
-        message: 'Welcome to ConsultEase! Check your notifications for session updates and campus announcements.',
+        message:
+          'Welcome to ConsultEase! Real-time notifications keep you informed on session bookings, reschedules, and campus notices.',
         time: 'System Notice',
         read: this.readNotifIds.has(sysId),
         type: 'system',
@@ -275,9 +488,34 @@ export class NavbarStudent implements OnInit {
   }
 
   private combineNotifications(): void {
-    const merged = [...this.dbNotifications, ...this.consultationNotifications, ...this.systemNotifications];
+    const combined = [
+      ...this.dbNotifications,
+      ...this.broadcastNotifications,
+      ...this.consultationNotifications,
+      ...this.systemNotifications,
+    ];
+
+    // De-duplicate by notification ID
+    const uniqueMap = new Map<string, NotificationItem>();
+    combined.forEach((item) => {
+      if (!uniqueMap.has(item.id)) {
+        uniqueMap.set(item.id, item);
+      }
+    });
+
     // Filter out dismissed notifications
-    this.notifications = merged.filter((n) => !this.dismissedNotifIds.has(n.id));
+    const visible = Array.from(uniqueMap.values()).filter(
+      (n) => !this.dismissedNotifIds.has(n.id),
+    );
+
+    // Sort: unread first, then by date/priority
+    this.notifications = visible.sort((a, b) => {
+      if (a.read !== b.read) {
+        return a.read ? 1 : -1;
+      }
+      return (b.createdAtRaw || '').localeCompare(a.createdAtRaw || '');
+    });
+
     this.cdr.detectChanges();
   }
 
@@ -304,17 +542,37 @@ export class NavbarStudent implements OnInit {
 
   private calculateTimeAgo(dateStr: string): string {
     if (!dateStr) return 'Recently';
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const [y, m, d] = dateStr.split('-').map(Number);
-    if (!y || !m || !d) return 'Recently';
-    const apptDate = new Date(y, m - 1, d);
-    const diffDays = Math.floor((today.getTime() - apptDate.getTime()) / (1000 * 60 * 60 * 24));
+    try {
+      const targetDate = new Date(dateStr);
+      if (isNaN(targetDate.getTime())) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        if (y && m && d) {
+          const apptDate = new Date(y, m - 1, d);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const diffDays = Math.floor(
+            (today.getTime() - apptDate.getTime()) / (1000 * 60 * 60 * 24),
+          );
+          if (diffDays === 0) return 'Today';
+          if (diffDays === 1) return 'Yesterday';
+          if (diffDays < 0) return `In ${Math.abs(diffDays)}d`;
+          return `${diffDays}d ago`;
+        }
+        return 'Recently';
+      }
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 0) return `In ${Math.abs(diffDays)}d`;
-    return `${diffDays}d ago`;
+      const diffMs = Date.now() - targetDate.getTime();
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours}h ago`;
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays === 1) return 'Yesterday';
+      return `${diffDays}d ago`;
+    } catch {
+      return 'Recently';
+    }
   }
 
   @HostListener('document:click', ['$event'])
@@ -350,7 +608,10 @@ export class NavbarStudent implements OnInit {
     }
     this.notificationsEnabled = !this.notificationsEnabled;
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('student_notifications_enabled', String(this.notificationsEnabled));
+      localStorage.setItem(
+        'student_notifications_enabled',
+        String(this.notificationsEnabled),
+      );
     }
   }
 
@@ -363,6 +624,13 @@ export class NavbarStudent implements OnInit {
       this.readNotifIds.add(n.id);
     });
     this.saveNotifState();
+
+    // Call backend endpoint to persist
+    this.studentNotificationService.markAllAsRead().subscribe({
+      next: () => {},
+      error: () => {},
+    });
+
     this.cdr.detectChanges();
   }
 
@@ -373,6 +641,14 @@ export class NavbarStudent implements OnInit {
     notif.read = true;
     this.readNotifIds.add(notif.id);
     this.saveNotifState();
+
+    if (notif.dbId) {
+      this.studentNotificationService.markAsRead(notif.dbId).subscribe({
+        next: () => {},
+        error: () => {},
+      });
+    }
+
     this.cdr.detectChanges();
 
     if (notif.link) {
@@ -385,9 +661,34 @@ export class NavbarStudent implements OnInit {
     if (event) {
       event.stopPropagation();
     }
+    const item = this.notifications.find((n) => n.id === id);
     this.notifications = this.notifications.filter((n) => n.id !== id);
     this.dismissedNotifIds.add(id);
     this.saveNotifState();
+
+    if (item?.dbId) {
+      this.studentNotificationService.deleteNotification(item.dbId).subscribe({
+        next: () => {},
+        error: () => {},
+      });
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  clearAllNotifications(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.notifications.forEach((n) => this.dismissedNotifIds.add(n.id));
+    this.notifications = [];
+    this.saveNotifState();
+
+    this.studentNotificationService.clearAllNotifications().subscribe({
+      next: () => {},
+      error: () => {},
+    });
+
     this.cdr.detectChanges();
   }
 

@@ -35,7 +35,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            Pending
+            Pending Sessions
             <span *ngIf="pendingAppointments.length > 0"
               class="ml-1 px-2 py-0.5 text-xs rounded-full font-black shadow-xs"
               [ngClass]="activeTab === 'pending' ? 'bg-white text-amber-700' : 'bg-amber-500 text-white animate-pulse'">
@@ -51,7 +51,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            Confirmed
+            Confirmed Sessions
             <span *ngIf="confirmedAppointments.length > 0"
               class="ml-1 px-2 py-0.5 text-xs rounded-full bg-white/20 text-white font-black">
               {{ confirmedAppointments.length }}
@@ -106,11 +106,11 @@
               </span>
             </button>
 
-            <!-- Awaiting Approval Button -->
+            <!-- Pending Filter Button -->
             <button type="button" (click)="setPendingFilter('PENDING')"
               [ngClass]="pendingFilter === 'PENDING' ? 'bg-amber-600 text-white shadow-sm font-extrabold' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
-              Awaiting Approval
+              Pending
               <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
                 {{ pendingCount }}
               </span>
@@ -181,7 +181,7 @@
                     <!-- Status Tags -->
                     <span *ngIf="appt.status === 'PENDING'"
                       class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800/60">
-                      Awaiting Approval
+                      Pending
                     </span>
 
                     <span *ngIf="appt.status === 'RESCHEDULE-PENDING'"
@@ -195,12 +195,19 @@
                     {{ appt.reason }}
                   </p>
 
-                  <!-- Reschedule proposal highlight if present -->
+                  <!-- Reschedule proposal highlight if present (Lecturer-initiated) -->
                   <div *ngIf="appt.status === 'RESCHEDULE-PENDING'"
                     class="mt-2 text-xs font-medium text-cyan-800 dark:text-cyan-300 bg-cyan-50/90 dark:bg-cyan-950/40 p-2.5 rounded-xl border border-cyan-200 dark:border-cyan-900/40 flex items-start gap-1.5">
                     <span class="shrink-0">🔄</span>
                     <span>Lecturer suggested new slot: <strong>{{ appt.proposedDate }} at {{ appt.proposedTime
                         }}</strong></span>
+                  </div>
+
+                  <!-- Student requested reschedule highlight if present -->
+                  <div *ngIf="appt.status === 'PENDING' && appt.proposedDate"
+                    class="mt-2 text-xs font-medium text-amber-800 dark:text-amber-300 bg-amber-50/90 dark:bg-amber-950/40 p-2.5 rounded-xl border border-amber-200 dark:border-amber-900/40 flex items-start gap-1.5">
+                    <span class="shrink-0">🔄</span>
+                    <span>Requested reschedule to: <strong>{{ appt.proposedDate }} at {{ appt.proposedTime }}</strong></span>
                   </div>
 
                   <!-- Remarks snippet if present -->
@@ -823,6 +830,40 @@
             class="text-xs font-semibold italic text-slate-700 dark:text-slate-300 bg-teal-50/80 dark:bg-teal-950/50 p-3.5 rounded-xl border border-teal-200 dark:border-teal-900/40">
             "{{ selectedAppointment.remarks }}"
           </p>
+        </div>
+
+        <!-- Student-Requested Reschedule Note in View Details -->
+        <div class="pt-2" *ngIf="selectedAppointment.status === 'PENDING' && selectedAppointment.proposedDate">
+          <p class="modal-label font-bold text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+              </path>
+            </svg>
+            Pending Reschedule Request
+          </p>
+          <div
+            class="p-3.5 rounded-xl border border-amber-200 bg-amber-50/80 text-amber-900 dark:bg-amber-950/40 dark:border-amber-900/50 dark:text-amber-200 text-xs leading-relaxed">
+            <p class="font-bold">Proposed New Slot: {{ selectedAppointment.proposedDate }} at {{ selectedAppointment.proposedTime }}</p>
+            <p class="italic mt-1" *ngIf="selectedAppointment.rescheduleReason">Reason: "{{ selectedAppointment.rescheduleReason }}"</p>
+          </div>
+        </div>
+
+        <!-- Lecturer-Proposed Reschedule Note in View Details -->
+        <div class="pt-2" *ngIf="selectedAppointment.status === 'RESCHEDULE-PENDING' && selectedAppointment.proposedDate">
+          <p class="modal-label font-bold text-cyan-600 dark:text-cyan-400 mb-1 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+              </path>
+            </svg>
+            Reschedule Proposed by Lecturer
+          </p>
+          <div
+            class="p-3.5 rounded-xl border border-cyan-200 bg-cyan-50/80 text-cyan-900 dark:bg-cyan-950/40 dark:border-cyan-900/50 dark:text-cyan-200 text-xs leading-relaxed">
+            <p class="font-bold">Suggested New Slot: {{ selectedAppointment.proposedDate }} at {{ selectedAppointment.proposedTime }}</p>
+            <p class="italic mt-1" *ngIf="selectedAppointment.rescheduleReason">Reason: "{{ selectedAppointment.rescheduleReason }}"</p>
+          </div>
         </div>
       </div>
 
