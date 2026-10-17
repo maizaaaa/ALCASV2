@@ -198,7 +198,6 @@
                   <!-- Reschedule proposal highlight if present (Lecturer-initiated) -->
                   <div *ngIf="appt.status === 'RESCHEDULE-PENDING'"
                     class="mt-2 text-xs font-medium text-cyan-800 dark:text-cyan-300 bg-cyan-50/90 dark:bg-cyan-950/40 p-2.5 rounded-xl border border-cyan-200 dark:border-cyan-900/40 flex items-start gap-1.5">
-                    <span class="shrink-0">🔄</span>
                     <span>Lecturer suggested new slot: <strong>{{ appt.proposedDate }} at {{ appt.proposedTime
                         }}</strong></span>
                   </div>
@@ -206,8 +205,8 @@
                   <!-- Student requested reschedule highlight if present -->
                   <div *ngIf="appt.status === 'PENDING' && appt.proposedDate"
                     class="mt-2 text-xs font-medium text-amber-800 dark:text-amber-300 bg-amber-50/90 dark:bg-amber-950/40 p-2.5 rounded-xl border border-amber-200 dark:border-amber-900/40 flex items-start gap-1.5">
-                    <span class="shrink-0">🔄</span>
-                    <span>Requested reschedule to: <strong>{{ appt.proposedDate }} at {{ appt.proposedTime }}</strong></span>
+                    <span>Requested reschedule to: <strong>{{ appt.proposedDate }} at {{ appt.proposedTime
+                        }}</strong></span>
                   </div>
 
                   <!-- Remarks snippet if present -->
@@ -345,12 +344,22 @@
                     {{ appt.reason }}
                   </p>
 
-                  <!-- Venue / Room Badge -->
+                  <!-- Venue / Room or Webex Badge -->
                   <div class="mt-2" *ngIf="appt.location">
-                    <span
-                      class="location-pill inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/60 text-xs font-semibold">
-                      📍 Room: {{ appt.location }}
-                    </span>
+                    <ng-container
+                      *ngIf="appt.consultationMode === 'ONLINE' || appt.location.includes('http') || appt.location.toLowerCase().includes('webex'); else physicalLocation">
+                      <a [href]="appt.location.includes('http') ? appt.location : 'https://' + appt.location"
+                        target="_blank" rel="noopener noreferrer"
+                        class="location-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60 text-xs font-bold hover:underline shadow-xs">
+                        <span>💻</span> Join Webex Meeting: {{ appt.location }}
+                      </a>
+                    </ng-container>
+                    <ng-template #physicalLocation>
+                      <span
+                        class="location-pill inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/60 text-xs font-semibold">
+                        📍 Room: {{ appt.location }}
+                      </span>
+                    </ng-template>
                   </div>
 
                   <!-- Remarks snippet if present -->
@@ -733,13 +742,32 @@
         <div class="pt-2">
           <p class="modal-label text-slate-400 dark:text-slate-500 mb-1">Venue / Room Number</p>
           <div *ngIf="selectedAppointment.status === 'UPCOMING' || selectedAppointment.status === 'CONFIRMED'"
-            class="p-3.5 bg-emerald-50 dark:bg-teal-950/60 border border-emerald-200 dark:border-teal-800/60 rounded-xl">
-            <p class="modal-val text-emerald-900 dark:text-teal-200 font-bold flex items-center gap-2">
-              📍 {{ selectedAppointment.location }}
-              <small class="text-emerald-700 dark:text-teal-400 block mt-1 font-medium text-xs">Assigned room by
-                lecturer
-                for your consultation session.</small>
-            </p>
+            class="p-3.5 bg-emerald-50 dark:bg-teal-950/60 border border-emerald-200 dark:border-teal-800/60 rounded-xl"
+            [class.bg-blue-50]="selectedAppointment.consultationMode === 'ONLINE' || selectedAppointment.location.includes('http')">
+            <ng-container
+              *ngIf="selectedAppointment.consultationMode === 'ONLINE' || selectedAppointment.location.includes('http') || selectedAppointment.location.toLowerCase().includes('webex'); else modalRoomBlock">
+              <p class="modal-val text-blue-900 dark:text-blue-200 font-bold flex items-center gap-2">
+                💻 Virtual Consultation Room (Webex)
+              </p>
+              <div class="mt-2">
+                <a [href]="selectedAppointment.location.includes('http') ? selectedAppointment.location : 'https://' + selectedAppointment.location"
+                  target="_blank" rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm">
+                  Join Webex Meeting ➔
+                </a>
+              </div>
+              <small class="text-blue-700 dark:text-blue-400 block mt-1.5 font-medium text-xs break-all">
+                Link: {{ selectedAppointment.location }}
+              </small>
+            </ng-container>
+            <ng-template #modalRoomBlock>
+              <p class="modal-val text-emerald-900 dark:text-teal-200 font-bold flex items-center gap-2">
+                📍 {{ selectedAppointment.location }}
+              </p>
+              <small class="text-emerald-700 dark:text-teal-400 block mt-1 font-medium text-xs">
+                Assigned room by lecturer for your consultation session.
+              </small>
+            </ng-template>
           </div>
 
           <div *ngIf="selectedAppointment.status === 'PENDING'"
@@ -844,13 +872,16 @@
           </p>
           <div
             class="p-3.5 rounded-xl border border-amber-200 bg-amber-50/80 text-amber-900 dark:bg-amber-950/40 dark:border-amber-900/50 dark:text-amber-200 text-xs leading-relaxed">
-            <p class="font-bold">Proposed New Slot: {{ selectedAppointment.proposedDate }} at {{ selectedAppointment.proposedTime }}</p>
-            <p class="italic mt-1" *ngIf="selectedAppointment.rescheduleReason">Reason: "{{ selectedAppointment.rescheduleReason }}"</p>
+            <p class="font-bold">Proposed New Slot: {{ selectedAppointment.proposedDate }} at {{
+              selectedAppointment.proposedTime }}</p>
+            <p class="italic mt-1" *ngIf="selectedAppointment.rescheduleReason">Reason: "{{
+              selectedAppointment.rescheduleReason }}"</p>
           </div>
         </div>
 
         <!-- Lecturer-Proposed Reschedule Note in View Details -->
-        <div class="pt-2" *ngIf="selectedAppointment.status === 'RESCHEDULE-PENDING' && selectedAppointment.proposedDate">
+        <div class="pt-2"
+          *ngIf="selectedAppointment.status === 'RESCHEDULE-PENDING' && selectedAppointment.proposedDate">
           <p class="modal-label font-bold text-cyan-600 dark:text-cyan-400 mb-1 flex items-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -861,8 +892,10 @@
           </p>
           <div
             class="p-3.5 rounded-xl border border-cyan-200 bg-cyan-50/80 text-cyan-900 dark:bg-cyan-950/40 dark:border-cyan-900/50 dark:text-cyan-200 text-xs leading-relaxed">
-            <p class="font-bold">Suggested New Slot: {{ selectedAppointment.proposedDate }} at {{ selectedAppointment.proposedTime }}</p>
-            <p class="italic mt-1" *ngIf="selectedAppointment.rescheduleReason">Reason: "{{ selectedAppointment.rescheduleReason }}"</p>
+            <p class="font-bold">Suggested New Slot: {{ selectedAppointment.proposedDate }} at {{
+              selectedAppointment.proposedTime }}</p>
+            <p class="italic mt-1" *ngIf="selectedAppointment.rescheduleReason">Reason: "{{
+              selectedAppointment.rescheduleReason }}"</p>
           </div>
         </div>
       </div>

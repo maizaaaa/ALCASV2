@@ -61,13 +61,14 @@
               d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
             </path>
           </svg>
-          <span class="notif-badge" [class.pulse]="unreadCount > 0" *ngIf="notificationsEnabled && unreadCount > 0">{{ unreadCount }}</span>
+          <span class="notif-badge" [class.pulse]="unreadCount > 0" *ngIf="notificationsEnabled && unreadCount > 0">{{
+            unreadCount }}</span>
           <span class="notif-muted-dot" *ngIf="!notificationsEnabled" title="Notifications Muted"></span>
         </button>
 
         <!-- Notification Popover Dropdown -->
         <div class="notif-dropdown" *ngIf="isNotificationOpen" (click)="$event.stopPropagation()">
-          
+
           <!-- Dropdown Header -->
           <div class="notif-dropdown-header">
             <div class="notif-header-title">
@@ -84,22 +85,6 @@
             </div>
           </div>
 
-          <!-- Category Filter Pills -->
-          <div class="notif-filters-bar" *ngIf="notificationsEnabled">
-            <button class="filter-pill" [class.active]="activeFilter === 'ALL'" (click)="setFilter('ALL', $event)">
-              All ({{ notifications.length }})
-            </button>
-            <button class="filter-pill" [class.active]="activeFilter === 'SYSTEM'" (click)="setFilter('SYSTEM', $event)">
-              📢 System & Broadcasts
-            </button>
-            <button class="filter-pill" [class.active]="activeFilter === 'BOOKINGS'" (click)="setFilter('BOOKINGS', $event)">
-              📅 Bookings
-            </button>
-            <button class="filter-pill" [class.active]="activeFilter === 'ALERTS'" (click)="setFilter('ALERTS', $event)">
-              ⏰ Alerts
-            </button>
-          </div>
-
           <!-- Actions Bar -->
           <div class="notif-actions-bar" *ngIf="notificationsEnabled && notifications.length > 0">
             <button class="notif-action-btn" (click)="markAllAsRead($event)" [disabled]="unreadCount === 0">
@@ -112,7 +97,7 @@
 
           <!-- Notification Items Body -->
           <div class="notif-dropdown-body">
-            
+
             <!-- Muted State -->
             <div *ngIf="!notificationsEnabled" class="notif-empty-state">
               <div class="empty-icon-wrap">
@@ -131,7 +116,7 @@
 
             <!-- Enabled State -->
             <ng-container *ngIf="notificationsEnabled">
-              
+
               <!-- Empty State -->
               <div *ngIf="filteredNotifications.length === 0" class="notif-empty-state">
                 <div class="empty-icon-wrap">
@@ -147,52 +132,61 @@
 
               <!-- List of Notifications -->
               <div *ngFor="let item of filteredNotifications" class="notif-card" [class.unread]="!item.read"
-                [class.maintenance-card]="item.type === 'maintenance'"
-                (click)="markAsRead(item, $event)">
-                
+                [class.maintenance-card]="item.type === 'maintenance'" (click)="markAsRead(item, $event)">
+
                 <!-- Icon by Type -->
                 <div class="notif-card-icon" [ngClass]="item.type">
                   <!-- 1. Maintenance Icon -->
-                  <svg *ngIf="item.type === 'maintenance'" class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg *ngIf="item.type === 'maintenance'" class="card-icon" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
                     </path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
                     </path>
                   </svg>
 
                   <!-- 2. Booking / Confirmed Icon -->
-                  <svg *ngIf="item.type === 'booking'" class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg *ngIf="item.type === 'booking'" class="card-icon" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
 
                   <!-- 3. Cancellation Icon -->
-                  <svg *ngIf="item.type === 'cancellation'" class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg *ngIf="item.type === 'cancellation'" class="card-icon" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
 
                   <!-- 4. Reschedule Icon -->
-                  <svg *ngIf="item.type === 'reschedule'" class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg *ngIf="item.type === 'reschedule'" class="card-icon" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                    </path>
                   </svg>
 
                   <!-- 5. Broadcast Icon -->
-                  <svg *ngIf="item.type === 'broadcast'" class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg *ngIf="item.type === 'broadcast'" class="card-icon" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                      d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z">
+                    </path>
                   </svg>
 
                   <!-- 6. Reminder / Attendance Icon -->
-                  <svg *ngIf="item.type === 'reminder'" class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg *ngIf="item.type === 'reminder'" class="card-icon" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
 
                   <!-- 7. System Default Icon -->
-                  <svg *ngIf="item.type === 'system'" class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg *ngIf="item.type === 'system'" class="card-icon" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
@@ -210,11 +204,11 @@
                   <div class="notif-card-tag-row">
                     <span class="type-tag" [ngClass]="item.type">
                       {{ item.type === 'maintenance' ? '🔧 Maintenance' :
-                         item.type === 'booking' ? '📅 Booking' :
-                         item.type === 'cancellation' ? '❌ Cancelled' :
-                         item.type === 'reschedule' ? '🔄 Reschedule' :
-                         item.type === 'broadcast' ? '📢 Broadcast' :
-                         item.type === 'reminder' ? '⏰ Alert' : 'ℹ️ System' }}
+                      item.type === 'booking' ? '📅 Booking' :
+                      item.type === 'cancellation' ? '❌ Cancelled' :
+                      item.type === 'reschedule' ? '🔄 Reschedule' :
+                      item.type === 'broadcast' ? '📢 Broadcast' :
+                      item.type === 'reminder' ? '⏰ Alert' : 'ℹ️ System' }}
                     </span>
                     <span *ngIf="!item.read" class="unread-dot"></span>
                   </div>
@@ -232,7 +226,8 @@
       </div>
 
       <!-- Dark Mode Toggle Button -->
-      <button class="theme-toggle-btn" (click)="toggleDarkMode()" title="Toggle Dark/Light Mode" aria-label="Toggle Dark/Light Mode">
+      <button class="theme-toggle-btn" (click)="toggleDarkMode()" title="Toggle Dark/Light Mode"
+        aria-label="Toggle Dark/Light Mode">
         <ng-container *ngIf="!isDarkMode">
           <svg class="control-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -294,17 +289,24 @@
 <div *ngIf="toastMessage" class="student-toast-container animate-fade-in-down" (click)="dismissToast()">
   <div class="student-toast-card" [ngClass]="toastMessage.type">
     <div class="toast-icon-wrap">
-      <svg *ngIf="toastMessage.type === 'success'" class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg *ngIf="toastMessage.type === 'success'" class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor"
+        viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
       </svg>
-      <svg *ngIf="toastMessage.type === 'warning'" class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+      <svg *ngIf="toastMessage.type === 'warning'" class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor"
+        viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+        </path>
       </svg>
-      <svg *ngIf="toastMessage.type === 'error'" class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg *ngIf="toastMessage.type === 'error'" class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor"
+        viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
-      <svg *ngIf="toastMessage.type === 'info'" class="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      <svg *ngIf="toastMessage.type === 'info'" class="w-5 h-5 text-teal-500" fill="none" stroke="currentColor"
+        viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
       </svg>
     </div>
 

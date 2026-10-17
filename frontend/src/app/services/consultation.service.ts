@@ -78,16 +78,22 @@ export class ConsultationService {
     consultationId: string,
     location: string,
     remarks: string,
+    consultationMode?: string,
   ): Observable<Consultation> {
+    const params: any = {
+      location: location,
+      remarks: remarks,
+    };
+    if (consultationMode) {
+      params.consultationMode = consultationMode;
+    }
+
     return this.http.put<Consultation>(
       `${this.apiUrl}/${consultationId}/approve`,
       {},
       {
         headers: this.getAuthHeaders(),
-        params: {
-          location: location,
-          remarks: remarks,
-        },
+        params: params,
       },
     );
   }

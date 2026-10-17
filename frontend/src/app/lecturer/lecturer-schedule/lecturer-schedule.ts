@@ -6,6 +6,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
 import { SystemSettingsService} from "../../services/system-settings.service";
 import { LecturerProfileService } from '../../services/lecturer-profile.service';
+import { LecturerNotificationService } from '../../services/lecturer-notification.service';
 
 @Component({
   selector: 'app-lecturer-schedule',
@@ -76,6 +77,7 @@ export class LecturerScheduleComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private systemSettingsService: SystemSettingsService,
     private lecturerProfileService: LecturerProfileService,
+    private lecturerNotificationService: LecturerNotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -275,6 +277,12 @@ export class LecturerScheduleComponent implements OnInit {
         )
         .subscribe({
           next: () => {
+            this.lecturerNotificationService.triggerRefresh();
+            this.lecturerNotificationService.showToast(
+              'Schedule Updated',
+              `Schedule slot for ${this.slotForm.day} (${this.slotForm.startTime} - ${this.slotForm.endTime}) updated.`,
+              'success'
+            );
             alert('Schedule updated!');
             this.closeModal();
             this.loadSchedule();
@@ -308,6 +316,12 @@ export class LecturerScheduleComponent implements OnInit {
       .post('http://localhost:8080/api/lecturer-availability/schedule', requestBody, { headers })
       .subscribe({
         next: () => {
+          this.lecturerNotificationService.triggerRefresh();
+          this.lecturerNotificationService.showToast(
+            'Schedule Slot Added',
+            `New ${this.slotForm.type.toLowerCase()} slot added for ${this.slotForm.day} (${this.slotForm.startTime} - ${this.slotForm.endTime}).`,
+            'success'
+          );
           alert('Schedule added successfully!');
           this.closeModal();
           this.loadSchedule();
@@ -333,6 +347,12 @@ export class LecturerScheduleComponent implements OnInit {
         .delete(`http://localhost:8080/api/lecturer-availability/schedule/${id}`, { headers })
         .subscribe({
           next: () => {
+            this.lecturerNotificationService.triggerRefresh();
+            this.lecturerNotificationService.showToast(
+              'Schedule Slot Removed',
+              'Schedule slot removed from your calendar.',
+              'info'
+            );
             alert('Schedule deleted!');
             this.loadSchedule();
           },

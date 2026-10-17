@@ -144,7 +144,7 @@
         <div class="summary-box pending-summary">
           <strong>Student:</strong> {{ selectedAppt?.studentName }} ({{ selectedAppt?.studentMatric }})<br>
           <strong>Topic:</strong> {{ selectedAppt?.reason }} — {{ selectedAppt?.scheduledDate }} at {{ selectedAppt?.scheduledTime }}<br>
-          <strong>Consultation Mode:</strong> {{ selectedAppt?.consultationMode }}
+          <strong>Consultation Mode:</strong> {{ formatConsultationMode(selectedAppt?.consultationMode) }}
         </div>
 
         <div class="form-group mt-4">

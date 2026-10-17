@@ -4,6 +4,7 @@ import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
 import { ConsultationService, Consultation} from '../../services/consultation.service';
+import { LecturerNotificationService } from '../../services/lecturer-notification.service';
 
 @Component({
   selector: 'app-lecturer-dashboard',
@@ -45,6 +46,7 @@ export class LecturerDashboardComponent implements OnInit {
   constructor(
     private router: Router,
     private consultationService: ConsultationService,
+    private lecturerNotificationService: LecturerNotificationService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -169,6 +171,8 @@ export class LecturerDashboardComponent implements OnInit {
       return;
     }
 
+    const studentName = this.selectedAppt?.studentName || 'Student';
+
     // UPDATE THIS: Pass the 3 required arguments (id, location, remarks)
     this.consultationService
       .approveConsultation(
@@ -179,7 +183,13 @@ export class LecturerDashboardComponent implements OnInit {
       .subscribe({
         next: (response) => {
           console.log('DASHBOARD APPROVE RESPONSE:', response);
-          alert(`Appointment approved successfully for ${this.selectedAppt?.studentName}.`);
+          this.lecturerNotificationService.triggerRefresh();
+          this.lecturerNotificationService.showToast(
+            'Consultation Approved',
+            `Consultation with ${studentName} has been approved.`,
+            'success'
+          );
+          alert(`Appointment approved successfully for ${studentName}.`);
           this.closeApprovalModal();
           this.loadDashboardData();
         },
@@ -191,15 +201,21 @@ export class LecturerDashboardComponent implements OnInit {
   }
 
   rejectRequest(req: Consultation): void {
+    const studentName = req.studentName || 'Student';
     const reason = prompt(
-      `Please provide a reason for declining ${req.studentName}'s request (Required):`,
+      `Please provide a reason for declining ${studentName}'s request (Required):`,
     );
 
     if (reason && reason.trim()) {
       this.consultationService.rejectConsultation(req.id, reason.trim()).subscribe({
         next: (response) => {
           console.log('DASHBOARD REJECT RESPONSE:', response);
-
+          this.lecturerNotificationService.triggerRefresh();
+          this.lecturerNotificationService.showToast(
+            'Consultation Declined',
+            `Consultation request from ${studentName} was declined.`,
+            'info'
+          );
           alert(`Appointment declined. Student notified with reason: "${reason.trim()}"`);
 
           this.loadDashboardData();
@@ -216,7 +232,17 @@ export class LecturerDashboardComponent implements OnInit {
     }
   }
 
+  formatConsultationMode(modeStr?: string | null): string {
+    if (!modeStr) return 'In-Person';
+    const clean = modeStr.trim().toUpperCase().replace(/_/g, ' ');
+    if (clean.includes('ONLINE') || clean.includes('WEBEX')) {
+      return 'Online (Webex)';
+    }
+    return 'In-Person';
+  }
+
   onLogout() {
     this.router.navigate(['/login']);
   }
 }
+

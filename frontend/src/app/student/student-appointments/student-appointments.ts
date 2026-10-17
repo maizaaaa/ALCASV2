@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { NavbarStudent } from '../../shared/navbar-student/navbar-student';
 import { ConsultationService, Consultation } from '../../services/consultation.service';
 import { StudentNotificationService } from '../../services/student-notification.service';
+import { AppointmentService } from '../../services/appointment.service';
 
 interface StudentAppointmentView {
   id: string;
@@ -22,6 +23,8 @@ interface StudentAppointmentView {
   proposedTime: string;
   rescheduleReason: string;
   rescheduleInitiator?: string;
+  consultationMode?: string;
+  mode?: string;
   rejectReason?: string;
   cancelReason?: string;
 }
@@ -75,6 +78,7 @@ export class StudentAppointmentsComponent implements OnInit {
   private isInitialLoad = true;
 
   private studentNotificationService = inject(StudentNotificationService, { optional: true });
+  private appointmentService = inject(AppointmentService, { optional: true });
 
   constructor(
     private router: Router,
@@ -147,6 +151,8 @@ export class StudentAppointmentsComponent implements OnInit {
               rawDate: c.scheduledDate || '',
               rawTime: c.scheduledTime || '',
               location: c.location || '',
+              consultationMode: c.consultationMode || '',
+              mode: c.consultationMode === 'ONLINE' ? 'Online (Webex)' : 'In-Person',
               remarks: c.lecturerRemarks || '',
               status: mappedStatus,
               proposedDate: c.proposedDate ? this.formatDate(c.proposedDate) : '',
@@ -661,6 +667,9 @@ export class StudentAppointmentsComponent implements OnInit {
     const lecturerName = this.selectedAppointment.lecturer;
     const reason = this.cancelReason.trim();
 
+    // Sync with local AppointmentService storage
+    this.appointmentService?.cancelAppointment(appointmentId, reason);
+
     this.consultationService.cancelConsultation(appointmentId, reason).subscribe({
       next: () => {
         this.ngZone.run(() => {
@@ -685,11 +694,14 @@ export class StudentAppointmentsComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Failed to cancel appointment:', error);
+        console.error('Failed to cancel appointment in backend:', error);
+        // Even if backend fails, local cancel is recorded for consistent fallback
         this.ngZone.run(() => {
+          this.closeModal();
+          this.loadAppointments();
           this.cdr.detectChanges();
         });
-        alert(error.error?.message || 'Unable to cancel this appointment. Please try again.');
+        alert(error.error?.message || 'Appointment cancelled locally.');
       },
     });
   }

@@ -247,6 +247,61 @@
   background: #fef2f2;
 }
 
+/* Drawer Filter Pills Bar */
+.drawer-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.drawer-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-pill {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.filter-pill:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.filter-pill.active {
+  background: #0f766e;
+  color: #ffffff;
+  border-color: #0f766e;
+  box-shadow: 0 1px 4px rgba(15, 118, 110, 0.25);
+}
+
+.clear-all-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.clear-all-btn:hover {
+  color: #ef4444;
+}
+
 /* Actions Sub-bar */
 .drawer-actions-bar {
   display: flex;
@@ -345,18 +400,24 @@
   border-color: rgba(15, 118, 110, 0.3);
 }
 
+.drawer-notif-card.maintenance-card {
+  border-left: 4px solid #f97316 !important;
+  background: #fffbf5;
+}
+
 /* Status Indicator Icons */
 .card-left {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  align-self: center;
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
 .card-status-badge {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -396,6 +457,38 @@
   color: #dc2626;
   border: 1.5px solid #fda4af;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* Purple icon for reschedules */
+.card-status-badge.reschedule {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  color: #7c3aed;
+  border: 1.5px solid #c4b5fd;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+}
+
+/* Orange/Amber icon for maintenance */
+.card-status-badge.maintenance {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  color: #ea580c;
+  border: 1.5px solid #fdba74;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.2);
+}
+
+/* Yellow icon for broadcasts */
+.card-status-badge.broadcast {
+  background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
+  color: #ca8a04;
+  border: 1.5px solid #fde047;
+  box-shadow: 0 4px 12px rgba(202, 138, 4, 0.2);
+}
+
+/* Cyan/Blue icon for system */
+.card-status-badge.system {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #0284c7;
+  border: 1.5px solid #7dd3fc;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
 }
 
 .card-content {
@@ -822,6 +915,199 @@ html.dark .enable-notif-btn {
 html.dark .enable-notif-btn:hover {
   background: #14b8a6 !important;
   color: #ffffff !important;
+}
+
+:host-context(.dark) .drawer-filter-bar,
+html.dark .drawer-filter-bar {
+  background: #06171d !important;
+  border-bottom-color: rgba(45, 212, 191, 0.12) !important;
+}
+
+:host-context(.dark) .filter-pill,
+html.dark .filter-pill {
+  background: #091d24 !important;
+  border-color: rgba(45, 212, 191, 0.2) !important;
+  color: #94a3b8 !important;
+}
+
+:host-context(.dark) .filter-pill:hover,
+html.dark .filter-pill:hover {
+  color: #2dd4bf !important;
+  border-color: #2dd4bf !important;
+}
+
+:host-context(.dark) .filter-pill.active,
+html.dark .filter-pill.active {
+  background: #0f766e !important;
+  color: #ffffff !important;
+  border-color: #2dd4bf !important;
+}
+
+:host-context(.dark) .clear-all-btn,
+html.dark .clear-all-btn {
+  color: #94a3b8 !important;
+}
+
+:host-context(.dark) .clear-all-btn:hover,
+html.dark .clear-all-btn:hover {
+  color: #f87171 !important;
+}
+
+:host-context(.dark) .drawer-notif-card.maintenance-card,
+html.dark .drawer-notif-card.maintenance-card {
+  border-left-color: #ea580c !important;
+  background: rgba(35, 18, 12, 0.75) !important;
+}
+
+/* Floating Real-time Toast Alert for Lecturer */
+.lecturer-toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10050;
+  max-width: 400px;
+  width: calc(100% - 48px);
+  cursor: pointer;
+  animation: toastSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toastSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.lecturer-toast-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lecturer-toast-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.18);
+}
+
+.lecturer-toast-card.success {
+  border-left: 5px solid #10b981;
+}
+
+.lecturer-toast-card.warning {
+  border-left: 5px solid #f59e0b;
+}
+
+.lecturer-toast-card.error {
+  border-left: 5px solid #f43f5e;
+}
+
+.lecturer-toast-card.info {
+  border-left: 5px solid #0f766e;
+}
+
+.toast-icon-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #f1f5f9;
+}
+
+.toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.toast-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.toast-time {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0f766e;
+  background: rgba(15, 118, 110, 0.1);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.toast-desc {
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.toast-close-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+
+.toast-close-btn:hover {
+  color: #ef4444;
+}
+
+:host-context(.dark) .lecturer-toast-card,
+html.dark .lecturer-toast-card {
+  background: rgba(11, 25, 30, 0.95) !important;
+  border-color: rgba(45, 212, 191, 0.25) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+:host-context(.dark) .toast-title,
+html.dark .toast-title {
+  color: #f1f5f9 !important;
+}
+
+:host-context(.dark) .toast-desc,
+html.dark .toast-desc {
+  color: #cbd5e1 !important;
+}
+
+:host-context(.dark) .toast-icon-wrap,
+html.dark .toast-icon-wrap {
+  background: #192c33 !important;
+}
+
+@keyframes notifPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.notif-sidebar-badge.pulse {
+  animation: notifPulse 2s infinite ease-in-out;
 }
 
 /* Responsive Media Queries */

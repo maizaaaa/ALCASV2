@@ -14,7 +14,7 @@
         </div>
         <button class="btn-outline-blue" (click)="exportHistory()">
           <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          Export CSV Report
+          Export Excel Report
         </button>
       </div>
 
@@ -159,40 +159,117 @@
 
         <div class="divider"></div>
 
-        <div class="detail-group full-width">
-          <label>Student's Reason for Request</label>
-          <div class="text-box outline">
-            "{{ selectedLog.reason }}"
-          </div>
-        </div>
+        <!-- Conditional rendering based on Appointment Status -->
+        <ng-container [ngSwitch]="selectedLog.status">
 
-        <!-- Cancellation Reason -->
-        <div class="detail-group full-width" *ngIf="selectedLog.status === 'CANCELLED' || selectedLog.cancelReason">
-          <label style="color: #d97706; font-weight: 700; display: flex; align-items: center; gap: 6px;">
-            ⚠️ Cancellation Reason
-          </label>
-          <div class="text-box filled" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: #b45309; font-weight: 600;">
-            "{{ selectedLog.cancelReason || selectedLog.remarks || 'have emergency' }}"
-          </div>
-        </div>
+          <!-- 1. Status is REJECTED -->
+          <ng-container *ngSwitchCase="'REJECTED'">
+            <div class="detail-group full-width">
+              <label>Reason for Consultation</label>
+              <div class="text-box outline">
+                "{{ selectedLog.reason }}"
+              </div>
+            </div>
 
-        <!-- Rejection Reason -->
-        <div class="detail-group full-width" *ngIf="selectedLog.status === 'REJECTED' || selectedLog.rejectReason">
-          <label style="color: #e11d48; font-weight: 700; display: flex; align-items: center; gap: 6px;">
-            ❌ Reason for Rejection
-          </label>
-          <div class="text-box filled" style="background: rgba(225, 29, 72, 0.12); border: 1px solid rgba(225, 29, 72, 0.35); color: #be123c; font-weight: 600;">
-            "{{ selectedLog.rejectReason || selectedLog.remarks || 'No rejection reason specified.' }}"
-          </div>
-        </div>
+            <div class="detail-group full-width">
+              <label style="color: #e11d48; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                ❌ Rejected by: {{ getRejectedBy(selectedLog) }}
+              </label>
+              <div class="text-box filled" style="background: rgba(225, 29, 72, 0.12); border: 1px solid rgba(225, 29, 72, 0.35); color: #be123c; font-weight: 600;">
+                <span class="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-75">Reason for Rejection:</span>
+                "{{ selectedLog.rejectReason || selectedLog.remarks || 'No rejection reason specified.' }}"
+              </div>
+            </div>
+          </ng-container>
 
-        <!-- Lecturer Remarks & Notes -->
-        <div class="detail-group full-width" *ngIf="selectedLog.status !== 'CANCELLED' && (selectedLog.remarks || selectedLog.notes)">
-          <label>Lecturer Remarks & Notes</label>
-          <div class="text-box filled">
-            {{ selectedLog.remarks || selectedLog.notes }}
-          </div>
-        </div>
+          <!-- 1. Status is CANCELLED -->
+          <ng-container *ngSwitchCase="'CANCELLED'">
+            <div class="detail-group full-width">
+              <label>Reason for Consultation</label>
+              <div class="text-box outline">
+                "{{ selectedLog.reason }}"
+              </div>
+            </div>
+
+            <div class="detail-group full-width">
+              <label style="color: #d97706; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                ⚠️ Cancelled by: {{ getCancelledBy(selectedLog) }}
+              </label>
+              <div class="text-box filled" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: #b45309; font-weight: 600;">
+                <span class="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-75">Reason for Cancellation:</span>
+                "{{ selectedLog.cancelReason || selectedLog.remarks || 'No cancellation reason provided.' }}"
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- 2. Status is COMPLETED -->
+          <ng-container *ngSwitchCase="'COMPLETED'">
+            <div class="detail-group full-width">
+              <label>Reason for Consultation</label>
+              <div class="text-box outline">
+                "{{ selectedLog.reason }}"
+              </div>
+            </div>
+
+            <div class="detail-group full-width">
+              <label>Remark from Lecturer</label>
+              <div class="text-box filled">
+                {{ selectedLog.remarks || selectedLog.notes || 'No remarks recorded for this completed session.' }}
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- 3. Status is NO-SHOW -->
+          <ng-container *ngSwitchCase="'NO-SHOW'">
+            <div class="detail-group full-width">
+              <label>Reason for Consultation</label>
+              <div class="text-box outline">
+                "{{ selectedLog.reason }}"
+              </div>
+            </div>
+
+            <div class="detail-group full-width">
+              <label>Remark from Lecturer</label>
+              <div class="text-box filled">
+                {{ selectedLog.remarks || selectedLog.notes || 'Student was marked as No-Show. No remarks provided.' }}
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'NO_SHOW'">
+            <div class="detail-group full-width">
+              <label>Reason for Consultation</label>
+              <div class="text-box outline">
+                "{{ selectedLog.reason }}"
+              </div>
+            </div>
+
+            <div class="detail-group full-width">
+              <label>Remark from Lecturer</label>
+              <div class="text-box filled">
+                {{ selectedLog.remarks || selectedLog.notes || 'Student was marked as No-Show. No remarks provided.' }}
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Fallback default -->
+          <ng-container *ngSwitchDefault>
+            <div class="detail-group full-width">
+              <label>Reason for Consultation</label>
+              <div class="text-box outline">
+                "{{ selectedLog.reason }}"
+              </div>
+            </div>
+
+            <div class="detail-group full-width" *ngIf="selectedLog.remarks || selectedLog.notes">
+              <label>Remark from Lecturer</label>
+              <div class="text-box filled">
+                {{ selectedLog.remarks || selectedLog.notes }}
+              </div>
+            </div>
+          </ng-container>
+
+        </ng-container>
 
       </div>
 

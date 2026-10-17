@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
 import { LecturerProfileService } from '../../services/lecturer-profile.service';
+import { LecturerNotificationService } from '../../services/lecturer-notification.service';
 
 @Component({
   selector: 'app-lecturer-profile',
@@ -38,6 +39,7 @@ export class LecturerProfileComponent implements OnInit {
   constructor(
     private router: Router,
     private lecturerProfileService: LecturerProfileService,
+    private lecturerNotificationService: LecturerNotificationService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -175,6 +177,12 @@ export class LecturerProfileComponent implements OnInit {
     this.lecturerProfileService.updateMyProfile(this.profile).subscribe({
       next: (data) => {
         this.profile = data;
+        this.lecturerNotificationService.triggerRefresh();
+        this.lecturerNotificationService.showToast(
+          'Profile Updated',
+          'Your profile details have been saved successfully.',
+          'success'
+        );
         this.cdr.detectChanges();
         alert('Profile information successfully updated!');
       },
@@ -222,6 +230,13 @@ export class LecturerProfileComponent implements OnInit {
           blockNonWorkingDays: data.blockNonWorkingDays ?? true,
           blockedDays: parsedBlockedDays,
         };
+
+        this.lecturerNotificationService.triggerRefresh();
+        this.lecturerNotificationService.showToast(
+          'Preferences Saved',
+          'Consultation rules and notification preferences updated.',
+          'success'
+        );
 
         this.cdr.detectChanges();
         alert('Preference & Rules successfully updated!');
