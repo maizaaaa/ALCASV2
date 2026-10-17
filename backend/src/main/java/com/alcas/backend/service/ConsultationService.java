@@ -253,6 +253,21 @@ public class ConsultationService {
                 notif.setCreatedAt(now);
                 notificationRepository.save(notif);
             }
+            if (saved.getLecturer() != null && saved.getLecturer().getUser() != null) {
+                Notification lectNotif = new Notification();
+                lectNotif.setUser(saved.getLecturer().getUser());
+                lectNotif.setTitle("New Consultation Request");
+                String studentName = (saved.getStudent() != null && saved.getStudent().getUser() != null)
+                        ? saved.getStudent().getUser().getFullName()
+                        : "A student";
+                lectNotif.setMessage(studentName + " booked a consultation on "
+                        + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ".");
+                lectNotif.setType("BOOKING");
+                lectNotif.setIsRead(false);
+                lectNotif.setConsultation(saved);
+                lectNotif.setCreatedAt(now);
+                notificationRepository.save(lectNotif);
+            }
         } catch (Exception ignored) {
         }
 
@@ -316,6 +331,15 @@ public class ConsultationService {
             Integer lecturerId,
             String location,
             String remarks) {
+        return approveConsultation(consultationId, lecturerId, location, remarks, null);
+    }
+
+    public Consultation approveConsultation(
+            String consultationId,
+            Integer lecturerId,
+            String location,
+            String remarks,
+            String consultationMode) {
 
         String email = SecurityContextHolder
                 .getContext()
@@ -369,6 +393,15 @@ public class ConsultationService {
         consultation.setLocation(location);
         consultation.setLecturerRemarks(remarks);
 
+        if (consultationMode != null && !consultationMode.trim().isEmpty()) {
+            String normalizedMode = consultationMode.trim().toUpperCase().replace("-", "_").replace(" ", "_");
+            if (normalizedMode.contains("ONLINE")) {
+                consultation.setConsultationMode("ONLINE");
+            } else {
+                consultation.setConsultationMode("IN_PERSON");
+            }
+        }
+
         consultation.setStatus(
                 Consultation.Status.CONFIRMED
         );
@@ -378,7 +411,49 @@ public class ConsultationService {
                 LocalDateTime.now()
         );
 
-        return consultationRepository.save(consultation);
+        Consultation saved = consultationRepository.save(consultation);
+
+        try {
+            LocalDateTime notifNow = LocalDateTime.now();
+            String studentName = (saved.getStudent() != null && saved.getStudent().getUser() != null)
+                    ? saved.getStudent().getUser().getFullName()
+                    : "Student";
+            String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                    ? saved.getLecturer().getUser().getFullName()
+                    : "Lecturer";
+
+            // Notify Student
+            if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
+                Notification notif = new Notification();
+                notif.setUser(saved.getStudent().getUser());
+                notif.setTitle("Consultation Approved");
+                notif.setMessage("Your consultation session with " + lecturerName + " on "
+                        + saved.getScheduledDate() + " at " + saved.getScheduledTime()
+                        + " has been approved (" + (location != null && !location.isBlank() ? location : "Confirmed") + ").");
+                notif.setType("BOOKING");
+                notif.setIsRead(false);
+                notif.setConsultation(saved);
+                notif.setCreatedAt(notifNow);
+                notificationRepository.save(notif);
+            }
+
+            // Notify Lecturer
+            if (saved.getLecturer() != null && saved.getLecturer().getUser() != null) {
+                Notification lectNotif = new Notification();
+                lectNotif.setUser(saved.getLecturer().getUser());
+                lectNotif.setTitle("Consultation Approved");
+                lectNotif.setMessage("You approved the consultation session with " + studentName + " on "
+                        + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ".");
+                lectNotif.setType("BOOKING");
+                lectNotif.setIsRead(false);
+                lectNotif.setConsultation(saved);
+                lectNotif.setCreatedAt(notifNow);
+                notificationRepository.save(lectNotif);
+            }
+        } catch (Exception ignored) {
+        }
+
+        return saved;
     }
 
     public Consultation rejectConsultation(
@@ -395,7 +470,7 @@ public class ConsultationService {
                 = userRepository.findByEmail(email)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                        "Authenticated user not found"
+                                         "Authenticated user not found"
                                 ));
 
         if (!authenticatedUser.getId().equals(lecturerId)) {
@@ -408,7 +483,7 @@ public class ConsultationService {
                 = consultationRepository.findById(consultationId)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                        "Consultation not found"
+                                         "Consultation not found"
                                 ));
 
         // Make sure this consultation belongs to this lecturer
@@ -436,7 +511,49 @@ public class ConsultationService {
                 LocalDateTime.now()
         );
 
-        return consultationRepository.save(consultation);
+        Consultation saved = consultationRepository.save(consultation);
+
+        try {
+            LocalDateTime notifNow = LocalDateTime.now();
+            String studentName = (saved.getStudent() != null && saved.getStudent().getUser() != null)
+                    ? saved.getStudent().getUser().getFullName()
+                    : "Student";
+            String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                    ? saved.getLecturer().getUser().getFullName()
+                    : "Lecturer";
+
+            // Notify Student
+            if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
+                Notification notif = new Notification();
+                notif.setUser(saved.getStudent().getUser());
+                notif.setTitle("Consultation Request Declined");
+                notif.setMessage(lecturerName + " was unable to accept your consultation on "
+                        + saved.getScheduledDate() + " at " + saved.getScheduledTime()
+                        + (rejectReason != null && !rejectReason.isBlank() ? ". Reason: " + rejectReason : "."));
+                notif.setType("CANCELLATION");
+                notif.setIsRead(false);
+                notif.setConsultation(saved);
+                notif.setCreatedAt(notifNow);
+                notificationRepository.save(notif);
+            }
+
+            // Notify Lecturer
+            if (saved.getLecturer() != null && saved.getLecturer().getUser() != null) {
+                Notification lectNotif = new Notification();
+                lectNotif.setUser(saved.getLecturer().getUser());
+                lectNotif.setTitle("Consultation Request Declined");
+                lectNotif.setMessage("You declined the consultation request from " + studentName + " for "
+                        + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ".");
+                lectNotif.setType("CANCELLATION");
+                lectNotif.setIsRead(false);
+                lectNotif.setConsultation(saved);
+                lectNotif.setCreatedAt(notifNow);
+                notificationRepository.save(lectNotif);
+            }
+        } catch (Exception ignored) {
+        }
+
+        return saved;
     }
 
     public Consultation requestReschedule(
@@ -544,12 +661,17 @@ public class ConsultationService {
         Consultation saved = consultationRepository.save(consultation);
 
         try {
+            LocalDateTime notifNow = LocalDateTime.now();
+            String studentName = (saved.getStudent() != null && saved.getStudent().getUser() != null)
+                    ? saved.getStudent().getUser().getFullName()
+                    : "Student";
+            String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                    ? saved.getLecturer().getUser().getFullName()
+                    : "Lecturer";
+
             if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
                 Notification notif = new Notification();
                 notif.setUser(saved.getStudent().getUser());
-                String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
-                        ? saved.getLecturer().getUser().getFullName()
-                        : "Lecturer";
                 if (isStudent) {
                     notif.setTitle("Reschedule Requested Successfully");
                     notif.setMessage("Your request to reschedule consultation with " + lecturerName + " to "
@@ -562,8 +684,28 @@ public class ConsultationService {
                 notif.setType("RESCHEDULE");
                 notif.setIsRead(false);
                 notif.setConsultation(saved);
-                notif.setCreatedAt(LocalDateTime.now());
+                notif.setCreatedAt(notifNow);
                 notificationRepository.save(notif);
+            }
+
+            if (saved.getLecturer() != null && saved.getLecturer().getUser() != null) {
+                Notification lectNotif = new Notification();
+                lectNotif.setUser(saved.getLecturer().getUser());
+                if (isStudent) {
+                    lectNotif.setTitle("Reschedule Requested by Student");
+                    lectNotif.setMessage(studentName + " requested to reschedule consultation to "
+                            + saved.getProposedDate() + " at " + saved.getProposedTime()
+                            + (rescheduleReason != null && !rescheduleReason.isBlank() ? " (" + rescheduleReason + ")" : "."));
+                } else {
+                    lectNotif.setTitle("Reschedule Proposal Sent");
+                    lectNotif.setMessage("You proposed rescheduling consultation with " + studentName + " to "
+                            + saved.getProposedDate() + " at " + saved.getProposedTime() + ".");
+                }
+                lectNotif.setType("RESCHEDULE");
+                lectNotif.setIsRead(false);
+                lectNotif.setConsultation(saved);
+                lectNotif.setCreatedAt(notifNow);
+                notificationRepository.save(lectNotif);
             }
         } catch (Exception ignored) {
         }
@@ -633,20 +775,38 @@ public class ConsultationService {
         Consultation saved = consultationRepository.save(consultation);
 
         try {
+            LocalDateTime notifNow = LocalDateTime.now();
+            String studentName = (saved.getStudent() != null && saved.getStudent().getUser() != null)
+                    ? saved.getStudent().getUser().getFullName()
+                    : "Student";
+            String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                    ? saved.getLecturer().getUser().getFullName()
+                    : "Lecturer";
+
             if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
                 Notification notif = new Notification();
                 notif.setUser(saved.getStudent().getUser());
                 notif.setTitle("Reschedule Confirmed");
-                String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
-                        ? saved.getLecturer().getUser().getFullName()
-                        : "Lecturer";
-                notif.setMessage("You accepted the proposed consultation time with " + lecturerName
-                        + ". Your session is now confirmed for " + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ".");
+                notif.setMessage("Reschedule confirmed with " + lecturerName
+                        + ". Session is confirmed for " + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ".");
                 notif.setType("RESCHEDULE");
                 notif.setIsRead(false);
                 notif.setConsultation(saved);
-                notif.setCreatedAt(LocalDateTime.now());
+                notif.setCreatedAt(notifNow);
                 notificationRepository.save(notif);
+            }
+
+            if (saved.getLecturer() != null && saved.getLecturer().getUser() != null) {
+                Notification lectNotif = new Notification();
+                lectNotif.setUser(saved.getLecturer().getUser());
+                lectNotif.setTitle("Reschedule Confirmed");
+                lectNotif.setMessage("Reschedule confirmed with " + studentName
+                        + " for " + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ".");
+                lectNotif.setType("RESCHEDULE");
+                lectNotif.setIsRead(false);
+                lectNotif.setConsultation(saved);
+                lectNotif.setCreatedAt(notifNow);
+                notificationRepository.save(lectNotif);
             }
         } catch (Exception ignored) {
         }
@@ -700,20 +860,38 @@ public class ConsultationService {
         Consultation saved = consultationRepository.save(consultation);
 
         try {
+            LocalDateTime notifNow = LocalDateTime.now();
+            String studentName = (saved.getStudent() != null && saved.getStudent().getUser() != null)
+                    ? saved.getStudent().getUser().getFullName()
+                    : "Student";
+            String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                    ? saved.getLecturer().getUser().getFullName()
+                    : "Lecturer";
+
             if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
                 Notification notif = new Notification();
                 notif.setUser(saved.getStudent().getUser());
                 notif.setTitle("Reschedule Proposal Rejected");
-                String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
-                        ? saved.getLecturer().getUser().getFullName()
-                        : "Lecturer";
-                notif.setMessage("You rejected the proposed reschedule time with " + lecturerName
-                        + ". Your appointment remains confirmed for " + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ".");
+                notif.setMessage("The reschedule proposal with " + lecturerName
+                        + " was declined. Appointment remains on " + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ".");
                 notif.setType("RESCHEDULE");
                 notif.setIsRead(false);
                 notif.setConsultation(saved);
-                notif.setCreatedAt(LocalDateTime.now());
+                notif.setCreatedAt(notifNow);
                 notificationRepository.save(notif);
+            }
+
+            if (saved.getLecturer() != null && saved.getLecturer().getUser() != null) {
+                Notification lectNotif = new Notification();
+                lectNotif.setUser(saved.getLecturer().getUser());
+                lectNotif.setTitle("Reschedule Proposal Declined");
+                lectNotif.setMessage("The reschedule proposal with " + studentName
+                        + " was declined. Appointment remains on " + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ".");
+                lectNotif.setType("RESCHEDULE");
+                lectNotif.setIsRead(false);
+                lectNotif.setConsultation(saved);
+                lectNotif.setCreatedAt(notifNow);
+                notificationRepository.save(lectNotif);
             }
         } catch (Exception ignored) {
         }
@@ -735,7 +913,7 @@ public class ConsultationService {
                 = userRepository.findByEmail(email)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                        "Authenticated user not found"
+                                         "Authenticated user not found"
                                 ));
 
         if (!authenticatedUser.getId().equals(studentId)) {
@@ -748,7 +926,7 @@ public class ConsultationService {
                 = consultationRepository.findById(consultationId)
                         .orElseThrow(()
                                 -> new RuntimeException(
-                                        "Consultation not found"
+                                         "Consultation not found"
                                 ));
 
         // Make sure the consultation belongs to this student
@@ -780,20 +958,39 @@ public class ConsultationService {
         Consultation saved = consultationRepository.save(consultation);
 
         try {
+            LocalDateTime notifNow = LocalDateTime.now();
+            String studentName = (saved.getStudent() != null && saved.getStudent().getUser() != null)
+                    ? saved.getStudent().getUser().getFullName()
+                    : "Student";
+            String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                    ? saved.getLecturer().getUser().getFullName()
+                    : "Lecturer";
+
             if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
                 Notification notif = new Notification();
                 notif.setUser(saved.getStudent().getUser());
                 notif.setTitle("Consultation Cancelled");
-                String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
-                        ? saved.getLecturer().getUser().getFullName()
-                        : "Lecturer";
                 notif.setMessage("Your consultation session with " + lecturerName + " on "
                         + saved.getScheduledDate() + " at " + saved.getScheduledTime() + " has been successfully cancelled.");
                 notif.setType("CANCELLATION");
                 notif.setIsRead(false);
                 notif.setConsultation(saved);
-                notif.setCreatedAt(LocalDateTime.now());
+                notif.setCreatedAt(notifNow);
                 notificationRepository.save(notif);
+            }
+
+            if (saved.getLecturer() != null && saved.getLecturer().getUser() != null) {
+                Notification lectNotif = new Notification();
+                lectNotif.setUser(saved.getLecturer().getUser());
+                lectNotif.setTitle("Consultation Cancelled by Student");
+                lectNotif.setMessage(studentName + " has cancelled the consultation scheduled for "
+                        + saved.getScheduledDate() + " at " + saved.getScheduledTime()
+                        + (cancelReason != null && !cancelReason.isBlank() ? ". Reason: " + cancelReason : "."));
+                lectNotif.setType("CANCELLATION");
+                lectNotif.setIsRead(false);
+                lectNotif.setConsultation(saved);
+                lectNotif.setCreatedAt(notifNow);
+                notificationRepository.save(lectNotif);
             }
         } catch (Exception ignored) {
         }

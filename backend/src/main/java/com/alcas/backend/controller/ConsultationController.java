@@ -287,6 +287,7 @@ public class ConsultationController {
             @PathVariable String consultationId,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String remarks,
+            @RequestParam(required = false) String consultationMode,
             Authentication authentication) {
 
         String email = authentication.getName();
@@ -302,7 +303,8 @@ public class ConsultationController {
                         consultationId,
                         lecturerId,
                         location,
-                        remarks
+                        remarks,
+                        consultationMode
                 );
 
         ConsultationResponse response
