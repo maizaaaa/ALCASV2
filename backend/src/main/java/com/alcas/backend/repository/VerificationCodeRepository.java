@@ -12,4 +12,9 @@ public interface VerificationCodeRepository extends JpaRepository<VerificationCo
             String code,
             VerificationCode.Purpose purpose
     );
+
+    java.util.List<VerificationCode> findByUserIdAndPurpose(
+            Integer userId,
+            VerificationCode.Purpose purpose
+    );
 }

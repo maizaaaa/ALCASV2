@@ -41,4 +41,12 @@ public class VerificationCodeService {
         return verificationCodeRepository
                 .findByUserIdAndCodeAndPurpose(userId, code, purpose);
     }
+
+    public List<VerificationCode> findByUserIdAndPurpose(
+            Integer userId,
+            VerificationCode.Purpose purpose) {
+
+        return verificationCodeRepository
+                .findByUserIdAndPurpose(userId, purpose);
+    }
 }

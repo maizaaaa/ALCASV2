@@ -51,23 +51,33 @@ public class AuthController {
         );
     }
 
-    @PostMapping("/forgot-password")
-    public String forgotPassword(
+    @PostMapping(value = "/forgot-password", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> forgotPassword(
             @RequestBody ForgotPasswordRequest request) {
 
-        return authenticationService.requestPasswordReset(
+        String message = authenticationService.requestPasswordReset(
                 request.getEmail()
         );
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", message
+        ));
     }
 
-    @PostMapping("/reset-password")
-    public String resetPassword(
+    @PostMapping(value = "/reset-password", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> resetPassword(
             @RequestBody ResetPasswordRequest request) {
 
-        return authenticationService.resetPassword(
+        String message = authenticationService.resetPassword(
                 request.getEmail(),
                 request.getCode(),
                 request.getNewPassword()
         );
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", message
+        ));
     }
 }

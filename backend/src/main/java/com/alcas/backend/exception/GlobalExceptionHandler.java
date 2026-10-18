@@ -35,12 +35,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleRuntimeException(
-            RuntimeException exception) {
+    public Map<String, String> handleException(
+            Exception exception) {
 
         return Map.of(
                 "message",
-                exception.getMessage()
+                exception.getMessage() != null ? exception.getMessage() : "An error occurred processing your request"
         );
     }
 }

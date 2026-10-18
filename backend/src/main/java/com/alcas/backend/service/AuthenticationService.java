@@ -7,13 +7,17 @@ import com.alcas.backend.entity.Program;
 import com.alcas.backend.entity.School;
 import com.alcas.backend.entity.StudentProfile;
 import com.alcas.backend.entity.User;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class AuthenticationService {
@@ -26,6 +30,10 @@ public class AuthenticationService {
     private final SchoolService schoolService;
     private final ProgramService programService;
     private final VerificationCodeService verificationCodeService;
+    private final EmailService emailService;
+
+    @Value("${app.frontend.url:http://localhost:4200}")
+    private String frontendUrl;
 
     public AuthenticationService(
             AuthenticationManager authenticationManager,
@@ -35,7 +43,8 @@ public class AuthenticationService {
             StudentProfileService studentProfileService,
             SchoolService schoolService,
             ProgramService programService,
-            VerificationCodeService verificationCodeService) {
+            VerificationCodeService verificationCodeService,
+            EmailService emailService) {
 
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
@@ -45,6 +54,7 @@ public class AuthenticationService {
         this.schoolService = schoolService;
         this.programService = programService;
         this.verificationCodeService = verificationCodeService;
+        this.emailService = emailService;
     }
 
     public LoginResponse login(String email, String password) {
@@ -161,7 +171,8 @@ public class AuthenticationService {
 
         verificationCodeService.save(verificationCode);
 
-        System.out.println("Account activation OTP: " + code);
+        // Send university account activation email
+        emailService.sendAccountActivationEmail(savedUser.getEmail(), savedUser.getFullName(), code);
     }
 
     public String verifyAccount(String email, String code) {
@@ -206,11 +217,29 @@ public class AuthenticationService {
         return "Account verified successfully";
     }
 
-    public String requestPasswordReset(String email) {
+    public String requestPasswordReset(String rawEmail) {
+
+        if (rawEmail == null || rawEmail.trim().isBlank()) {
+            throw new RuntimeException("University email is required");
+        }
+
+        String email = rawEmail.trim().toLowerCase();
 
         User user = userService.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new RuntimeException("No account found registered with university email: " + email));
+
+        // Invalidate any previous unused reset codes for this user
+        List<VerificationCode> existingCodes = verificationCodeService.findByUserIdAndPurpose(
+                user.getId(),
+                VerificationCode.Purpose.PASSWORD_RESET
+        );
+        for (VerificationCode oldCode : existingCodes) {
+            if (!Boolean.TRUE.equals(oldCode.getIsUsed())) {
+                oldCode.setIsUsed(true);
+                verificationCodeService.save(oldCode);
+            }
+        }
 
         String code = String.format(
                 "%06d",
@@ -232,40 +261,59 @@ public class AuthenticationService {
 
         verificationCodeService.save(verificationCode);
 
-        System.out.println("Password reset OTP: " + code);
+        // Build reset link for frontend
+        String encodedEmail = URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8);
+        String resetLink = frontendUrl + "/reset-password?email=" + encodedEmail + "&code=" + code;
 
-        return "Password reset code sent";
+        // Send official UUM ALCAS password reset email
+        emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetLink, code);
+
+        return "Password reset link has been dispatched to " + user.getEmail();
     }
 
     public String resetPassword(
-            String email,
+            String rawEmail,
             String code,
             String newPassword) {
 
+        if (rawEmail == null || rawEmail.trim().isBlank()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        if (code == null || code.trim().isBlank()) {
+            throw new RuntimeException("Verification code is required");
+        }
+
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new RuntimeException("New password must be at least 6 characters long");
+        }
+
+        String email = rawEmail.trim().toLowerCase();
+
         User user = userService.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new RuntimeException("User not found with email: " + email));
 
         VerificationCode verificationCode =
                 verificationCodeService
                         .findByUserIdAndCodeAndPurpose(
                                 user.getId(),
-                                code,
+                                code.trim(),
                                 VerificationCode.Purpose.PASSWORD_RESET
                         )
                         .orElseThrow(() ->
-                                new RuntimeException("Invalid password reset code"));
+                                new RuntimeException("Invalid password reset code or link"));
 
-        if (verificationCode.getIsUsed()) {
+        if (Boolean.TRUE.equals(verificationCode.getIsUsed())) {
             throw new RuntimeException(
-                    "Password reset code has already been used");
+                    "This password reset link/code has already been used");
         }
 
         if (verificationCode.getExpiresAt()
                 .isBefore(LocalDateTime.now())) {
 
             throw new RuntimeException(
-                    "Password reset code has expired");
+                    "Password reset link has expired. Please request a new one.");
         }
 
         user.setPassword(
@@ -280,7 +328,7 @@ public class AuthenticationService {
 
         verificationCodeService.save(verificationCode);
 
-        return "Password reset successfully";
+        return "Password reset successfully. You may now log in with your new password.";
     }
 
     public String encodePassword(String password) {
