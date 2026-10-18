@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../shared/sidebar/sidebar';
+import { getAdminStatusBadgeClass } from '../admin-status';
 import * as XLSX from 'xlsx';
 
 export interface AdminDashboardData {
@@ -61,6 +62,10 @@ export class AdminDashboardComponent implements OnInit {
 
   isDarkMode: boolean = false;
 
+  getStatusBadgeClass(status?: string): string {
+    return getAdminStatusBadgeClass(status);
+  }
+
   // 1. Statistics
   stats = {
     todayConsultations: 0,
@@ -115,8 +120,6 @@ export class AdminDashboardComponent implements OnInit {
 
   // Export State
   isExporting: boolean = false;
-  showToast: boolean = false;
-  toastMessage: string = '';
 
   constructor(private router: Router) { }
 
@@ -420,4 +423,5 @@ export class AdminDashboardComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 }
+
 

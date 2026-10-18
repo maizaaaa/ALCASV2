@@ -47,18 +47,23 @@
 
       <div class="controls-card glass-card">
         <div class="tabs-container">
-          <button class="tab-btn" [class.active]="filterStatus === 'ALL'" (click)="filterStatus = 'ALL'">
-            All Records ({{ attendanceRecords.length }})
+          <button type="button" class="tab-btn" [class.active]="filterStatus === 'ALL'" (click)="filterStatus = 'ALL'">
+            <span>All Records</span>
+            <span class="tab-count">{{ attendanceRecords.length }}</span>
           </button>
-          <button class="tab-btn" [class.active]="filterStatus === 'PRESENT'" (click)="filterStatus = 'PRESENT'">
-            Present
+          <button type="button" class="tab-btn" [class.active]="filterStatus === 'PRESENT'" (click)="filterStatus = 'PRESENT'">
+            <span>Present</span>
           </button>
-          <button class="tab-btn" [class.active]="filterStatus === 'NO_SHOW' || filterStatus === 'NO-SHOW'"
+          <button type="button" class="tab-btn" [class.active]="filterStatus === 'NO_SHOW' || filterStatus === 'NO-SHOW'"
             (click)="filterStatus = 'NO_SHOW'">
-            No-Shows Only
+            <span>Student No-Shows</span>
           </button>
-          <button class="tab-btn" [class.active]="filterStatus === 'EXCUSED'" (click)="filterStatus = 'EXCUSED'">
-            Excused
+          <button type="button" class="tab-btn" [class.active]="filterStatus === 'LECTURER_NO_SHOW' || filterStatus === 'LECTURER-NO-SHOW'"
+            (click)="filterStatus = 'LECTURER_NO_SHOW'">
+            <span>Lecturer No-Shows</span>
+          </button>
+          <button type="button" class="tab-btn" [class.active]="filterStatus === 'EXCUSED'" (click)="filterStatus = 'EXCUSED'">
+            <span>Excused</span>
           </button>
         </div>
 
@@ -98,7 +103,7 @@
               </tr>
 
               <tr *ngFor="let record of filteredRecords"
-                [class.row-alert]="record.status === 'NO_SHOW' || record.status === 'NO-SHOW'">
+                [class.row-alert]="record.status === 'NO_SHOW' || record.status === 'NO-SHOW' || isLecturerNoShow(record)">
                 <td>
                   <div class="student-name">{{ record.studentName || 'Student #' + record.studentId }}</div>
                   <div class="student-matric">{{ record.studentMatric || '-' }}</div>
@@ -171,10 +176,12 @@
             <span class="recipient-label">Student:</span>
             <span class="recipient-val">{{ selectedRecordForWarning.studentName || 'Student #' + selectedRecordForWarning.studentId }}</span>
             <span class="recipient-sub" *ngIf="selectedRecordForWarning.studentMatric">({{ selectedRecordForWarning.studentMatric }})</span>
+            <span class="recipient-sub font-semibold text-emerald-600 ml-1" *ngIf="isLecturerNoShow(selectedRecordForWarning)">[Reporter]</span>
           </div>
           <div class="recipient-item">
             <span class="recipient-label">Lecturer:</span>
             <span class="recipient-val">{{ selectedRecordForWarning.lecturerName || 'Lecturer #' + selectedRecordForWarning.lecturerId }}</span>
+            <span class="recipient-sub font-semibold text-violet-600 ml-1" *ngIf="isLecturerNoShow(selectedRecordForWarning)">[Reported Absent]</span>
           </div>
           <div class="recipient-item">
             <span class="recipient-label">Session Date:</span>
@@ -194,7 +201,8 @@
             [(ngModel)]="warningMessage"
             placeholder="Enter a brief message regarding this no-show issue..."
           ></textarea>
-          <p class="field-helper">Upon clicking Send, this message will be automatically sent to the notifications of the student and lecturer.</p>
+          <p class="field-helper" *ngIf="isLecturerNoShow(selectedRecordForWarning)">Upon clicking Send, this warning message will be sent directly to the lecturer's notification only.</p>
+          <p class="field-helper" *ngIf="!isLecturerNoShow(selectedRecordForWarning)">Upon clicking Send, this message will be automatically sent to the notifications of the student and lecturer.</p>
         </div>
       </div>
 
@@ -205,6 +213,73 @@
         <button type="button" class="btn-modal-send" (click)="sendWarning()" [disabled]="isSendingWarning || !warningMessage.trim()">
           <span *ngIf="!isSendingWarning">Send</span>
           <span *ngIf="isSendingWarning">Sending...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Popup Card: Excuse Absence -->
+  <div class="modal-overlay" *ngIf="isExcuseModalOpen" (click)="closeExcuseModal()">
+    <div class="warning-modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge excuse-badge">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title">Excuse Consultation Absence</h3>
+            <p class="modal-subtitle">Mark absence as excused. Both parties will be officially notified.</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="closeExcuseModal()" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedRecordForExcuse">
+        <!-- Target recipients info -->
+        <div class="recipients-summary">
+          <div class="recipient-item">
+            <span class="recipient-label">Student:</span>
+            <span class="recipient-val">{{ selectedRecordForExcuse.studentName || 'Student #' + selectedRecordForExcuse.studentId }}</span>
+            <span class="recipient-sub" *ngIf="selectedRecordForExcuse.studentMatric">({{ selectedRecordForExcuse.studentMatric }})</span>
+            <span class="recipient-sub font-semibold text-emerald-600 ml-1" *ngIf="isLecturerNoShow(selectedRecordForExcuse)">[Reporter]</span>
+          </div>
+          <div class="recipient-item">
+            <span class="recipient-label">Lecturer:</span>
+            <span class="recipient-val">{{ selectedRecordForExcuse.lecturerName || 'Lecturer #' + selectedRecordForExcuse.lecturerId }}</span>
+            <span class="recipient-sub font-semibold text-violet-600 ml-1" *ngIf="isLecturerNoShow(selectedRecordForExcuse)">[Reported Absent]</span>
+          </div>
+          <div class="recipient-item">
+            <span class="recipient-label">Session Date:</span>
+            <span class="recipient-val">{{ selectedRecordForExcuse.attendanceDate }}</span>
+          </div>
+        </div>
+
+        <!-- Reason / Notes section -->
+        <div class="message-field-group">
+          <label class="field-label" for="excuse-reason-input">
+            Administrative Excuse Reason / Notes
+          </label>
+          <textarea
+            id="excuse-reason-input"
+            class="modal-textarea"
+            rows="3"
+            [(ngModel)]="excuseReason"
+            placeholder="Enter reason for excusing this absence..."
+          ></textarea>
+          <p class="field-helper">Status will be updated to EXCUSED and formal notifications will be sent to the student and lecturer.</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" (click)="closeExcuseModal()" [disabled]="isSubmittingExcuse">
+          Cancel
+        </button>
+        <button type="button" class="btn-modal-excuse" (click)="confirmExcuse()" [disabled]="isSubmittingExcuse">
+          <span *ngIf="!isSubmittingExcuse">Confirm & Excuse</span>
+          <span *ngIf="isSubmittingExcuse">Updating...</span>
         </button>
       </div>
     </div>

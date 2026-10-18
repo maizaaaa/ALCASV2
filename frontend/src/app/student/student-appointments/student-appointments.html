@@ -45,7 +45,7 @@
 
           <!-- 2. Completed / Confirmed Tab -->
           <button (click)="setTab('confirmed')"
-            [ngClass]="activeTab === 'confirmed' ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-md font-extrabold' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 font-bold hover:bg-slate-100 dark:hover:bg-slate-800/60'"
+            [ngClass]="activeTab === 'confirmed' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md font-extrabold' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 font-bold hover:bg-slate-100 dark:hover:bg-slate-800/60'"
             class="px-5 sm:px-6 py-2.5 rounded-xl transition-all duration-200 min-w-[160px] sm:min-w-[185px] text-center text-sm flex items-center justify-center gap-2 cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -53,7 +53,8 @@
             </svg>
             Confirmed Sessions
             <span *ngIf="confirmedAppointments.length > 0"
-              class="ml-1 px-2 py-0.5 text-xs rounded-full bg-white/20 text-white font-black">
+              class="ml-1 px-2 py-0.5 text-xs rounded-full font-black shadow-xs"
+              [ngClass]="activeTab === 'confirmed' ? 'bg-white text-blue-600' : 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-300'">
               {{ confirmedAppointments.length }}
             </span>
           </button>
@@ -108,21 +109,22 @@
 
             <!-- Pending Filter Button -->
             <button type="button" (click)="setPendingFilter('PENDING')"
-              [ngClass]="pendingFilter === 'PENDING' ? 'bg-amber-600 text-white shadow-sm font-extrabold' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 font-bold'"
+              [ngClass]="pendingFilter === 'PENDING' ? 'bg-amber-600 text-white shadow-sm font-extrabold' : 'bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
               Pending
-              <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
+              <span class="px-1.5 py-0.2 text-[10px] rounded-md font-bold"
+                [ngClass]="pendingFilter === 'PENDING' ? 'bg-white/20 text-white' : 'bg-amber-200/80 text-amber-700 dark:bg-white/10'">
                 {{ pendingCount }}
               </span>
             </button>
 
             <!-- Reschedule Proposed Filter -->
             <button type="button" (click)="setPendingFilter('RESCHEDULE-PENDING')"
-              [ngClass]="pendingFilter === 'RESCHEDULE-PENDING' ? 'bg-cyan-600 text-white shadow-sm font-extrabold' : 'bg-cyan-50 text-cyan-800 hover:bg-cyan-100 dark:bg-cyan-950/60 dark:text-cyan-300 font-bold'"
+              [ngClass]="pendingFilter === 'RESCHEDULE-PENDING' ? 'bg-teal-600 text-white shadow-sm font-extrabold' : 'bg-teal-100 text-teal-600 hover:bg-teal-200 dark:bg-teal-950/60 dark:text-teal-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
               Reschedule Proposed
               <span *ngIf="reschedulePendingCount > 0"
-                class="px-1.5 py-0.2 text-[10px] rounded-md bg-cyan-500 text-white font-black animate-pulse">
+                class="px-1.5 py-0.2 text-[10px] rounded-md bg-teal-500 text-white font-black animate-pulse">
                 {{ reschedulePendingCount }}
               </span>
             </button>
@@ -159,7 +161,7 @@
             class="student-card bg-white dark:bg-[#071317] border border-slate-200 dark:border-teal-900/40 shadow-md rounded-[2rem] p-6 transition-all duration-200 relative overflow-hidden"
             [ngClass]="{
               'border-l-4 border-l-amber-500 dark:border-l-amber-400': appt.status === 'PENDING',
-              'border-l-4 border-l-cyan-500 dark:border-l-cyan-400': appt.status === 'RESCHEDULE-PENDING'
+              'border-l-4 border-l-teal-500 dark:border-l-teal-400': appt.status === 'RESCHEDULE-PENDING'
             }">
 
             <!-- Card Header & Main Info Row -->
@@ -180,12 +182,12 @@
 
                     <!-- Status Tags -->
                     <span *ngIf="appt.status === 'PENDING'"
-                      class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800/60">
+                      class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-600 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-900/60">
                       Pending
                     </span>
 
                     <span *ngIf="appt.status === 'RESCHEDULE-PENDING'"
-                      class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-100 text-cyan-800 border border-cyan-300 dark:bg-cyan-950 dark:text-cyan-300 dark:border-cyan-800">
+                      class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-100 text-teal-600 border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-900/60">
                       Reschedule Proposed
                     </span>
                   </div>
@@ -197,7 +199,7 @@
 
                   <!-- Reschedule proposal highlight if present (Lecturer-initiated) -->
                   <div *ngIf="appt.status === 'RESCHEDULE-PENDING'"
-                    class="mt-2 text-xs font-medium text-cyan-800 dark:text-cyan-300 bg-cyan-50/90 dark:bg-cyan-950/40 p-2.5 rounded-xl border border-cyan-200 dark:border-cyan-900/40 flex items-start gap-1.5">
+                    class="mt-2 text-xs font-medium text-teal-800 dark:text-teal-300 bg-teal-50/90 dark:bg-teal-950/40 p-2.5 rounded-xl border border-teal-200 dark:border-teal-900/40 flex items-start gap-1.5">
                     <span>Lecturer suggested new slot: <strong>{{ appt.proposedDate }} at {{ appt.proposedTime
                         }}</strong></span>
                   </div>
@@ -334,7 +336,7 @@
 
                     <!-- Status Tags -->
                     <span
-                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800/60">
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-600 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-900/60">
                       Confirmed
                     </span>
                   </div>
@@ -398,6 +400,19 @@
 
                 <!-- Action Buttons -->
                 <div class="flex items-center gap-2 shrink-0">
+
+                  <!-- Report Lecturer Absence Button (when current time exceeds start time by >= 15 mins) -->
+                  <button *ngIf="isEligibleForLecturerNoShow(appt)" type="button"
+                    (click)="openModal(appt, 'lecturer-no-show')"
+                    class="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="Report Lecturer Absence" aria-label="Report Lecturer Absence">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                      </path>
+                    </svg>
+                    Report Lecturer Absence
+                  </button>
 
                   <!-- View Details Button -->
                   <button type="button" (click)="openModal(appt, 'view')" class="action-icon-btn btn-view"
@@ -475,40 +490,44 @@
 
             <!-- Completed Filter -->
             <button type="button" (click)="setHistoryFilter('COMPLETED')"
-              [ngClass]="historyFilter === 'COMPLETED' ? 'bg-slate-700 text-white shadow-sm font-extrabold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 font-bold'"
+              [ngClass]="historyFilter === 'COMPLETED' ? 'bg-green-600 text-white shadow-sm font-extrabold' : 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-950/60 dark:text-green-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
               Completed
-              <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
+              <span class="px-1.5 py-0.2 text-[10px] rounded-md font-bold"
+                [ngClass]="historyFilter === 'COMPLETED' ? 'bg-white/20 text-white' : 'bg-green-200/80 text-green-700 dark:bg-white/10'">
                 {{ completedCount }}
               </span>
             </button>
 
             <!-- Cancelled Filter -->
             <button type="button" (click)="setHistoryFilter('CANCELLED')"
-              [ngClass]="historyFilter === 'CANCELLED' ? 'bg-amber-600 text-white shadow-sm font-extrabold' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 font-bold'"
+              [ngClass]="historyFilter === 'CANCELLED' ? 'bg-gray-500 text-white shadow-sm font-extrabold' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
               Cancelled
-              <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
+              <span class="px-1.5 py-0.2 text-[10px] rounded-md font-bold"
+                [ngClass]="historyFilter === 'CANCELLED' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600 dark:bg-white/10'">
                 {{ cancelledCount }}
               </span>
             </button>
 
             <!-- Rejected Filter -->
             <button type="button" (click)="setHistoryFilter('REJECTED')"
-              [ngClass]="historyFilter === 'REJECTED' ? 'bg-rose-600 text-white shadow-sm font-extrabold' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 font-bold'"
+              [ngClass]="historyFilter === 'REJECTED' ? 'bg-red-600 text-white shadow-sm font-extrabold' : 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-950/60 dark:text-red-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
               Rejected
-              <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
+              <span class="px-1.5 py-0.2 text-[10px] rounded-md font-bold"
+                [ngClass]="historyFilter === 'REJECTED' ? 'bg-white/20 text-white' : 'bg-red-200/80 text-red-700 dark:bg-white/10'">
                 {{ rejectedCount }}
               </span>
             </button>
 
             <!-- No-Show Filter -->
             <button type="button" (click)="setHistoryFilter('NO-SHOW')"
-              [ngClass]="historyFilter === 'NO-SHOW' ? 'bg-red-700 text-white shadow-sm font-extrabold' : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/60 dark:text-red-300 font-bold'"
+              [ngClass]="historyFilter === 'NO-SHOW' ? 'bg-violet-600 text-white shadow-sm font-extrabold' : 'bg-violet-100 text-violet-600 hover:bg-violet-200 dark:bg-violet-950/60 dark:text-violet-300 font-bold'"
               class="px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer">
               No-Show
-              <span class="px-1.5 py-0.2 text-[10px] rounded-md bg-black/10 dark:bg-white/10 font-bold">
+              <span class="px-1.5 py-0.2 text-[10px] rounded-md font-bold"
+                [ngClass]="historyFilter === 'NO-SHOW' ? 'bg-white/20 text-white' : 'bg-violet-200/80 text-violet-700 dark:bg-white/10'">
                 {{ noShowCount }}
               </span>
             </button>
@@ -549,12 +568,12 @@
                     <span
                       class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border"
                       [ngClass]="{
-                        'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800': appt.status === 'COMPLETED',
-                        'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/50': appt.status === 'CANCELLED',
-                        'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/50': appt.status === 'REJECTED',
-                        'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900/50': appt.status === 'NO-SHOW'
+                        'bg-green-100 text-green-600 border-green-200 dark:bg-green-950/60 dark:text-green-300 dark:border-green-900/60': appt.status === 'COMPLETED',
+                        'bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-900/70 dark:text-gray-400 dark:border-gray-800': appt.status === 'CANCELLED' || appt.status === 'CANCELED',
+                        'bg-red-100 text-red-600 border-red-200 dark:bg-red-950/60 dark:text-red-300 dark:border-red-900/60': appt.status === 'REJECTED',
+                        'bg-violet-100 text-violet-600 border-violet-200 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-900/60': appt.status === 'NO-SHOW' || appt.status === 'NO_SHOW' || appt.status === 'LECTURER-NO-SHOW' || appt.status === 'LECTURER_NO_SHOW'
                       }">
-                      {{ appt.status }}
+                      {{ appt.status === 'LECTURER-NO-SHOW' || appt.status === 'LECTURER_NO_SHOW' ? 'LECTURER NO-SHOW' : appt.status }}
                     </span>
                   </div>
                   <p class="consultation-reason text-slate-500 dark:text-slate-400 text-sm mt-0.5">
@@ -618,27 +637,27 @@
             <div *ngIf="appt.status !== 'COMPLETED'"
               class="w-full pt-3 border-t border-slate-100 dark:border-teal-900/20">
               <div class="rounded-2xl p-3.5 flex items-start gap-3 border text-xs transition-all" [ngClass]="{
-                  'bg-rose-50/70 border-rose-200/80 text-rose-900 dark:bg-rose-950/30 dark:border-rose-900/40 dark:text-rose-200': appt.status === 'REJECTED' || appt.rejectReason,
-                  'bg-amber-50/70 border-amber-200/80 text-amber-900 dark:bg-amber-950/30 dark:border-amber-900/40 dark:text-amber-200': appt.status === 'CANCELLED' || appt.cancelReason,
-                  'bg-red-50/70 border-red-200/80 text-red-900 dark:bg-red-950/30 dark:border-red-900/40 dark:text-red-200': appt.status === 'NO-SHOW' && !appt.cancelReason && !appt.rejectReason
+                  'bg-red-50/80 border-red-200/80 text-red-900 dark:bg-red-950/30 dark:border-red-900/40 dark:text-red-200': appt.status === 'REJECTED' || appt.rejectReason,
+                  'bg-gray-100/90 border-gray-200 text-gray-700 dark:bg-gray-900/40 dark:border-gray-800 dark:text-gray-300': appt.status === 'CANCELLED' || appt.cancelReason,
+                  'bg-violet-50/80 border-violet-200/80 text-violet-900 dark:bg-violet-950/30 dark:border-violet-900/40 dark:text-violet-200': (appt.status === 'NO-SHOW' || appt.status === 'NO_SHOW' || appt.status === 'LECTURER-NO-SHOW' || appt.status === 'LECTURER_NO_SHOW') && !appt.cancelReason && !appt.rejectReason
                 }">
 
                 <!-- Status Icon -->
                 <div class="mt-0.5 shrink-0">
                   <svg *ngIf="appt.status === 'REJECTED' || appt.rejectReason"
-                    class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor"
+                    class="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
                     viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
                   <svg *ngIf="appt.status === 'CANCELLED' || appt.cancelReason"
-                    class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor"
+                    class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor"
                     viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
-                  <svg *ngIf="appt.status === 'NO-SHOW' && !appt.cancelReason && !appt.rejectReason"
-                    class="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
+                  <svg *ngIf="(appt.status === 'NO-SHOW' || appt.status === 'NO_SHOW' || appt.status === 'LECTURER-NO-SHOW' || appt.status === 'LECTURER_NO_SHOW') && !appt.cancelReason && !appt.rejectReason"
+                    class="w-4 h-4 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor"
                     viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
@@ -714,14 +733,8 @@
           </div>
           <div class="text-right">
             <p class="modal-label text-slate-400 dark:text-slate-500 mb-1">Status</p>
-            <span class="status-pill text-xs font-black uppercase px-2.5 py-1 rounded-lg border inline-block" [ngClass]="{
-                'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800': selectedAppointment.status === 'CONFIRMED' || selectedAppointment.status === 'UPCOMING',
-                'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800': selectedAppointment.status === 'PENDING' || selectedAppointment.status === 'CANCELLED',
-                'bg-cyan-100 text-cyan-800 border-cyan-300 dark:bg-cyan-950 dark:text-cyan-300 dark:border-cyan-800': selectedAppointment.status === 'RESCHEDULE-PENDING',
-                'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800': selectedAppointment.status === 'COMPLETED',
-                'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800': selectedAppointment.status === 'REJECTED',
-                'bg-red-100 text-red-800 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-800': selectedAppointment.status === 'NO-SHOW'
-              }">
+            <span class="status-pill text-xs font-black uppercase px-2.5 py-1 rounded-lg border inline-block"
+              [ngClass]="getStatusPillClass(selectedAppointment.status)">
               {{ (selectedAppointment.status === 'UPCOMING' || selectedAppointment.status === 'CONFIRMED') ? 'CONFIRMED'
               : selectedAppointment.status }}
             </span>
@@ -819,17 +832,17 @@
 
         <!-- No-Show Reason / Remarks (Displayed explicitly for No-Show sessions) -->
         <div class="pt-2"
-          *ngIf="selectedAppointment.status === 'NO-SHOW' && !selectedAppointment.cancelReason && !selectedAppointment.rejectReason">
-          <p class="modal-label font-bold text-red-600 dark:text-red-400 mb-1 flex items-center gap-1.5">
+          *ngIf="(selectedAppointment.status === 'NO-SHOW' || selectedAppointment.status === 'NO_SHOW' || selectedAppointment.status === 'LECTURER-NO-SHOW' || selectedAppointment.status === 'LECTURER_NO_SHOW') && !selectedAppointment.cancelReason && !selectedAppointment.rejectReason">
+          <p class="modal-label font-bold text-violet-600 dark:text-violet-400 mb-1 flex items-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
               </path>
             </svg>
-            No-Show Reason / Remarks
+            {{ getHistoryReasonLabel(selectedAppointment) }}
           </p>
           <div
-            class="p-3.5 rounded-xl border border-red-200 bg-red-50/80 text-red-900 dark:bg-red-950/40 dark:border-red-900/50 dark:text-red-200 text-xs leading-relaxed">
+            class="p-3.5 rounded-xl border border-violet-200 bg-violet-50/80 text-violet-900 dark:bg-violet-950/40 dark:border-violet-900/50 dark:text-violet-200 text-xs leading-relaxed">
             <p class="font-semibold italic">"{{ getHistoryReason(selectedAppointment) }}"</p>
           </div>
         </div>
@@ -852,7 +865,7 @@
 
         <!-- Lecturer Notes for Active Sessions -->
         <div class="pt-2"
-          *ngIf="selectedAppointment.remarks && selectedAppointment.status !== 'NO-SHOW' && selectedAppointment.status !== 'COMPLETED' && selectedAppointment.status !== 'CANCELLED' && selectedAppointment.status !== 'REJECTED'">
+          *ngIf="selectedAppointment.remarks && selectedAppointment.status !== 'NO-SHOW' && selectedAppointment.status !== 'LECTURER-NO-SHOW' && selectedAppointment.status !== 'LECTURER_NO_SHOW' && selectedAppointment.status !== 'COMPLETED' && selectedAppointment.status !== 'CANCELLED' && selectedAppointment.status !== 'REJECTED'">
           <p class="modal-label text-teal-600 dark:text-teal-400 mb-1">Lecturer Notes & Instructions</p>
           <p
             class="text-xs font-semibold italic text-slate-700 dark:text-slate-300 bg-teal-50/80 dark:bg-teal-950/50 p-3.5 rounded-xl border border-teal-200 dark:border-teal-900/40">
@@ -898,12 +911,58 @@
               selectedAppointment.rescheduleReason }}"</p>
           </div>
         </div>
+
+        <!-- Absence Report Callout inside View Details Modal -->
+        <div *ngIf="isEligibleForLecturerNoShow(selectedAppointment)"
+          class="pt-3 border-t border-slate-200 dark:border-teal-900/30">
+          <div
+            class="p-4 rounded-2xl bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-900/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <div
+                class="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-900/60 text-violet-600 dark:text-violet-300 flex items-center justify-center shrink-0 mt-0.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                  </path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-violet-900 dark:text-violet-200">Lecturer Absence Reporting Available</p>
+                <p class="text-[11px] text-violet-700 dark:text-violet-300 mt-0.5 font-medium leading-relaxed">
+                  More than 15 minutes have elapsed since the scheduled start time. You may submit an absence report for this session.
+                </p>
+              </div>
+            </div>
+            <button type="button" (click)="openModal(selectedAppointment, 'lecturer-no-show')"
+              class="shrink-0 px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                </path>
+              </svg>
+              Report Absence
+            </button>
+          </div>
+        </div>
       </div>
 
-      <button (click)="closeModal()"
-        class="w-full mt-6 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-teal-700 dark:hover:bg-teal-600 text-white font-extrabold transition-all shadow-md">
-        Close Details
-      </button>
+      <div class="mt-6 flex flex-col sm:flex-row gap-3">
+        <button *ngIf="isEligibleForLecturerNoShow(selectedAppointment)" type="button"
+          (click)="openModal(selectedAppointment, 'lecturer-no-show')"
+          class="flex-1 py-3.5 px-4 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+            </path>
+          </svg>
+          Report Lecturer Absence
+        </button>
+
+        <button (click)="closeModal()"
+          class="flex-1 py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-teal-700 dark:hover:bg-teal-600 text-white font-extrabold transition-all shadow-md text-sm cursor-pointer">
+          Close Details
+        </button>
+      </div>
     </div>
 
     <!-- 2. CANCEL APPOINTMENT MODAL -->
@@ -963,6 +1022,64 @@
             </path>
           </svg>
           Confirm Cancellation
+        </button>
+      </div>
+    </div>
+
+    <!-- 2.5. REPORT LECTURER ABSENCE (NO-SHOW) MODAL -->
+    <div *ngIf="modalMode === 'lecturer-no-show' && selectedAppointment" class="overflow-y-auto max-h-[calc(90vh-100px)] pr-1">
+      <div class="flex items-center gap-3 mb-4">
+        <div
+          class="w-10 h-10 rounded-2xl bg-violet-100 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+            </path>
+          </svg>
+        </div>
+        <div>
+          <h2 class="modal-section-title text-slate-900 dark:text-white text-xl font-extrabold">Report Lecturer Absence</h2>
+          <p class="text-xs text-violet-600 dark:text-violet-400 font-semibold">15-minute wait threshold reached</p>
+        </div>
+      </div>
+
+      <div
+        class="bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900/50 rounded-2xl p-4 mb-5 flex items-start gap-3">
+        <svg class="w-5 h-5 text-violet-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+          </path>
+        </svg>
+        <p class="text-xs font-semibold text-violet-800 dark:text-violet-300 leading-relaxed">
+          At least 15 minutes have passed since the scheduled start time. Submitting this report will mark the consultation as <strong>Lecturer No-Show</strong> and notify <strong>{{ selectedAppointment.lecturer }}</strong>.
+        </p>
+      </div>
+
+      <div
+        class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-teal-900/30 mb-5">
+        <p class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider mb-1">Target Appointment</p>
+        <p class="text-sm font-extrabold text-slate-800 dark:text-slate-200">{{ selectedAppointment.lecturer }}</p>
+        <p class="text-xs text-teal-700 dark:text-teal-300 font-bold mt-1">📅 {{ selectedAppointment.date }} @ {{ selectedAppointment.time }}</p>
+      </div>
+
+      <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+        Student Remark <span class="text-violet-600">*</span>
+      </label>
+      <textarea [(ngModel)]="lecturerNoShowRemark" rows="3" placeholder="e.g. Waited for 15+ minutes at room / link, lecturer did not show up..."
+        class="reschedule-textarea w-full box-border p-4 mb-6 bg-white dark:bg-slate-900/80 border border-slate-300 dark:border-teal-900/40 rounded-2xl outline-none focus:ring-2 focus:ring-violet-400 transition-all text-sm font-medium text-slate-800 dark:text-slate-100 resize-none shadow-xs"></textarea>
+
+      <div class="flex gap-3">
+        <button (click)="closeModal()"
+          class="flex-1 py-3.5 rounded-xl border-2 border-slate-200 dark:border-teal-900/40 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-sm cursor-pointer">
+          Keep Appointment
+        </button>
+        <button (click)="confirmLecturerNoShow()" [disabled]="isSubmittingNoShow"
+          class="flex-1 py-3.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold shadow-md transition-all text-sm flex items-center justify-center gap-1.5 cursor-pointer">
+          <svg *ngIf="isSubmittingNoShow" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          <span>{{ isSubmittingNoShow ? 'Submitting Report...' : 'Submit Absence Report' }}</span>
         </button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../shared/sidebar/sidebar';
 import { ConsultationService, Consultation } from '../../services/consultation.service';
+import { getAdminStatusBadgeClass } from '../admin-status';
 import * as XLSX from 'xlsx';
 
 export interface ConsultationLogItem {
@@ -36,6 +37,10 @@ export class ConsultationLogsComponent implements OnInit {
   dateFilter: string = '';
   isLoading: boolean = false;
   errorMessage: string = '';
+
+  getStatusBadgeClass(status?: string): string {
+    return getAdminStatusBadgeClass(status);
+  }
 
   // --- MODAL STATE ---
   showModal = false;
@@ -98,8 +103,7 @@ export class ConsultationLogsComponent implements OnInit {
 
     let status = (c.status || 'PENDING').toUpperCase();
     if (status === 'NO_SHOW') status = 'NO-SHOW';
-    if (status === 'RESCHEDULE_PENDING') status = 'RESCHEDULE-PENDING';
-    const statusClass = status.toLowerCase().replace(/_/g, '-');
+    const statusClass = this.getStatusBadgeClass(status);
 
     return {
       id: c.id,

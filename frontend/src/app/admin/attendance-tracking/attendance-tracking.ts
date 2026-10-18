@@ -62,7 +62,7 @@ export class AttendanceTrackingComponent implements OnInit {
   calculateStats(): void {
     const total = this.attendanceRecords.length;
     const noShows = this.attendanceRecords.filter(
-      (r) => r.status === 'NO_SHOW' || r.status === 'NO-SHOW'
+      (r) => r.status === 'NO_SHOW' || r.status === 'NO-SHOW' || this.isLecturerNoShow(r)
     ).length;
     const present = this.attendanceRecords.filter(
       (r) => r.status === 'PRESENT'
@@ -77,11 +77,27 @@ export class AttendanceTrackingComponent implements OnInit {
     };
   }
 
+  isLecturerNoShow(record?: AdminAttendanceItem | null): boolean {
+    if (!record || !record.status) return false;
+    const s = record.status.trim().toUpperCase();
+    return s === 'LECTURER_NO_SHOW' || s === 'LECTURER-NO-SHOW';
+  }
+
+  get lecturerNoShowsCount(): number {
+    return this.attendanceRecords.filter((r) => this.isLecturerNoShow(r)).length;
+  }
+
+  get studentNoShowsCount(): number {
+    return this.attendanceRecords.filter((r) => r.status === 'NO_SHOW' || r.status === 'NO-SHOW').length;
+  }
+
   get filteredRecords(): AdminAttendanceItem[] {
     return this.attendanceRecords.filter((record) => {
       let matchesStatus = true;
       if (this.filterStatus === 'NO_SHOW' || this.filterStatus === 'NO-SHOW') {
         matchesStatus = record.status === 'NO_SHOW' || record.status === 'NO-SHOW';
+      } else if (this.filterStatus === 'LECTURER_NO_SHOW' || this.filterStatus === 'LECTURER-NO-SHOW') {
+        matchesStatus = this.isLecturerNoShow(record);
       } else if (this.filterStatus === 'PRESENT') {
         matchesStatus = record.status === 'PRESENT';
       } else if (this.filterStatus === 'EXCUSED') {
@@ -107,6 +123,7 @@ export class AttendanceTrackingComponent implements OnInit {
     if (!status) return '';
     const upper = status.trim().toUpperCase();
     if (upper === 'NO_SHOW' || upper === 'NO-SHOW') return 'NO-SHOW';
+    if (upper === 'LECTURER_NO_SHOW' || upper === 'LECTURER-NO-SHOW') return 'LECTURER NO-SHOW';
     if (upper === 'RESCHEDULE_PENDING' || upper === 'RESCHEDULE-PENDING') return 'RESCHEDULE-PENDING';
     return upper;
   }
@@ -115,7 +132,8 @@ export class AttendanceTrackingComponent implements OnInit {
     if (!status) return '';
     const s = status.toUpperCase();
     if (s === 'PRESENT') return 'present';
-    if (s === 'NO_SHOW' || s === 'NO-SHOW') return 'no-show no_show';
+    if (s === 'NO_SHOW' || s === 'NO-SHOW') return 'no-show no_show text-violet-600 bg-violet-100';
+    if (s === 'LECTURER_NO_SHOW' || s === 'LECTURER-NO-SHOW') return 'lecturer-no-show no-show text-violet-600 bg-violet-100 border border-violet-200';
     if (s === 'EXCUSED') return 'excused';
     return s.toLowerCase();
   }
@@ -137,7 +155,11 @@ export class AttendanceTrackingComponent implements OnInit {
     const lecturerName = record.lecturerName || 'Lecturer';
     const dateStr = record.attendanceDate || 'the scheduled consultation';
 
-    this.warningMessage = `Attendance Warning: ${studentName} was marked as a NO-SHOW for the scheduled consultation session with ${lecturerName} on ${dateStr}. Please review this missed session.`;
+    if (this.isLecturerNoShow(record)) {
+      this.warningMessage = `Attendance Warning: Lecturer ${lecturerName} was reported absent by student ${studentName} for the scheduled consultation session on ${dateStr}. Please adhere to scheduled consultation commitments.`;
+    } else {
+      this.warningMessage = `Attendance Warning: ${studentName} was marked as a NO-SHOW for the scheduled consultation session with ${lecturerName} on ${dateStr}. Please review this missed session.`;
+    }
     this.isWarningModalOpen = true;
     this.cdr.detectChanges();
   }
@@ -151,12 +173,12 @@ export class AttendanceTrackingComponent implements OnInit {
   }
 
   isActionRequired(record: AdminAttendanceItem): boolean {
-    const isNoShow = record.status === 'NO_SHOW' || record.status === 'NO-SHOW';
+    const isNoShow = record.status === 'NO_SHOW' || record.status === 'NO-SHOW' || this.isLecturerNoShow(record);
     return isNoShow && !record.warningIssued;
   }
 
   isWarningSent(record: AdminAttendanceItem): boolean {
-    const isNoShow = record.status === 'NO_SHOW' || record.status === 'NO-SHOW';
+    const isNoShow = record.status === 'NO_SHOW' || record.status === 'NO-SHOW' || this.isLecturerNoShow(record);
     return isNoShow && !!record.warningIssued;
   }
 
@@ -181,6 +203,7 @@ export class AttendanceTrackingComponent implements OnInit {
       targetRecord.lecturerName || 'Lecturer';
     const msg = this.warningMessage;
     const recordId = targetRecord.id;
+    const isLecturer = this.isLecturerNoShow(targetRecord);
 
     // Immediately mark warning as issued on this record so buttons disappear
     targetRecord.warningIssued = true;
@@ -193,7 +216,9 @@ export class AttendanceTrackingComponent implements OnInit {
     this.calculateStats();
 
     // 3. Show small popup success message
-    this.successPopupMessage = `Warning sent successfully to ${studentName} and ${lecturerName}!`;
+    this.successPopupMessage = isLecturer
+      ? `Warning sent successfully to lecturer ${lecturerName}!`
+      : `Warning sent successfully to ${studentName} and ${lecturerName}!`;
     this.showSuccessPopup = true;
     this.cdr.detectChanges();
 
@@ -227,41 +252,72 @@ export class AttendanceTrackingComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  // Excuse Modal State
+  isExcuseModalOpen: boolean = false;
+  selectedRecordForExcuse: AdminAttendanceItem | null = null;
+  excuseReason: string = 'Admin override: Excused absence';
+  isSubmittingExcuse: boolean = false;
+
+  openExcuseModal(record: AdminAttendanceItem): void {
+    this.selectedRecordForExcuse = record;
+    this.excuseReason = 'Admin override: Excused absence';
+    this.isExcuseModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeExcuseModal(): void {
+    this.isExcuseModalOpen = false;
+    this.selectedRecordForExcuse = null;
+    this.excuseReason = 'Admin override: Excused absence';
+    this.isSubmittingExcuse = false;
+    this.cdr.detectChanges();
+  }
+
+  confirmExcuse(): void {
+    if (!this.selectedRecordForExcuse) return;
+    const record = this.selectedRecordForExcuse;
+    const isLecturer = this.isLecturerNoShow(record);
+    const targetName = isLecturer
+      ? (record.lecturerName || 'Lecturer')
+      : (record.studentName || record.studentMatric || 'Student');
+
+    this.isSubmittingExcuse = true;
+    const notes = this.excuseReason.trim() || 'Admin override: Excused absence';
+
+    this.attendanceService
+      .updateAttendanceStatus(record.id, 'EXCUSED', notes)
+      .subscribe({
+        next: (updated) => {
+          record.status = updated.status;
+          record.notes = updated.notes;
+          this.calculateStats();
+
+          this.closeExcuseModal();
+
+          // Display floating success toast message
+          this.successPopupMessage = `Absence for ${targetName} has been marked as EXCUSED. Notification sent.`;
+          this.showSuccessPopup = true;
+          if (this.successPopupTimer) {
+            clearTimeout(this.successPopupTimer);
+          }
+          this.successPopupTimer = setTimeout(() => {
+            this.showSuccessPopup = false;
+            this.cdr.detectChanges();
+          }, 4500);
+
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Failed to update status to EXCUSED:', err);
+          this.errorMessage = 'Failed to update status on server. Please try again.';
+          this.isSubmittingExcuse = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
   markExcused(record: AdminAttendanceItem) {
-    const studentName = record.studentName || record.studentMatric || 'Student';
-    if (
-      confirm(
-        `Excuse absence for ${studentName}? This will update the status to EXCUSED and notify the student and lecturer.`
-      )
-    ) {
-      this.attendanceService
-        .updateAttendanceStatus(record.id, 'EXCUSED', 'Admin override: Excused absence')
-        .subscribe({
-          next: (updated) => {
-            record.status = updated.status;
-            record.notes = updated.notes;
-            this.calculateStats();
-
-            // Display floating success toast message
-            this.successPopupMessage = `Absence for ${studentName} has been marked as EXCUSED. Notification sent.`;
-            this.showSuccessPopup = true;
-            if (this.successPopupTimer) {
-              clearTimeout(this.successPopupTimer);
-            }
-            this.successPopupTimer = setTimeout(() => {
-              this.showSuccessPopup = false;
-              this.cdr.detectChanges();
-            }, 4500);
-
-            this.cdr.detectChanges();
-          },
-          error: (err) => {
-            console.error('Failed to update status to EXCUSED:', err);
-            this.errorMessage = 'Failed to update status on server. Please try again.';
-            this.cdr.detectChanges();
-          },
-        });
-    }
+    this.openExcuseModal(record);
   }
 
   onLogout() {

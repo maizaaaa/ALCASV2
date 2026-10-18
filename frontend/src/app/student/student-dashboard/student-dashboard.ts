@@ -7,6 +7,11 @@ import { SystemSettingsService } from '../../services/system-settings.service';
 import { ConsultationService, Consultation } from '../../services/consultation.service';
 import { StudentService, StudentClassSchedule } from '../../services/student.service';
 import { StudentNotificationService } from '../../services/student-notification.service';
+import {
+  getStudentStatusBadgeClass,
+  getStudentStatusPillClass,
+  getStudentStatusBadgeStyle,
+} from '../student-status';
 
 interface DashboardAppointment {
   id: string;
@@ -351,6 +356,18 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
       day: 'numeric',
       year: 'numeric',
     });
+  }
+
+  getStatusBadgeClass(status?: string): string {
+    return getStudentStatusBadgeClass(status);
+  }
+
+  getStatusPillClass(status?: string): string {
+    return getStudentStatusPillClass(status);
+  }
+
+  getStatusBadgeStyle(status?: string): { color: string; backgroundColor: string; borderColor?: string } {
+    return getStudentStatusBadgeStyle(status);
   }
 
   onLogout(): void {

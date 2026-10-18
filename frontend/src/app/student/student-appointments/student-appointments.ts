@@ -6,6 +6,11 @@ import { NavbarStudent } from '../../shared/navbar-student/navbar-student';
 import { ConsultationService, Consultation } from '../../services/consultation.service';
 import { StudentNotificationService } from '../../services/student-notification.service';
 import { AppointmentService } from '../../services/appointment.service';
+import {
+  getStudentStatusBadgeClass,
+  getStudentStatusPillClass,
+  getStudentStatusBadgeStyle,
+} from '../student-status';
 
 interface StudentAppointmentView {
   id: string;
@@ -18,6 +23,7 @@ interface StudentAppointmentView {
   rawTime: string;
   location: string;
   remarks: string;
+  notes?: string;
   status: string;
   proposedDate: string;
   proposedTime: string;
@@ -42,20 +48,22 @@ export class StudentAppointmentsComponent implements OnInit {
   appointments: StudentAppointmentView[] = [];
 
   selectedAppointment: StudentAppointmentView | null = null;
-  modalMode: 'view' | 'cancel' | 'reschedule' | null = null;
+  modalMode: 'view' | 'cancel' | 'reschedule' | 'lecturer-no-show' | null = null;
 
   // Tab Filter States
   pendingFilter: string = 'ALL';
   confirmedFilter: string = 'ALL';
   historyFilter: string = 'ALL';
 
-  // Reschedule & Cancel Modal States
+  // Reschedule, Cancel & No-Show Modal States
   smartSuggestion = '';
   selectedNewSlot = '';
   selectedNewDate = '';
   selectedNewTime = '';
   cancelReason = '';
   rescheduleReason = '';
+  lecturerNoShowRemark = 'Waited for 15+ minutes';
+  isSubmittingNoShow = false;
   isSubmittingReschedule = false;
   isLoadingSmartSuggestion = false;
   isLoadingSlots = false;
@@ -154,6 +162,7 @@ export class StudentAppointmentsComponent implements OnInit {
               consultationMode: c.consultationMode || '',
               mode: c.consultationMode === 'ONLINE' ? 'Online (Webex)' : 'In-Person',
               remarks: c.lecturerRemarks || '',
+              notes: c.notes || '',
               status: mappedStatus,
               proposedDate: c.proposedDate ? this.formatDate(c.proposedDate) : '',
               proposedTime: c.proposedTime ? this.formatTime(c.proposedTime) : '',
@@ -209,7 +218,7 @@ export class StudentAppointmentsComponent implements OnInit {
   get historyAppointments(): StudentAppointmentView[] {
     return this.appointments
       .filter((a) =>
-        ['COMPLETED', 'CANCELLED', 'REJECTED', 'NO-SHOW'].includes(a.status),
+        ['COMPLETED', 'CANCELLED', 'REJECTED', 'NO-SHOW', 'LECTURER_NO_SHOW', 'LECTURER-NO-SHOW'].includes(a.status),
       )
       .sort((a, b) => {
         const dateTimeA = `${a.rawDate || ''}T${a.rawTime || '00:00'}`;
@@ -251,7 +260,9 @@ export class StudentAppointmentsComponent implements OnInit {
   }
 
   get noShowCount(): number {
-    return this.appointments.filter((a) => a.status === 'NO-SHOW').length;
+    return this.appointments.filter((a) =>
+      a.status === 'NO-SHOW' || a.status === 'LECTURER-NO-SHOW' || a.status === 'LECTURER_NO_SHOW'
+    ).length;
   }
 
   getHistoryReason(appt: StudentAppointmentView): string {
@@ -261,8 +272,11 @@ export class StudentAppointmentsComponent implements OnInit {
     if (appt.status === 'CANCELLED' || appt.cancelReason) {
       return appt.cancelReason?.trim() || appt.remarks?.trim() || 'No cancellation reason provided.';
     }
+    if (appt.status === 'LECTURER-NO-SHOW' || appt.status === 'LECTURER_NO_SHOW') {
+      return appt.notes?.trim() || appt.remarks?.trim() || 'Lecturer did not attend session (waited 15+ minutes).';
+    }
     if (appt.status === 'NO-SHOW') {
-      return appt.remarks?.trim() || 'Student was marked as absent / no-show for this consultation session.';
+      return appt.notes?.trim() || appt.remarks?.trim() || 'Student was marked as absent / no-show for this consultation session.';
     }
     return '';
   }
@@ -273,6 +287,9 @@ export class StudentAppointmentsComponent implements OnInit {
     }
     if (appt.status === 'CANCELLED' || appt.cancelReason) {
       return 'Cancellation Reason';
+    }
+    if (appt.status === 'LECTURER-NO-SHOW' || appt.status === 'LECTURER_NO_SHOW') {
+      return 'Student Absence Remark';
     }
     if (appt.status === 'NO-SHOW') {
       return 'No-Show Reason / Remarks';
@@ -302,10 +319,73 @@ export class StudentAppointmentsComponent implements OnInit {
     if (!this.historyFilter || this.historyFilter === 'ALL') {
       return this.historyAppointments;
     }
+    if (this.historyFilter === 'NO-SHOW') {
+      return this.historyAppointments.filter((a) =>
+        a.status === 'NO-SHOW' || a.status === 'LECTURER-NO-SHOW' || a.status === 'LECTURER_NO_SHOW'
+      );
+    }
     return this.historyAppointments.filter((a) => a.status === this.historyFilter);
   }
 
-  openModal(appointment: StudentAppointmentView, mode: 'view' | 'cancel' | 'reschedule'): void {
+  /**
+   * Time-check logic: if current time exceeds appointment start time by at least 15 minutes,
+   * student is eligible to report lecturer absence.
+   */
+  isEligibleForLecturerNoShow(appt: StudentAppointmentView | null): boolean {
+    if (!appt) return false;
+    const st = (appt.status || '').toUpperCase();
+    if (st !== 'CONFIRMED' && st !== 'UPCOMING') {
+      return false;
+    }
+
+    try {
+      let appointmentStart: Date | null = null;
+
+      if (appt.rawDate) {
+        const cleanDate = appt.rawDate.split('T')[0];
+        const dateParts = cleanDate.split('-').map(Number);
+        if (dateParts.length >= 3 && dateParts[0] && dateParts[1] && dateParts[2]) {
+          const year = dateParts[0];
+          const month = dateParts[1] - 1;
+          const day = dateParts[2];
+
+          let hours = 0;
+          let minutes = 0;
+          let seconds = 0;
+
+          if (appt.rawTime) {
+            const timeParts = appt.rawTime.split(':').map(Number);
+            hours = timeParts[0] || 0;
+            minutes = timeParts[1] || 0;
+            seconds = timeParts[2] || 0;
+          }
+
+          appointmentStart = new Date(year, month, day, hours, minutes, seconds);
+        }
+      }
+
+      // Fallback: parse from date and time strings if rawDate wasn't parsed
+      if (!appointmentStart || isNaN(appointmentStart.getTime())) {
+        if (appt.date) {
+          const parsed = new Date(`${appt.date} ${appt.time || ''}`);
+          if (!isNaN(parsed.getTime())) {
+            appointmentStart = parsed;
+          }
+        }
+      }
+
+      if (!appointmentStart || isNaN(appointmentStart.getTime())) {
+        return false;
+      }
+
+      const elapsedMs = Date.now() - appointmentStart.getTime();
+      return elapsedMs >= 15 * 60 * 1000;
+    } catch {
+      return false;
+    }
+  }
+
+  openModal(appointment: StudentAppointmentView, mode: 'view' | 'cancel' | 'reschedule' | 'lecturer-no-show'): void {
     this.selectedAppointment = appointment;
     this.modalMode = mode;
     this.selectedNewSlot = '';
@@ -313,6 +393,7 @@ export class StudentAppointmentsComponent implements OnInit {
     this.selectedNewTime = '';
     this.cancelReason = '';
     this.rescheduleReason = '';
+    this.lecturerNoShowRemark = 'Waited for 15+ minutes';
     this.availableSlotsForSelectedDate = [];
     this.smartSuggestions = [];
 
@@ -706,6 +787,49 @@ export class StudentAppointmentsComponent implements OnInit {
     });
   }
 
+  confirmLecturerNoShow(): void {
+    if (!this.selectedAppointment) return;
+
+    const appointmentId = this.selectedAppointment.id;
+    const lecturerName = this.selectedAppointment.lecturer;
+    const remark = this.lecturerNoShowRemark?.trim() || 'Waited for 15+ minutes';
+
+    this.isSubmittingNoShow = true;
+    this.consultationService.reportLecturerNoShow(appointmentId, remark).subscribe({
+      next: () => {
+        this.ngZone.run(() => {
+          this.isSubmittingNoShow = false;
+          this.closeModal();
+
+          this.showSuccessPopup(
+            'Absence Reported',
+            `Lecturer absence has been reported for your session with ${lecturerName}. Status updated to Lecturer No-Show.`,
+            'info'
+          );
+
+          // Trigger real-time notification update
+          this.studentNotificationService?.triggerRefresh();
+          this.studentNotificationService?.showToast(
+            'Absence Reported',
+            `Lecturer absence reported for ${lecturerName}.`,
+            'info'
+          );
+
+          this.loadAppointments();
+          this.cdr.detectChanges();
+        });
+      },
+      error: (error) => {
+        console.error('Failed to report lecturer no-show:', error);
+        this.ngZone.run(() => {
+          this.isSubmittingNoShow = false;
+          this.cdr.detectChanges();
+        });
+        const errMsg = error?.error?.message || (typeof error?.error === 'string' ? error.error : 'Failed to submit report. Please try again.');
+        alert(errMsg);
+      },
+    });
+  }
 
   onLogout(): void {
     this.router.navigate(['/login']);
@@ -739,5 +863,17 @@ export class StudentAppointmentsComponent implements OnInit {
       minute: '2-digit',
       hour12: true,
     });
+  }
+
+  getStatusBadgeClass(status?: string): string {
+    return getStudentStatusBadgeClass(status);
+  }
+
+  getStatusPillClass(status?: string): string {
+    return getStudentStatusPillClass(status);
+  }
+
+  getStatusBadgeStyle(status?: string): { color: string; backgroundColor: string; borderColor?: string } {
+    return getStudentStatusBadgeStyle(status);
   }
 }

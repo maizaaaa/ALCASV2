@@ -39,16 +39,34 @@ export class Sidebar implements OnInit, OnDestroy {
   notifications: AdminNotification[] = [];
   private pollingSub!: Subscription;
 
+  isJustNow(notif?: AdminNotification): boolean {
+    if (!notif) return false;
+    const timeLower = (notif.time || '').trim().toLowerCase();
+    return timeLower === 'just now' || timeLower === 'now' || timeLower === 'right now';
+  }
+
   get todayNotifications(): AdminNotification[] {
     return this.notifications
       .filter((n) => n.group === 'Today')
-      .sort((a, b) => this.getTimeValue(b) - this.getTimeValue(a));
+      .sort((a, b) => {
+        const aJustNow = this.isJustNow(a);
+        const bJustNow = this.isJustNow(b);
+        if (aJustNow && !bJustNow) return -1;
+        if (!aJustNow && bJustNow) return 1;
+        return this.getTimeValue(b) - this.getTimeValue(a);
+      });
   }
 
   get yesterdayNotifications(): AdminNotification[] {
     return this.notifications
       .filter((n) => n.group === 'Yesterday')
-      .sort((a, b) => this.getTimeValue(b) - this.getTimeValue(a));
+      .sort((a, b) => {
+        const aJustNow = this.isJustNow(a);
+        const bJustNow = this.isJustNow(b);
+        if (aJustNow && !bJustNow) return -1;
+        if (!aJustNow && bJustNow) return 1;
+        return this.getTimeValue(b) - this.getTimeValue(a);
+      });
   }
 
   get unreadCount(): number {
@@ -162,37 +180,44 @@ export class Sidebar implements OnInit, OnDestroy {
     let timeStr = '';
 
     if (typeof notifOrDate === 'object') {
+      if ('time' in notifOrDate && notifOrDate.time) {
+        timeStr = String(notifOrDate.time).trim().toLowerCase();
+      }
       if ('createdAt' in notifOrDate) {
         dateVal = notifOrDate.createdAt;
       }
-      if ('time' in notifOrDate) {
-        timeStr = notifOrDate.time || '';
+    }
+
+    // Relative time string fallback so "Just now" always sorts highest
+    if (timeStr === 'just now' || timeStr === 'now' || timeStr === 'right now') {
+      const d = this.parseDate(dateVal);
+      const parsedTime = d ? d.getTime() : 0;
+      return Math.max(Date.now(), parsedTime);
+    }
+
+    if (timeStr) {
+      const minMatch = timeStr.match(/^(\d+)\s*m\s*ago$/);
+      if (minMatch) {
+        return Date.now() - parseInt(minMatch[1], 10) * 60 * 1000;
+      }
+      const hrMatch = timeStr.match(/^(\d+)\s*h\s*ago$/);
+      if (hrMatch) {
+        return Date.now() - parseInt(hrMatch[1], 10) * 3600 * 1000;
+      }
+      const dayMatch = timeStr.match(/^(\d+)\s*d\s*ago$/);
+      if (dayMatch) {
+        return Date.now() - parseInt(dayMatch[1], 10) * 86400 * 1000;
       }
     }
 
     const d = this.parseDate(dateVal);
     if (d) {
-      return d.getTime();
-    }
-
-    // Relative time string fallback so "Just now" always sorts highest
-    if (timeStr) {
-      const lower = timeStr.trim().toLowerCase();
-      if (lower === 'just now' || lower === 'now' || lower === 'recent') {
-        return Date.now();
+      const timeMs = d.getTime();
+      // Future dates (e.g. appointment scheduledDate in future) must NOT outrank current time!
+      if (timeMs > Date.now()) {
+        return Date.now() - 60000;
       }
-      const minMatch = lower.match(/^(\d+)\s*m\s*ago$/);
-      if (minMatch) {
-        return Date.now() - parseInt(minMatch[1], 10) * 60 * 1000;
-      }
-      const hrMatch = lower.match(/^(\d+)\s*h\s*ago$/);
-      if (hrMatch) {
-        return Date.now() - parseInt(hrMatch[1], 10) * 3600 * 1000;
-      }
-      const dayMatch = lower.match(/^(\d+)\s*d\s*ago$/);
-      if (dayMatch) {
-        return Date.now() - parseInt(dayMatch[1], 10) * 86400 * 1000;
-      }
+      return timeMs;
     }
 
     return 0;
@@ -222,6 +247,12 @@ export class Sidebar implements OnInit, OnDestroy {
 
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
+
+    // If date is in the future (e.g. appointment scheduled date passed mistakenly)
+    if (diffMs < 0) {
+      return 'Today';
+    }
+
     const diffSec = Math.floor(diffMs / 1000);
     const diffMin = Math.floor(diffSec / 60);
     const diffHours = Math.floor(diffMin / 60);
@@ -262,7 +293,11 @@ export class Sidebar implements OnInit, OnDestroy {
 
     const index = this.notifications.findIndex((x) => x.id === item.id);
     if (index === -1) {
-      this.notifications.unshift(item);
+      if (this.isJustNow(item)) {
+        this.notifications.unshift(item);
+      } else {
+        this.notifications.push(item);
+      }
     } else {
       this.notifications[index].read = item.read;
       this.notifications[index].group = item.group;
@@ -396,7 +431,15 @@ export class Sidebar implements OnInit, OnDestroy {
 
             if (notifId && !dismissedIds.includes(notifId)) {
               const isRead = readIds.includes(notifId);
-              const rawCreatedAt = c.createdAt || c.scheduledDate;
+              let rawCreatedAt = c.createdAt;
+              if (!rawCreatedAt) {
+                const schedD = this.parseDate(c.scheduledDate);
+                if (schedD && schedD.getTime() <= Date.now()) {
+                  rawCreatedAt = c.scheduledDate;
+                } else {
+                  rawCreatedAt = new Date(Date.now() - 3600 * 1000 * 4);
+                }
+              }
               this.upsertNotification({
                 id: notifId,
                 title,

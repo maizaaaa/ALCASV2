@@ -33,6 +33,7 @@
         </div>
       </div>
 
+
       <div class="stats-grid-3">
         <div class="glass-card stat-clickable" (click)="filterByStatus('All')"
           [class.card-selected]="selectedStatus === 'All'">
@@ -182,11 +183,7 @@
                   <td class="user-cell">{{ log.student }}</td>
                   <td>{{ log.lecturer }}</td>
                   <td>
-                    <span class="status-badge" [ngClass]="{
-                    'completed': log.status === 'Completed',
-                    'pending': log.status === 'Pending',
-                    'no-show': log.status === 'No-Show'
-                  }">{{ log.status }}</span>
+                    <span class="status-badge" [ngClass]="getStatusBadgeClass(log.status)">{{ log.status }}</span>
                   </td>
                 </tr>
                 <tr *ngIf="filteredLogs.length === 0">
@@ -241,11 +238,8 @@
         <div class="detail-row">
           <div class="detail-label">Status</div>
           <div class="detail-val">
-            <span class="status-badge" [ngClass]="{
-              'completed': selectedLog?.status === 'Completed',
-              'pending': selectedLog?.status === 'Pending',
-              'no-show': selectedLog?.status === 'No-Show'
-            }">{{ selectedLog?.status }}</span>
+            <span class="status-badge" [ngClass]="getStatusBadgeClass(selectedLog?.status)">{{ selectedLog?.status
+              }}</span>
           </div>
         </div>
         <div class="detail-row">
@@ -267,18 +261,5 @@
     </div>
   </div>
 
-  <!-- Toast Notification -->
-  <div class="toast-container" [class.show]="showToast">
-    <div class="toast-card">
-      <div class="toast-icon">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-      </div>
-      <div class="toast-content">
-        <h4>System Action</h4>
-        <p>{{ toastMessage }}</p>
-      </div>
-    </div>
-  </div>
+
 </div>

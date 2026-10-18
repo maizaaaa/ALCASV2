@@ -294,7 +294,13 @@ export class NavbarStudent implements OnInit, OnDestroy {
               inferredType = 'reschedule';
             } else if (rawType === 'BROADCAST' || lowerCombo.includes('announcement')) {
               inferredType = 'broadcast';
-            } else if (rawType === 'REMINDER' || lowerCombo.includes('reminder') || lowerCombo.includes('no-show')) {
+            } else if (
+              rawType === 'REMINDER' ||
+              rawType === 'REPORT_REVIEWED' ||
+              lowerCombo.includes('reminder') ||
+              lowerCombo.includes('no-show') ||
+              lowerCombo.includes('reviewed')
+            ) {
               inferredType = 'reminder';
             }
 

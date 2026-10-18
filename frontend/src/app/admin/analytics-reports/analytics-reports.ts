@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../shared/sidebar/sidebar';
+import { getAdminStatusBadgeClass } from '../admin-status';
 import * as XLSX from 'xlsx';
 import {
   AdminReportService,
@@ -152,11 +153,12 @@ export class AnalyticsReportsComponent implements OnInit {
   }
 
   getStatusClass(status?: string): string {
-    if (!status) return '';
+    if (!status) return 'text-gray-500 bg-gray-100';
     const lower = status.toLowerCase();
     const hyphenated = lower.replace(/_/g, '-');
     const underscored = lower.replace(/-/g, '_');
-    return `${lower} ${hyphenated} ${underscored}`;
+    const adminBadge = getAdminStatusBadgeClass(status);
+    return `${lower} ${hyphenated} ${underscored} ${adminBadge}`;
   }
 
   get filteredConsultations(): ConsultationRecordItem[] {
@@ -319,6 +321,8 @@ export class AnalyticsReportsComponent implements OnInit {
     window.print();
   }
 
+  isExportingExcel: boolean = false;
+
   exportToExcel(): void {
     if (
       !this.reportData ||
@@ -329,210 +333,257 @@ export class AnalyticsReportsComponent implements OnInit {
       return;
     }
 
-    const workbook = XLSX.utils.book_new();
-    const data = this.reportData;
-    const dist = data.statusDistribution;
-    const consultations = data.consultations;
+    this.isExportingExcel = true;
+    this.cdr.detectChanges();
 
-    // ============================================================
-    // SHEET 1: EXECUTIVE ANALYTICS REPORT (MAIN DASHBOARD & RECORDS)
-    // ============================================================
-    const dashboardRows: any[][] = [];
+    try {
+      const workbook = XLSX.utils.book_new();
+      const data = this.reportData;
+      const dist = data.statusDistribution;
+      const consultations = data.consultations;
 
-    // Header Banners
-    dashboardRows.push(['ALCAS — ACADEMIC CONSULTATION & ADVISING SYSTEM']);
-    dashboardRows.push(['EXECUTIVE ANALYTICS & ATTENDANCE PERFORMANCE REPORT']);
-    dashboardRows.push([]);
+      // ============================================================
+      // SHEET 1: EXECUTIVE ANALYTICS REPORT (MAIN DASHBOARD & RECORDS)
+      // ============================================================
+      const dashboardRows: any[][] = [];
 
-    // Executive KPI Summary Section Header
-    dashboardRows.push([
-      'REPORT CONTEXT', '',
-      'KEY PERFORMANCE INDICATORS', '',
-      'STATUS DISTRIBUTION', '',
-      'WEEKLY SESSION TREND', ''
-    ]);
+      // Header Banners
+      dashboardRows.push(['ALCAS — ACADEMIC CONSULTATION & ADVISING SYSTEM']);
+      dashboardRows.push(['EXECUTIVE ANALYTICS & ATTENDANCE PERFORMANCE REPORT']);
+      dashboardRows.push([]);
 
-    const w1 = this.weeklyTrend[0] ? `${this.weeklyTrend[0].week}: ${this.weeklyTrend[0].count} sessions` : '-';
-    const w2 = this.weeklyTrend[1] ? `${this.weeklyTrend[1].week}: ${this.weeklyTrend[1].count} sessions` : '-';
-    const w3 = this.weeklyTrend[2] ? `${this.weeklyTrend[2].week}: ${this.weeklyTrend[2].count} sessions` : '-';
-    const w4 = this.weeklyTrend[3] ? `${this.weeklyTrend[3].week}: ${this.weeklyTrend[3].count} sessions` : '-';
-
-    dashboardRows.push([
-      'Target School:', data.schoolName || 'All Schools',
-      'Total Consultations:', data.totalConsultations,
-      'Completed Sessions:', `${dist?.completedCount ?? 0} (${dist?.completedPercentage ?? 0}%)`,
-      'Week 1:', w1
-    ]);
-
-    dashboardRows.push([
-      'Date Range:', `${this.reportStartDate} to ${this.reportEndDate}`,
-      'Completion Rate:', data.completionRate,
-      'No-Show Sessions:', `${dist?.noShowCount ?? 0} (${dist?.noShowPercentage ?? 0}%)`,
-      'Week 2:', w2
-    ]);
-
-    dashboardRows.push([
-      'Top Lecturer:', data.mostActiveLecturer,
-      'Peak Booking Day:', data.peakDay,
-      'Cancelled / Rejected:', `${dist?.cancelledCount ?? 0} (${dist?.cancelledPercentage ?? 0}%)`,
-      'Week 3:', w3
-    ]);
-
-    dashboardRows.push([
-      'Exported At:', new Date().toLocaleString(),
-      'Data Source:', 'Verified MySQL Database',
-      'Pending / In-Review:', `${dist?.pendingCount ?? 0} (${dist?.pendingPercentage ?? 0}%)`,
-      'Week 4:', w4
-    ]);
-
-    dashboardRows.push([]);
-    dashboardRows.push(['DETAILED CONSULTATION RECORDS & ATTENDANCE LOG (USE FILTER ARROWS ON TABLE HEADERS TO FILTER DATA)']);
-
-    // Table Header
-    const tableHeaderRowIndex = dashboardRows.length; // 0-indexed row for header
-    dashboardRows.push([
-      'No.',
-      'Consultation ID',
-      'Scheduled Date',
-      'Scheduled Time',
-      'Student Name',
-      'Matric ID',
-      'Lecturer Name',
-      'School / Department',
-      'Reason / Purpose',
-      'Mode',
-      'Attendance Status'
-    ]);
-
-    // Data Rows
-    consultations.forEach((c, idx) => {
+      // Executive KPI Summary Section Header
       dashboardRows.push([
-        idx + 1,
-        c.id,
-        c.scheduledDate,
-        c.scheduledTime,
-        c.studentName || '-',
-        c.studentMatric || '-',
-        c.lecturerName || '-',
-        c.schoolName || '-',
-        c.reason || '-',
-        c.consultationMode || '-',
-        this.formatStatus(c.status) || '-'
+        'REPORT CONTEXT', '',
+        'KEY PERFORMANCE INDICATORS', '',
+        'STATUS DISTRIBUTION', '',
+        'WEEKLY SESSION TREND', ''
       ]);
-    });
 
-    const dashboardSheet = XLSX.utils.aoa_to_sheet(dashboardRows);
+      const w1 = this.weeklyTrend && this.weeklyTrend[0] ? `${this.weeklyTrend[0].week}: ${this.weeklyTrend[0].count} sessions` : '-';
+      const w2 = this.weeklyTrend && this.weeklyTrend[1] ? `${this.weeklyTrend[1].week}: ${this.weeklyTrend[1].count} sessions` : '-';
+      const w3 = this.weeklyTrend && this.weeklyTrend[2] ? `${this.weeklyTrend[2].week}: ${this.weeklyTrend[2].count} sessions` : '-';
+      const w4 = this.weeklyTrend && this.weeklyTrend[3] ? `${this.weeklyTrend[3].week}: ${this.weeklyTrend[3].count} sessions` : '-';
 
-    // Banners & Section Header Merges
-    dashboardSheet['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }, // Main Title Banner
-      { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } }, // Subtitle Banner
-      { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },  // Scope
-      { s: { r: 3, c: 2 }, e: { r: 3, c: 3 } },  // KPIs
-      { s: { r: 3, c: 4 }, e: { r: 3, c: 5 } },  // Status Breakdown
-      { s: { r: 3, c: 6 }, e: { r: 3, c: 7 } },  // Weekly Trend
-      { s: { r: 8, c: 0 }, e: { r: 8, c: 10 } }  // Table Section Header
-    ];
+      dashboardRows.push([
+        'Target School:', data.schoolName || 'All Schools',
+        'Total Consultations:', data.totalConsultations,
+        'Completed Sessions:', `${dist?.completedCount ?? 0} (${dist?.completedPercentage ?? 0}%)`,
+        'Week 1:', w1
+      ]);
 
-    // Interactive AutoFilter across the consultation records table
-    const lastRowIndex = dashboardRows.length;
-    dashboardSheet['!autofilter'] = {
-      ref: `A${tableHeaderRowIndex + 1}:K${lastRowIndex}`
-    };
+      dashboardRows.push([
+        'Date Range:', `${this.reportStartDate} to ${this.reportEndDate}`,
+        'Completion Rate:', data.completionRate,
+        'No-Show Sessions:', `${dist?.noShowCount ?? 0} (${dist?.noShowPercentage ?? 0}%)`,
+        'Week 2:', w2
+      ]);
 
-    // Column Widths for comfortable readability
-    dashboardSheet['!cols'] = [
-      { wch: 6 },  // No.
-      { wch: 38 }, // Consultation ID
-      { wch: 15 }, // Date
-      { wch: 12 }, // Time
-      { wch: 22 }, // Student Name
-      { wch: 15 }, // Matric ID
-      { wch: 22 }, // Lecturer Name
-      { wch: 30 }, // School
-      { wch: 26 }, // Reason
-      { wch: 14 }, // Mode
-      { wch: 18 }, // Status
-    ];
+      dashboardRows.push([
+        'Top Lecturer:', data.mostActiveLecturer,
+        'Peak Booking Day:', data.peakDay,
+        'Cancelled / Rejected:', `${dist?.cancelledCount ?? 0} (${dist?.cancelledPercentage ?? 0}%)`,
+        'Week 3:', w3
+      ]);
 
-    XLSX.utils.book_append_sheet(workbook, dashboardSheet, 'Executive Report');
+      dashboardRows.push([
+        'Exported At:', new Date().toLocaleString(),
+        'Data Source:', 'Verified MySQL Database',
+        'Pending / In-Review:', `${dist?.pendingCount ?? 0} (${dist?.pendingPercentage ?? 0}%)`,
+        'Week 4:', w4
+      ]);
 
-    // ============================================================
-    // SHEET 2: FLAT DATA (READY FOR PIVOT TABLES & CHARTS)
-    // ============================================================
-    const pivotData = consultations.map((c, i) => {
-      const d = c.scheduledDate ? new Date(c.scheduledDate) : null;
-      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      const dayOfWeek = d && !isNaN(d.getTime()) ? dayNames[d.getDay()] : '-';
+      dashboardRows.push([]);
+      dashboardRows.push(['DETAILED CONSULTATION RECORDS & ATTENDANCE LOG (USE FILTER ARROWS ON TABLE HEADERS TO FILTER DATA)']);
 
-      return {
-        'Index': i + 1,
-        'Consultation ID': c.id,
-        'Scheduled Date': c.scheduledDate,
-        'Scheduled Time': c.scheduledTime,
-        'Day of Week': dayOfWeek,
-        'Student Name': c.studentName || '',
-        'Matric ID': c.studentMatric || '',
-        'Lecturer Name': c.lecturerName || '',
-        'School': c.schoolName || '',
-        'Purpose': c.reason || '',
-        'Mode': c.consultationMode || '',
-        'Attendance Status': this.formatStatus(c.status) || '',
+      // Table Header
+      const tableHeaderRowIndex = dashboardRows.length; // 0-indexed row for header
+      dashboardRows.push([
+        'No.',
+        'Consultation ID',
+        'Scheduled Date',
+        'Scheduled Time',
+        'Student Name',
+        'Matric ID',
+        'Lecturer Name',
+        'School / Department',
+        'Reason / Purpose',
+        'Mode',
+        'Attendance Status'
+      ]);
+
+      // Data Rows
+      consultations.forEach((c, idx) => {
+        dashboardRows.push([
+          idx + 1,
+          c.id || '-',
+          c.scheduledDate || '-',
+          c.scheduledTime || '-',
+          c.studentName || '-',
+          c.studentMatric || '-',
+          c.lecturerName || '-',
+          c.schoolName || '-',
+          c.reason || '-',
+          c.consultationMode || '-',
+          this.formatStatus(c.status) || '-'
+        ]);
+      });
+
+      const dashboardSheet = XLSX.utils.aoa_to_sheet(dashboardRows);
+
+      // Banners & Section Header Merges
+      dashboardSheet['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }, // Main Title Banner
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } }, // Subtitle Banner
+        { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },  // Scope
+        { s: { r: 3, c: 2 }, e: { r: 3, c: 3 } },  // KPIs
+        { s: { r: 3, c: 4 }, e: { r: 3, c: 5 } },  // Status Breakdown
+        { s: { r: 3, c: 6 }, e: { r: 3, c: 7 } },  // Weekly Trend
+        { s: { r: 9, c: 0 }, e: { r: 9, c: 10 } }  // Table Section Header
+      ];
+
+      // Interactive AutoFilter across the consultation records table
+      const lastRowIndex = dashboardRows.length;
+      dashboardSheet['!autofilter'] = {
+        ref: `A${tableHeaderRowIndex + 1}:K${lastRowIndex}`
       };
-    });
 
-    const pivotSheet = XLSX.utils.json_to_sheet(pivotData);
-    pivotSheet['!autofilter'] = { ref: `A1:L${pivotData.length + 1}` };
-    pivotSheet['!cols'] = [
-      { wch: 8 },
-      { wch: 38 },
-      { wch: 15 },
-      { wch: 12 },
-      { wch: 14 },
-      { wch: 22 },
-      { wch: 15 },
-      { wch: 22 },
-      { wch: 30 },
-      { wch: 25 },
-      { wch: 14 },
-      { wch: 18 },
-    ];
-    XLSX.utils.book_append_sheet(workbook, pivotSheet, 'Data for Pivot Tables');
+      // Column Widths for comfortable readability
+      dashboardSheet['!cols'] = [
+        { wch: 6 },  // No.
+        { wch: 38 }, // Consultation ID
+        { wch: 15 }, // Date
+        { wch: 12 }, // Time
+        { wch: 22 }, // Student Name
+        { wch: 15 }, // Matric ID
+        { wch: 22 }, // Lecturer Name
+        { wch: 30 }, // School
+        { wch: 26 }, // Reason
+        { wch: 14 }, // Mode
+        { wch: 18 }, // Status
+      ];
 
-    // ============================================================
-    // SHEET 3: STATUS & WEEKLY BREAKDOWN TABLES
-    // ============================================================
-    const summarySheetRows: any[][] = [];
-    summarySheetRows.push(['STATUS BREAKDOWN ANALYSIS']);
-    summarySheetRows.push(['Status Category', 'Session Count', 'Percentage Ratio']);
-    summarySheetRows.push(['Completed', dist?.completedCount ?? 0, `${dist?.completedPercentage ?? 0}%`]);
-    summarySheetRows.push(['No-Show', dist?.noShowCount ?? 0, `${dist?.noShowPercentage ?? 0}%`]);
-    summarySheetRows.push(['Cancelled / Rejected', dist?.cancelledCount ?? 0, `${dist?.cancelledPercentage ?? 0}%`]);
-    summarySheetRows.push(['Pending / In-Review', dist?.pendingCount ?? 0, `${dist?.pendingPercentage ?? 0}%`]);
-    summarySheetRows.push(['Total Consultations', data.totalConsultations, '100.0%']);
-    summarySheetRows.push([]);
+      XLSX.utils.book_append_sheet(workbook, dashboardSheet, 'Executive Report');
 
-    summarySheetRows.push(['WEEKLY SESSION VOLUME']);
-    summarySheetRows.push(['Period Week', 'Total Sessions']);
-    this.weeklyTrend.forEach((w) => {
-      summarySheetRows.push([w.week, w.count]);
-    });
+      // ============================================================
+      // SHEET 2: FLAT DATA (READY FOR PIVOT TABLES & CHARTS)
+      // ============================================================
+      const pivotData = consultations.map((c, i) => {
+        const d = c.scheduledDate ? new Date(c.scheduledDate) : null;
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayOfWeek = d && !isNaN(d.getTime()) ? dayNames[d.getDay()] : '-';
 
-    const summaryBreakdownSheet = XLSX.utils.aoa_to_sheet(summarySheetRows);
-    summaryBreakdownSheet['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
-      { s: { r: 7, c: 0 }, e: { r: 7, c: 1 } },
-    ];
-    summaryBreakdownSheet['!cols'] = [{ wch: 28 }, { wch: 16 }, { wch: 18 }];
-    XLSX.utils.book_append_sheet(workbook, summaryBreakdownSheet, 'Summary Breakdown');
+        return {
+          'Index': i + 1,
+          'Consultation ID': c.id || '-',
+          'Scheduled Date': c.scheduledDate || '',
+          'Scheduled Time': c.scheduledTime || '',
+          'Day of Week': dayOfWeek,
+          'Student Name': c.studentName || '',
+          'Matric ID': c.studentMatric || '',
+          'Lecturer Name': c.lecturerName || '',
+          'School': c.schoolName || '',
+          'Purpose': c.reason || '',
+          'Mode': c.consultationMode || '',
+          'Attendance Status': this.formatStatus(c.status) || '',
+        };
+      });
 
-    // File download
-    const schoolLabel = data.schoolName
-      ? data.schoolName.replace(/[^a-zA-Z0-9]/g, '_')
-      : 'AllSchools';
-    const fileName = `ALCAS_${schoolLabel}_Analytics_${this.reportStartDate}_to_${this.reportEndDate}.xlsx`;
+      const pivotSheet = XLSX.utils.json_to_sheet(pivotData);
+      pivotSheet['!autofilter'] = { ref: `A1:L${pivotData.length + 1}` };
+      pivotSheet['!cols'] = [
+        { wch: 8 },
+        { wch: 38 },
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 14 },
+        { wch: 22 },
+        { wch: 15 },
+        { wch: 22 },
+        { wch: 30 },
+        { wch: 25 },
+        { wch: 14 },
+        { wch: 18 },
+      ];
+      XLSX.utils.book_append_sheet(workbook, pivotSheet, 'Data for Pivot Tables');
 
-    XLSX.writeFile(workbook, fileName);
+      // ============================================================
+      // SHEET 3: STATUS & WEEKLY BREAKDOWN TABLES
+      // ============================================================
+      const summarySheetRows: any[][] = [];
+      summarySheetRows.push(['STATUS BREAKDOWN ANALYSIS']);
+      summarySheetRows.push(['Status Category', 'Session Count', 'Percentage Ratio']);
+      summarySheetRows.push(['Completed', dist?.completedCount ?? 0, `${dist?.completedPercentage ?? 0}%`]);
+      summarySheetRows.push(['No-Show', dist?.noShowCount ?? 0, `${dist?.noShowPercentage ?? 0}%`]);
+      summarySheetRows.push(['Cancelled / Rejected', dist?.cancelledCount ?? 0, `${dist?.cancelledPercentage ?? 0}%`]);
+      summarySheetRows.push(['Pending / In-Review', dist?.pendingCount ?? 0, `${dist?.pendingPercentage ?? 0}%`]);
+      summarySheetRows.push(['Total Consultations', data.totalConsultations, '100.0%']);
+      summarySheetRows.push([]);
+
+      summarySheetRows.push(['WEEKLY SESSION VOLUME']);
+      summarySheetRows.push(['Period Week', 'Total Sessions']);
+      (this.weeklyTrend || []).forEach((w) => {
+        summarySheetRows.push([w.week, w.count]);
+      });
+
+      const summaryBreakdownSheet = XLSX.utils.aoa_to_sheet(summarySheetRows);
+      summaryBreakdownSheet['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
+        { s: { r: 8, c: 0 }, e: { r: 8, c: 1 } },
+      ];
+      summaryBreakdownSheet['!cols'] = [{ wch: 28 }, { wch: 16 }, { wch: 18 }];
+      XLSX.utils.book_append_sheet(workbook, summaryBreakdownSheet, 'Summary Breakdown');
+
+      // File download
+      const schoolLabel = data.schoolName
+        ? data.schoolName.replace(/[^a-zA-Z0-9]/g, '_')
+        : 'AllSchools';
+      const fileName = `ALCAS_${schoolLabel}_Analytics_${this.reportStartDate}_to_${this.reportEndDate}.xlsx`;
+
+      this.downloadExcelWorkbook(workbook, fileName);
+    } catch (err) {
+      console.error('Error generating Excel file:', err);
+      alert('Failed to generate Excel file. Please try again.');
+    } finally {
+      this.isExportingExcel = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private downloadExcelWorkbook(workbook: XLSX.WorkBook, fileName: string): void {
+    try {
+      const excelBuffer: any = XLSX.write(workbook, {
+        bookType: 'xlsx',
+        type: 'array',
+      });
+      const blob: Blob = new Blob([excelBuffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+      });
+
+      if ((window.navigator as any) && (window.navigator as any).msSaveOrOpenBlob) {
+        (window.navigator as any).msSaveOrOpenBlob(blob, fileName);
+        return;
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.setAttribute('download', fileName);
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+        window.URL.revokeObjectURL(url);
+      }, 1000);
+    } catch (saveErr) {
+      console.warn('Direct Blob download failed, attempting XLSX.writeFile fallback:', saveErr);
+      XLSX.writeFile(workbook, fileName);
+    }
   }
 
   // Backwards-compatibility alias

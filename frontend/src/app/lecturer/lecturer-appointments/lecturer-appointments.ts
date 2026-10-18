@@ -9,6 +9,7 @@ import { ConsultationService } from '../../services/consultation.service';
 import { AttendanceService } from '../../services/attendance.service';
 import { LecturerProfileService } from '../../services/lecturer-profile.service';
 import { LecturerNotificationService } from '../../services/lecturer-notification.service';
+import { getLecturerStatusBadgeClass, getLecturerStatusBadgeStyle } from '../lecturer-status';
 
 @Component({
   selector: 'app-lecturer-appointments',
@@ -956,6 +957,14 @@ export class LecturerAppointmentsComponent implements OnInit, OnDestroy {
           },
         });
     }
+  }
+
+  getStatusBadgeClass(status?: string): string {
+    return getLecturerStatusBadgeClass(status);
+  }
+
+  getStatusBadgeStyle(status?: string): { color: string; backgroundColor: string; borderColor?: string } {
+    return getLecturerStatusBadgeStyle(status);
   }
 
   onLogout() {

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { SidebarLect } from '../../shared/sidebar-lect/sidebar-lect';
 import { ConsultationService, Consultation } from '../../services/consultation.service';
 import * as XLSX from 'xlsx';
+import { getLecturerStatusBadgeClass, getLecturerStatusBadgeStyle } from '../lecturer-status';
 
 @Component({
   selector: 'app-lecturer-history',
@@ -247,6 +248,14 @@ export class LecturerHistoryComponent implements OnInit {
 
     const fileName = `Consultation_History_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
+  }
+
+  getStatusBadgeClass(status?: string): string {
+    return getLecturerStatusBadgeClass(status);
+  }
+
+  getStatusBadgeStyle(status?: string): { color: string; backgroundColor: string; borderColor?: string } {
+    return getLecturerStatusBadgeStyle(status);
   }
 
   onLogout(): void {

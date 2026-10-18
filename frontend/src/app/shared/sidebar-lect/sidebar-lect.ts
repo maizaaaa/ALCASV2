@@ -110,11 +110,94 @@ export class SidebarLect implements OnInit, OnDestroy {
     return this.notifications;
   }
 
+  isJustNow(notif?: LecturerNotification): boolean {
+    if (!notif) return false;
+    const timeLower = (notif.time || '').trim().toLowerCase();
+    if (
+      timeLower === 'just now' ||
+      timeLower === 'now' ||
+      timeLower === 'right now' ||
+      timeLower.includes('just now')
+    ) {
+      return true;
+    }
+    if (notif.createdAtRaw) {
+      try {
+        const d = new Date(notif.createdAtRaw);
+        if (!isNaN(d.getTime())) {
+          const diffMs = Date.now() - d.getTime();
+          if (diffMs >= 0 && diffMs < 60000) {
+            return true;
+          }
+        }
+      } catch {}
+    }
+    return false;
+  }
+
+  getTimeValue(notif?: LecturerNotification): number {
+    if (!notif) return 0;
+
+    const timeLower = (notif.time || '').trim().toLowerCase();
+    if (
+      timeLower === 'just now' ||
+      timeLower === 'now' ||
+      timeLower === 'right now' ||
+      timeLower.includes('just now')
+    ) {
+      if (notif.createdAtRaw) {
+        const d = new Date(notif.createdAtRaw);
+        if (!isNaN(d.getTime())) {
+          return Math.max(Date.now(), d.getTime());
+        }
+      }
+      return Date.now();
+    }
+
+    if (timeLower) {
+      const minMatch = timeLower.match(/^(\d+)\s*m\s*ago$/);
+      if (minMatch) {
+        return Date.now() - parseInt(minMatch[1], 10) * 60 * 1000;
+      }
+      const hrMatch = timeLower.match(/^(\d+)\s*h\s*ago$/);
+      if (hrMatch) {
+        return Date.now() - parseInt(hrMatch[1], 10) * 3600 * 1000;
+      }
+      const dayMatch = timeLower.match(/^(\d+)\s*d\s*ago$/);
+      if (dayMatch) {
+        return Date.now() - parseInt(dayMatch[1], 10) * 86400 * 1000;
+      }
+    }
+
+    if (notif.createdAtRaw) {
+      const d = new Date(notif.createdAtRaw);
+      if (!isNaN(d.getTime())) {
+        const timeMs = d.getTime();
+        if (timeMs > Date.now()) {
+          return Date.now() - 60000;
+        }
+        return timeMs;
+      }
+    }
+
+    return 0;
+  }
+
   get todayNotifications(): LecturerNotification[] {
     return this.filteredNotifications
       .filter((n) => n.group === 'Today')
       .sort((a, b) => {
-        // Unread items or action required come first
+        // 1. "Just now" MUST be at the very top
+        const aJustNow = this.isJustNow(a);
+        const bJustNow = this.isJustNow(b);
+        if (aJustNow && !bJustNow) return -1;
+        if (!aJustNow && bJustNow) return 1;
+
+        // 2. Real timestamp (newest first)
+        const timeDiff = this.getTimeValue(b) - this.getTimeValue(a);
+        if (timeDiff !== 0) return timeDiff;
+
+        // 3. Unread items or action required come next
         if (a.actionRequired && !b.actionRequired) return -1;
         if (!a.actionRequired && b.actionRequired) return 1;
         if (!a.read && b.read) return -1;
@@ -124,9 +207,25 @@ export class SidebarLect implements OnInit, OnDestroy {
   }
 
   get yesterdayNotifications(): LecturerNotification[] {
-    return this.filteredNotifications.filter(
-      (n) => n.group === 'Yesterday' || n.group === 'Earlier'
-    );
+    return this.filteredNotifications
+      .filter(
+        (n) => n.group === 'Yesterday' || n.group === 'Earlier'
+      )
+      .sort((a, b) => {
+        const aJustNow = this.isJustNow(a);
+        const bJustNow = this.isJustNow(b);
+        if (aJustNow && !bJustNow) return -1;
+        if (!aJustNow && bJustNow) return 1;
+
+        const timeDiff = this.getTimeValue(b) - this.getTimeValue(a);
+        if (timeDiff !== 0) return timeDiff;
+
+        if (a.actionRequired && !b.actionRequired) return -1;
+        if (!a.actionRequired && b.actionRequired) return 1;
+        if (!a.read && b.read) return -1;
+        if (a.read && !b.read) return 1;
+        return 0;
+      });
   }
 
   get unreadCount(): number {
@@ -365,14 +464,22 @@ export class SidebarLect implements OnInit, OnDestroy {
 
             const notifId = `bc-${b.id}`;
             const isRead = this.readNotifIds.has(notifId);
+            let timeAgo = b.date || 'Broadcast';
+            if (b.createdAt) {
+              const calc = this.calculateTimeAgo(b.createdAt);
+              if (calc) timeAgo = calc;
+            } else if ((b.date || '').toLowerCase().includes('now')) {
+              timeAgo = 'Just now';
+            }
+
             return {
               id: notifId,
               title: b.subject || 'Campus Broadcast',
               message: b.message || 'New broadcast message from administration.',
-              time: b.date || 'Broadcast',
+              time: timeAgo,
               read: isRead,
               type: isMaint ? ('maintenance' as const) : ('broadcast' as const),
-              group: 'Today',
+              group: b.createdAt ? this.determineTimeGroup(b.createdAt) : 'Today',
               link: '/lecturer',
               createdAtRaw: b.createdAt,
             };
@@ -422,17 +529,25 @@ export class SidebarLect implements OnInit, OnDestroy {
       // A: Pending Consultation Requests (Awaiting Lecturer Approval)
       if (statusUpper === 'PENDING' && initiator !== 'STUDENT') {
         const notifId = `req-${req.id}`;
+        let timeAgo = 'Awaiting Action';
+        if (req.createdAt) {
+          const calc = this.calculateTimeAgo(req.createdAt);
+          if (calc === 'Just now') {
+            timeAgo = 'Just now';
+          }
+        }
         list.push({
           id: notifId,
           title: 'New Consultation Request',
           message: `${req.studentName || 'Student'} requested a consultation on ${req.scheduledDate} at ${this.formatTime(req.scheduledTime)}.`,
-          time: 'Awaiting Action',
+          time: timeAgo,
           read: this.readNotifIds.has(notifId),
           type: 'booking',
-          group: 'Today',
+          group: req.createdAt ? this.determineTimeGroup(req.createdAt) : 'Today',
           studentName: req.studentName,
           actionRequired: true,
           link: '/lecturer/appointments',
+          createdAtRaw: req.createdAt,
         });
       }
 
@@ -444,17 +559,25 @@ export class SidebarLect implements OnInit, OnDestroy {
         const reschId = `resch-${req.id}`;
         const newDate = req.proposedDate || req.scheduledDate;
         const newTime = req.proposedTime ? this.formatTime(req.proposedTime) : this.formatTime(req.scheduledTime);
+        let timeAgo = 'Pending Review';
+        if (req.createdAt) {
+          const calc = this.calculateTimeAgo(req.createdAt);
+          if (calc === 'Just now') {
+            timeAgo = 'Just now';
+          }
+        }
         list.push({
           id: reschId,
           title: 'Reschedule Request from Student',
           message: `${req.studentName || 'Student'} requested to reschedule appointment to ${newDate} at ${newTime}.`,
-          time: 'Pending Review',
+          time: timeAgo,
           read: this.readNotifIds.has(reschId),
           type: 'reschedule',
-          group: 'Today',
+          group: req.createdAt ? this.determineTimeGroup(req.createdAt) : 'Today',
           studentName: req.studentName,
           actionRequired: true,
           link: '/lecturer/appointments',
+          createdAtRaw: req.createdAt,
         });
       }
 

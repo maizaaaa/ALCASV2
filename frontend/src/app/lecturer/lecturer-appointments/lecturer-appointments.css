@@ -169,11 +169,29 @@
 
 /* Status Top Borders */
 .pending-border {
-  border-top-color: #f59e0b;
+  border-top-color: #D97706;
 }
 
-.upcoming-border {
-  border-top-color: #0F766E;
+.upcoming-border,
+.confirmed-border {
+  border-top-color: #2563EB;
+}
+
+.completed-border {
+  border-top-color: #16A34A;
+}
+
+.no-show-border {
+  border-top-color: #7C3AED;
+}
+
+.rejected-border {
+  border-top-color: #DC2626;
+}
+
+.cancelled-border,
+.canceled-border {
+  border-top-color: #6B7280;
 }
 
 /* Appt Header */
@@ -432,9 +450,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(5, 150, 105, 0.1);
-  border: 1px solid rgba(5, 150, 105, 0.25);
-  color: #059669;
+  background: #DBEAFE;
+  border: 1px solid #93C5FD;
+  color: #2563EB;
   padding: 3px 10px;
   border-radius: 12px;
   font-size: 11px;
@@ -1063,12 +1081,36 @@ html.dark .hover-footer-hint,
 
 html.dark .pending-border,
 :host-context(.dark) .pending-border {
-  border-top-color: #f59e0b !important;
+  border-top-color: #fbbf24 !important;
 }
 
 html.dark .upcoming-border,
-:host-context(.dark) .upcoming-border {
-  border-top-color: #2dd4bf !important;
+html.dark .confirmed-border,
+:host-context(.dark) .upcoming-border,
+:host-context(.dark) .confirmed-border {
+  border-top-color: #60a5fa !important;
+}
+
+html.dark .completed-border,
+:host-context(.dark) .completed-border {
+  border-top-color: #4ade80 !important;
+}
+
+html.dark .no-show-border,
+:host-context(.dark) .no-show-border {
+  border-top-color: #c4b5fd !important;
+}
+
+html.dark .rejected-border,
+:host-context(.dark) .rejected-border {
+  border-top-color: #f87171 !important;
+}
+
+html.dark .cancelled-border,
+html.dark .canceled-border,
+:host-context(.dark) .cancelled-border,
+:host-context(.dark) .canceled-border {
+  border-top-color: #9ca3af !important;
 }
 
 html.dark .appt-header,
@@ -1136,9 +1178,9 @@ html.dark .location-badge.is-online,
 
 html.dark .confirmed-pill,
 :host-context(.dark) .confirmed-pill {
-  background: rgba(52, 211, 153, 0.18) !important;
-  border-color: rgba(52, 211, 153, 0.35) !important;
-  color: #34d399 !important;
+  background: rgba(37, 99, 235, 0.2) !important;
+  border-color: rgba(96, 165, 250, 0.4) !important;
+  color: #60a5fa !important;
 }
 
 html.dark .remarks-box,
@@ -1827,20 +1869,22 @@ html.dark .chip-btn.active,
   }
 }
 
-/* Card Border for Reschedule Request */
-.reschedule-request-border {
-  border-top-color: #f59e0b !important;
-  box-shadow: 0 6px 20px -6px rgba(245, 158, 11, 0.15) !important;
+/* Card Border for Reschedule Request - Teal */
+.reschedule-request-border,
+.reschedule-pending-border {
+  border-top-color: #0F766E !important;
+  box-shadow: 0 6px 20px -6px rgba(15, 118, 110, 0.15) !important;
 }
 
-/* Status Pill: Specifically 'Reschedule Request' */
-.reschedule-request-pill {
+/* Status Pill: Specifically 'Reschedule Request' - Kept in Teal */
+.reschedule-request-pill,
+.reschedule-pending-pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: rgba(245, 158, 11, 0.14);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: #b45309;
+  background: #CCFBF1;
+  border: 1px solid #5EEAD4;
+  color: #0F766E;
   padding: 3px 10px;
   border-radius: 12px;
   font-size: 11px;
@@ -1849,18 +1893,20 @@ html.dark .chip-btn.active,
   letter-spacing: 0.5px;
 }
 
+/* Status Pill: Pending - Amber */
 .pending-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(100, 116, 139, 0.1);
-  border: 1px solid rgba(100, 116, 139, 0.25);
-  color: #475569;
+  background: #FEF3C7;
+  border: 1px solid #FCD34D;
+  color: #D97706;
   padding: 3px 10px;
   border-radius: 12px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Time Block for Reschedule Request in Card Header */
@@ -2409,17 +2455,19 @@ html.dark .reschedule-tip-pill,
 }
 
 html.dark .reschedule-request-pill,
-:host-context(.dark) .reschedule-request-pill {
-  background: rgba(245, 158, 11, 0.2) !important;
-  border-color: rgba(245, 158, 11, 0.45) !important;
-  color: #fcd34d !important;
+html.dark .reschedule-pending-pill,
+:host-context(.dark) .reschedule-request-pill,
+:host-context(.dark) .reschedule-pending-pill {
+  background: rgba(15, 118, 110, 0.2) !important;
+  border-color: rgba(45, 212, 191, 0.4) !important;
+  color: #2dd4bf !important;
 }
 
 html.dark .pending-pill,
 :host-context(.dark) .pending-pill {
-  background: rgba(148, 163, 184, 0.15) !important;
-  border-color: rgba(148, 163, 184, 0.3) !important;
-  color: #cbd5e1 !important;
+  background: rgba(217, 119, 6, 0.2) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  color: #fbbf24 !important;
 }
 
 html.dark .proposed-slot-tag,

@@ -93,8 +93,9 @@
           </div>
           <div class="export-actions">
             <button id="btn-export-excel" class="btn-outline" (click)="exportToExcel()"
-              [disabled]="!reportData.consultations || reportData.consultations.length === 0">
-              Export Excel
+              [disabled]="isExportingExcel || !reportData.consultations || reportData.consultations.length === 0">
+              <span *ngIf="isExportingExcel" class="spinner-dark"></span>
+              {{ isExportingExcel ? 'Exporting...' : 'Export Excel' }}
             </button>
             <button id="btn-export-pdf" class="btn-premium-solid" (click)="exportToPDF()">
               Download PDF

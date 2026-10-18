@@ -23,6 +23,8 @@ export interface Consultation {
   rejectReason?: string | null;
   cancelReason?: string | null;
   rescheduleInitiator?: string | null;
+  notes?: string | null;
+  createdAt?: string;
 }
 
 @Injectable({
@@ -175,5 +177,22 @@ export class ConsultationService {
     return this.http.get<any[]>(`http://localhost:8080/api/lecturer-availability/schedule/${lecturerId}`, {
       headers: this.getAuthHeaders(),
     });
+  }
+
+  reportLecturerNoShow(appointmentId: string, studentRemark: string): Observable<Consultation> {
+    return this.http.post<Consultation>(
+      `${this.apiUrl}/lecturer-no-show`,
+      {
+        appointmentId,
+        studentRemark,
+      },
+      {
+        headers: this.getAuthHeaders(),
+        params: {
+          appointmentId,
+          studentRemark,
+        },
+      }
+    );
   }
 }

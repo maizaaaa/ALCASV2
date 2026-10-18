@@ -309,45 +309,85 @@
 }
 
 .status-badge.completed {
-  background: linear-gradient(135deg, #dcfce7, #ccfbf1);
-  color: #065f46;
-  border: 1.5px solid #6ee7b7;
-  box-shadow: 0 2px 8px rgba(6, 95, 70, 0.12);
+  background: #DCFCE7;
+  color: #16A34A;
+  border: 1.5px solid #86EFAC;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.12);
 }
 .status-badge.completed .badge-dot {
-  background-color: #059669;
+  background-color: #16A34A;
 }
 
 .status-badge.no-show,
 .status-badge.no_show {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  color: #92400e;
-  border: 1.5px solid #fcd34d;
-  box-shadow: 0 2px 8px rgba(146, 64, 14, 0.12);
+  background: #EDE9FE;
+  color: #7C3AED;
+  border: 1.5px solid #C4B5FD;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.12);
 }
 .status-badge.no-show .badge-dot,
 .status-badge.no_show .badge-dot {
-  background-color: #d97706;
+  background-color: #7C3AED;
 }
 
 .status-badge.rejected {
-  background: linear-gradient(135deg, #ffe4e6, #fecdd3);
-  color: #9f1239;
-  border: 1.5px solid #fda4af;
-  box-shadow: 0 2px 8px rgba(159, 18, 57, 0.12);
+  background: #FEE2E2;
+  color: #DC2626;
+  border: 1.5px solid #FDA4AF;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.12);
 }
 .status-badge.rejected .badge-dot {
-  background-color: #e11d48;
+  background-color: #DC2626;
 }
 
-.status-badge.cancelled {
-  background: linear-gradient(135deg, #f1f5f9, #cbd5e1);
-  color: #334155;
-  border: 1.5px solid #94a3b8;
-  box-shadow: 0 2px 8px rgba(51, 65, 85, 0.12);
+.status-badge.cancelled,
+.status-badge.canceled {
+  background: #F3F4F6;
+  color: #6B7280;
+  border: 1.5px solid #E5E7EB;
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.12);
 }
-.status-badge.cancelled .badge-dot {
-  background-color: #64748b;
+.status-badge.cancelled .badge-dot,
+.status-badge.canceled .badge-dot {
+  background-color: #6B7280;
+}
+
+.status-badge.confirmed,
+.status-badge.upcoming {
+  background: #DBEAFE;
+  color: #2563EB;
+  border: 1.5px solid #93C5FD;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+}
+.status-badge.confirmed .badge-dot,
+.status-badge.upcoming .badge-dot {
+  background-color: #2563EB;
+}
+
+.status-badge.pending {
+  background: #FEF3C7;
+  color: #D97706;
+  border: 1.5px solid #FCD34D;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.12);
+}
+.status-badge.pending .badge-dot {
+  background-color: #D97706;
+}
+
+.status-badge.reschedule-pending,
+.status-badge.reschedule_pending,
+.status-badge.reschedule-request,
+.status-badge.reschedule_request {
+  background: #CCFBF1;
+  color: #0F766E;
+  border: 1.5px solid #5EEAD4;
+  box-shadow: 0 2px 8px rgba(15, 118, 110, 0.12);
+}
+.status-badge.reschedule-pending .badge-dot,
+.status-badge.reschedule_pending .badge-dot,
+.status-badge.reschedule-request .badge-dot,
+.status-badge.reschedule_request .badge-dot {
+  background-color: #0F766E;
 }
 
 /* Actions Cell */
@@ -574,29 +614,51 @@ body.dark .empty-subtitle {
 }
 
 .status-banner.completed-bg {
-  background: linear-gradient(135deg, #dcfce7, #ccfbf1);
-  color: #047857;
-  border-color: #6ee7b7;
+  background: #DCFCE7;
+  color: #16A34A;
+  border-color: #86EFAC;
 }
 
 .status-banner.no-show-bg,
 .status-banner.no_show-bg {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  color: #92400e;
-  border-color: #fcd34d;
+  background: #EDE9FE;
+  color: #7C3AED;
+  border-color: #C4B5FD;
 }
 
 .status-banner.rejected-bg {
-  background: linear-gradient(135deg, #ffe4e6, #fecdd3);
-  color: #9f1239;
-  border-color: #fda4af;
+  background: #FEE2E2;
+  color: #DC2626;
+  border-color: #FDA4AF;
 }
 
 .status-banner.cancelled-bg,
-.status-banner.cancelled {
-  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-  color: #334155;
-  border-color: #cbd5e1;
+.status-banner.cancelled,
+.status-banner.canceled-bg,
+.status-banner.canceled {
+  background: #F3F4F6;
+  color: #6B7280;
+  border-color: #E5E7EB;
+}
+
+.status-banner.confirmed-bg,
+.status-banner.upcoming-bg {
+  background: #DBEAFE;
+  color: #2563EB;
+  border-color: #93C5FD;
+}
+
+.status-banner.pending-bg {
+  background: #FEF3C7;
+  color: #D97706;
+  border-color: #FCD34D;
+}
+
+.status-banner.reschedule-pending-bg,
+.status-banner.reschedule-request-bg {
+  background: #CCFBF1;
+  color: #0F766E;
+  border-color: #5EEAD4;
 }
 
 .detail-grid {
@@ -791,37 +853,71 @@ html.dark .action-btn.view-btn:hover {
 /* Dark Mode Badges & Banners */
 html.dark .status-badge.completed,
 html.dark .status-banner.completed-bg {
-  background: rgba(16, 185, 129, 0.18) !important;
-  color: #34d399 !important;
-  border: 1.5px solid rgba(52, 211, 153, 0.4) !important;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
+  background: rgba(22, 163, 74, 0.2) !important;
+  color: #4ade80 !important;
+  border: 1.5px solid rgba(74, 222, 128, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25) !important;
 }
 
 html.dark .status-badge.no-show,
 html.dark .status-badge.no_show,
 html.dark .status-banner.no-show-bg,
 html.dark .status-banner.no_show-bg {
-  background: rgba(245, 158, 11, 0.18) !important;
-  color: #fbbf24 !important;
-  border: 1.5px solid rgba(251, 191, 36, 0.4) !important;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2) !important;
+  background: rgba(124, 58, 237, 0.2) !important;
+  color: #c4b5fd !important;
+  border: 1.5px solid rgba(196, 181, 253, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25) !important;
 }
 
 html.dark .status-badge.rejected,
 html.dark .status-banner.rejected-bg {
-  background: rgba(239, 68, 68, 0.18) !important;
+  background: rgba(220, 38, 38, 0.2) !important;
   color: #f87171 !important;
   border: 1.5px solid rgba(248, 113, 113, 0.4) !important;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2) !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25) !important;
 }
 
 html.dark .status-badge.cancelled,
+html.dark .status-badge.canceled,
 html.dark .status-banner.cancelled-bg,
+html.dark .status-banner.canceled-bg,
 html.dark .status-banner.cancelled {
-  background: rgba(148, 163, 184, 0.18) !important;
-  color: #cbd5e1 !important;
-  border: 1.5px solid rgba(148, 163, 184, 0.4) !important;
-  box-shadow: 0 2px 8px rgba(148, 163, 184, 0.2) !important;
+  background: rgba(107, 114, 128, 0.2) !important;
+  color: #9ca3af !important;
+  border: 1.5px solid rgba(156, 163, 175, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2) !important;
+}
+
+html.dark .status-badge.confirmed,
+html.dark .status-badge.upcoming,
+html.dark .status-banner.confirmed-bg,
+html.dark .status-banner.upcoming-bg {
+  background: rgba(37, 99, 235, 0.2) !important;
+  color: #60a5fa !important;
+  border: 1.5px solid rgba(96, 165, 250, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25) !important;
+}
+
+html.dark .status-badge.pending,
+html.dark .status-banner.pending-bg {
+  background: rgba(217, 119, 6, 0.2) !important;
+  color: #fbbf24 !important;
+  border: 1.5px solid rgba(251, 191, 36, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25) !important;
+}
+
+html.dark .status-badge.reschedule-pending,
+html.dark .status-badge.reschedule_pending,
+html.dark .status-badge.reschedule-request,
+html.dark .status-badge.reschedule_request,
+html.dark .status-banner.reschedule-pending-bg,
+html.dark .status-banner.reschedule_pending-bg,
+html.dark .status-banner.reschedule-request-bg,
+html.dark .status-banner.reschedule_request-bg {
+  background: rgba(15, 118, 110, 0.2) !important;
+  color: #2dd4bf !important;
+  border: 1.5px solid rgba(45, 212, 191, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(15, 118, 110, 0.25) !important;
 }
 
 /* Dark Mode Modal */

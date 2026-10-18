@@ -270,6 +270,18 @@
   animation: spin 1s linear infinite;
 }
 
+.spinner-dark {
+  display: inline-block;
+  border: 2px solid rgba(15, 118, 110, 0.25);
+  border-top: 2px solid #0f766e;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  animation: spin 1s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -381,12 +393,35 @@
   letter-spacing: 0.4px;
 }
 
-.tag-teal { background: rgba(20, 184, 166, 0.12); color: #0f766e; }
-.tag-green { background: #dcfce7; color: #15803d; }
-.tag-red { background: #fee2e2; color: #b91c1c; }
-.tag-gray { background: #f1f5f9; color: #475569; }
-.tag-blue { background: #e0f2fe; color: #0369a1; }
-.tag-purple { background: #f3e8ff; color: #7e22ce; }
+.tag-teal {
+  background: rgba(20, 184, 166, 0.12);
+  color: #0f766e;
+}
+
+.tag-green {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.tag-red {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.tag-gray {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.tag-blue {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.tag-purple {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
 
 .metric-value {
   font-size: 26px;
@@ -401,10 +436,21 @@
   color: #64748b;
 }
 
-.text-forest { color: #0f766e !important; }
-.text-green { color: #16a34a !important; }
-.text-red { color: #dc2626 !important; }
-.text-muted-dark { color: #334155 !important; }
+.text-forest {
+  color: #0f766e !important;
+}
+
+.text-green {
+  color: #16a34a !important;
+}
+
+.text-red {
+  color: #dc2626 !important;
+}
+
+.text-muted-dark {
+  color: #334155 !important;
+}
 
 .interactive-card {
   cursor: pointer;
@@ -599,10 +645,21 @@
   font-size: 12.5px;
 }
 
-.green-text { color: #16a34a; }
-.red-text { color: #dc2626; }
-.gray-text { color: #64748b; }
-.yellow-text { color: #d97706; }
+.green-text {
+  color: #16a34a;
+}
+
+.red-text {
+  color: #dc2626;
+}
+
+.gray-text {
+  color: #64748b;
+}
+
+.yellow-text {
+  color: #d97706;
+}
 
 .dot {
   width: 10px;
@@ -611,10 +668,21 @@
   flex-shrink: 0;
 }
 
-.dot.green { background: #16a34a; }
-.dot.red { background: #dc2626; }
-.dot.gray { background: #94a3b8; }
-.dot.yellow { background: #f59e0b; }
+.dot.green {
+  background: #16a34a;
+}
+
+.dot.red {
+  background: #dc2626;
+}
+
+.dot.gray {
+  background: #94a3b8;
+}
+
+.dot.yellow {
+  background: #f59e0b;
+}
 
 /* Larger Modal for Reports */
 .modal-container-large {
@@ -1151,29 +1219,52 @@
   letter-spacing: 0.4px;
 }
 
-.status-pill.completed {
-  background-color: #dcfce7;
-  color: #15803d;
+.status-pill.completed,
+.status-pill.text-green-600 {
+  background-color: #DCFCE7;
+  color: #16A34A;
 }
 
 .status-pill.no_show,
-.status-pill.no-show {
-  background-color: #fee2e2;
-  color: #b91c1c;
+.status-pill.no-show,
+.status-pill.text-violet-600 {
+  background-color: #EDE9FE;
+  color: #7C3AED;
 }
 
 .status-pill.cancelled,
-.status-pill.rejected {
-  background-color: #f1f5f9;
-  color: #64748b;
+.status-pill.canceled,
+.status-pill.text-gray-500 {
+  background-color: #F3F4F6;
+  color: #6B7280;
+}
+
+.status-pill.rejected,
+.status-pill.text-red-600 {
+  background-color: #FEE2E2;
+  color: #DC2626;
+}
+
+.status-pill.confirmed,
+.status-pill.text-blue-600 {
+  background-color: #DBEAFE;
+  color: #2563EB;
 }
 
 .status-pill.pending,
-.status-pill.confirmed,
+.status-pill.text-amber-600 {
+  background-color: #FEF3C7;
+  color: #D97706;
+}
+
 .status-pill.reschedule_pending,
-.status-pill.reschedule-pending {
-  background-color: #fef3c7;
-  color: #b45309;
+.status-pill.reschedule-pending,
+.status-pill.reschedule_request,
+.status-pill.reschedule-request,
+.status-pill.text-teal-600,
+.status-pill.text-teal-700 {
+  background-color: #CCFBF1;
+  color: #0F766E;
 }
 
 .empty-table-state {
@@ -1324,13 +1415,16 @@
     margin: 10mm 12mm 12mm 12mm;
   }
 
-  *, *:before, *:after {
+  *,
+  *:before,
+  *:after {
     box-sizing: border-box !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  html, body {
+  html,
+  body {
     background: #ffffff !important;
     color: #0f172a !important;
     font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif !important;
@@ -1527,10 +1621,21 @@
     margin-bottom: 2px !important;
   }
 
-  .metric-value.text-forest { color: #0f766e !important; }
-  .metric-value.text-green { color: #16a34a !important; }
-  .metric-value.text-red { color: #dc2626 !important; }
-  .metric-value.text-muted-dark { color: #334155 !important; }
+  .metric-value.text-forest {
+    color: #0f766e !important;
+  }
+
+  .metric-value.text-green {
+    color: #16a34a !important;
+  }
+
+  .metric-value.text-red {
+    color: #dc2626 !important;
+  }
+
+  .metric-value.text-muted-dark {
+    color: #334155 !important;
+  }
 
   .metric-subtext {
     font-size: 7.5px !important;
@@ -1745,32 +1850,50 @@
   }
 
   .status-pill.completed {
-    background: #dcfce7 !important;
-    color: #15803d !important;
+    background: #DCFCE7 !important;
+    color: #16A34A !important;
     border: 1px solid #86efac !important;
   }
 
   .status-pill.no_show,
   .status-pill.no-show {
-    background: #fee2e2 !important;
-    color: #b91c1c !important;
-    border: 1px solid #fca5a5 !important;
+    background: #EDE9FE !important;
+    color: #7C3AED !important;
+    border: 1px solid #ddd6fe !important;
   }
 
   .status-pill.cancelled,
-  .status-pill.rejected {
-    background: #f1f5f9 !important;
-    color: #475569 !important;
-    border: 1px solid #cbd5e1 !important;
+  .status-pill.canceled {
+    background: #F3F4F6 !important;
+    color: #6B7280 !important;
+    border: 1px solid #e5e7eb !important;
   }
 
-  .status-pill.pending,
-  .status-pill.confirmed,
-  .status-pill.reschedule_pending,
-  .status-pill.reschedule-pending {
-    background: #fef3c7 !important;
-    color: #92400e !important;
+  .status-pill.rejected {
+    background: #FEE2E2 !important;
+    color: #DC2626 !important;
+    border: 1px solid #fca5a5 !important;
+  }
+
+  .status-pill.confirmed {
+    background: #DBEAFE !important;
+    color: #2563EB !important;
+    border: 1px solid #bfdbfe !important;
+  }
+
+  .status-pill.pending {
+    background: #FEF3C7 !important;
+    color: #D97706 !important;
     border: 1px solid #fde68a !important;
+  }
+
+  .status-pill.reschedule_pending,
+  .status-pill.reschedule-pending,
+  .status-pill.reschedule_request,
+  .status-pill.reschedule-request {
+    background: #CCFBF1 !important;
+    color: #0F766E !important;
+    border: 1px solid #99f6e4 !important;
   }
 
   /* 5. PDF PRINT FOOTER */
