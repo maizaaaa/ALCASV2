@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
@@ -13,6 +14,8 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     List<Attendance> findByStudentUserIdOrderByAttendanceDateDesc (Integer studentId);
 
     boolean existsByConsultationId (String consultationId);
+
+    Optional<Attendance> findByConsultationId (String consultationId);
 
     @Query("SELECT a FROM Attendance a " +
            "LEFT JOIN FETCH a.student s " +

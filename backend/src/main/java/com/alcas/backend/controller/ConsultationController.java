@@ -11,11 +11,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alcas.backend.dto.ConsultationResponse;
+import com.alcas.backend.dto.LecturerNoShowRequest;
 import com.alcas.backend.entity.Consultation;
 import com.alcas.backend.entity.LecturerProfile;
 import com.alcas.backend.entity.StudentProfile;
@@ -148,32 +150,34 @@ public class ConsultationController {
 
         List<ConsultationResponse> response
                 = consultations.stream()
-                        .map(consultation
-                                -> new ConsultationResponse(
-                                        consultation.getId(),
-                                        consultation.getStudent().getUserId(),
-                                        consultation.getLecturer().getUserId(),
-                                        consultation.getLecturer().getUser().getFullName(),
-                                        consultation.getLecturerRemarks(),
-                                        consultation.getScheduledDate().toString(),
-                                        consultation.getScheduledTime().toString(),
-                                        consultation.getReason(),
-                                        consultation.getReasonDetails(),
-                                        consultation.getConsultationMode(),
-                                        consultation.getLocation(),
-                                        consultation.getStatus().name(),
-                                        consultation.getProposedDate() != null
-                                        ? consultation.getProposedDate().toString()
-                                        : null,
-                                        consultation.getProposedTime() != null
-                                        ? consultation.getProposedTime().toString()
-                                        : null,
-                                        consultation.getRescheduleReason(),
-                                        consultation.getRejectReason(),
-                                        consultation.getCancelReason(),
-                                        consultation.getRescheduleInitiator()
-                                )
-                        )
+                        .map(consultation -> {
+                            ConsultationResponse resp = new ConsultationResponse(
+                                    consultation.getId(),
+                                    consultation.getStudent().getUserId(),
+                                    consultation.getLecturer().getUserId(),
+                                    consultation.getLecturer().getUser().getFullName(),
+                                    consultation.getLecturerRemarks(),
+                                    consultation.getScheduledDate().toString(),
+                                    consultation.getScheduledTime().toString(),
+                                    consultation.getReason(),
+                                    consultation.getReasonDetails(),
+                                    consultation.getConsultationMode(),
+                                    consultation.getLocation(),
+                                    consultation.getStatus().name(),
+                                    consultation.getProposedDate() != null
+                                    ? consultation.getProposedDate().toString()
+                                    : null,
+                                    consultation.getProposedTime() != null
+                                    ? consultation.getProposedTime().toString()
+                                    : null,
+                                    consultation.getRescheduleReason(),
+                                    consultation.getRejectReason(),
+                                    consultation.getCancelReason(),
+                                    consultation.getRescheduleInitiator()
+                            );
+                            resp.setNotes(consultation.getNotes());
+                            return resp;
+                        })
                         .toList();
 
         return ResponseEntity.ok(response);
@@ -230,6 +234,86 @@ public class ConsultationController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/lecturer-no-show")
+    public ResponseEntity<ConsultationResponse> reportLecturerNoShow(
+            @RequestBody(required = false) LecturerNoShowRequest request,
+            @RequestParam(required = false) String appointmentId,
+            @RequestParam(required = false) String studentRemark,
+            Authentication authentication) {
+
+        String targetId = request != null && request.getAppointmentId() != null
+                ? request.getAppointmentId()
+                : appointmentId;
+
+        String targetRemark = request != null && request.getStudentRemark() != null
+                ? request.getStudentRemark()
+                : studentRemark;
+
+        if (targetId == null || targetId.isBlank()) {
+            throw new IllegalArgumentException("Appointment ID is required.");
+        }
+
+        String email = authentication.getName();
+        Integer studentId = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found"))
+                .getId();
+
+        Consultation reported = consultationService.reportLecturerNoShow(targetId, studentId, targetRemark);
+        return ResponseEntity.ok(toConsultationResponse(reported));
+    }
+
+    @PutMapping("/{consultationId}/lecturer-no-show")
+    public ResponseEntity<ConsultationResponse> reportLecturerNoShowPut(
+            @PathVariable String consultationId,
+            @RequestBody(required = false) LecturerNoShowRequest request,
+            @RequestParam(required = false) String studentRemark,
+            Authentication authentication) {
+
+        String targetRemark = request != null && request.getStudentRemark() != null
+                ? request.getStudentRemark()
+                : studentRemark;
+
+        String email = authentication.getName();
+        Integer studentId = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found"))
+                .getId();
+
+        Consultation reported = consultationService.reportLecturerNoShow(consultationId, studentId, targetRemark);
+        return ResponseEntity.ok(toConsultationResponse(reported));
+    }
+
+    @PostMapping("/{consultationId}/lecturer-no-show")
+    public ResponseEntity<ConsultationResponse> reportLecturerNoShowPost(
+            @PathVariable String consultationId,
+            @RequestBody(required = false) LecturerNoShowRequest request,
+            @RequestParam(required = false) String studentRemark,
+            Authentication authentication) {
+        return reportLecturerNoShowPut(consultationId, request, studentRemark, authentication);
+    }
+
+    private ConsultationResponse toConsultationResponse(Consultation c) {
+        return new ConsultationResponse(
+                c.getId(),
+                c.getStudent().getUserId(),
+                c.getLecturer().getUserId(),
+                c.getLecturer().getUser() != null ? c.getLecturer().getUser().getFullName() : "Lecturer",
+                c.getLecturerRemarks(),
+                c.getScheduledDate().toString(),
+                c.getScheduledTime().toString(),
+                c.getReason(),
+                c.getReasonDetails(),
+                c.getConsultationMode(),
+                c.getLocation(),
+                c.getStatus().name(),
+                c.getProposedDate() != null ? c.getProposedDate().toString() : null,
+                c.getProposedTime() != null ? c.getProposedTime().toString() : null,
+                c.getRescheduleReason(),
+                c.getRejectReason(),
+                c.getCancelReason(),
+                c.getRescheduleInitiator()
+        );
+    }
+
     @GetMapping("/lecturer")
     public ResponseEntity<List<ConsultationResponse>> getLecturerConsultations(
             Authentication authentication) {
@@ -247,36 +331,40 @@ public class ConsultationController {
 
         List<ConsultationResponse> response
                 = consultations.stream()
-                        .map(consultation
-                                -> new ConsultationResponse(
-                                        consultation.getId(),
-                                        consultation.getStudent() != null ? consultation.getStudent().getUserId() : null,
-                                        consultation.getStudent() != null && consultation.getStudent().getUser() != null
-                                        ? consultation.getStudent().getUser().getFullName() : "Unknown Student",
-                                        consultation.getStudent() != null ? consultation.getStudent().getMatricNumber() : null,
-                                        consultation.getLecturer() != null ? consultation.getLecturer().getUserId() : null,
-                                        consultation.getLecturer() != null && consultation.getLecturer().getUser() != null
-                                        ? consultation.getLecturer().getUser().getFullName() : "Unknown Lecturer",
-                                        consultation.getLecturerRemarks(),
-                                        consultation.getScheduledDate() != null ? consultation.getScheduledDate().toString() : "",
-                                        consultation.getScheduledTime() != null ? consultation.getScheduledTime().toString() : "",
-                                        consultation.getReason(),
-                                        consultation.getReasonDetails(),
-                                        consultation.getConsultationMode(),
-                                        consultation.getLocation(),
-                                        consultation.getStatus() != null ? consultation.getStatus().name() : "",
-                                        consultation.getProposedDate() != null
-                                        ? consultation.getProposedDate().toString()
-                                        : null,
-                                        consultation.getProposedTime() != null
-                                        ? consultation.getProposedTime().toString()
-                                        : null,
-                                        consultation.getRescheduleReason(),
-                                        consultation.getRejectReason(),
-                                        consultation.getCancelReason(),
-                                        consultation.getRescheduleInitiator()
-                                )
-                        )
+                        .map(consultation -> {
+                            ConsultationResponse resp = new ConsultationResponse(
+                                consultation.getId(),
+                                consultation.getStudent() != null ? consultation.getStudent().getUserId() : null,
+                                consultation.getStudent() != null && consultation.getStudent().getUser() != null
+                                ? consultation.getStudent().getUser().getFullName() : "Unknown Student",
+                                consultation.getStudent() != null ? consultation.getStudent().getMatricNumber() : null,
+                                consultation.getLecturer() != null ? consultation.getLecturer().getUserId() : null,
+                                consultation.getLecturer() != null && consultation.getLecturer().getUser() != null
+                                ? consultation.getLecturer().getUser().getFullName() : "Unknown Lecturer",
+                                consultation.getLecturerRemarks(),
+                                consultation.getScheduledDate() != null ? consultation.getScheduledDate().toString() : "",
+                                consultation.getScheduledTime() != null ? consultation.getScheduledTime().toString() : "",
+                                consultation.getReason(),
+                                consultation.getReasonDetails(),
+                                consultation.getConsultationMode(),
+                                consultation.getLocation(),
+                                consultation.getStatus() != null ? consultation.getStatus().name() : "",
+                                consultation.getProposedDate() != null
+                                ? consultation.getProposedDate().toString()
+                                : null,
+                                consultation.getProposedTime() != null
+                                ? consultation.getProposedTime().toString()
+                                : null,
+                                consultation.getRescheduleReason(),
+                                consultation.getRejectReason(),
+                                consultation.getCancelReason(),
+                                consultation.getRescheduleInitiator()
+                            );
+                            if (consultation.getCreatedAt() != null) {
+                                resp.setCreatedAt(consultation.getCreatedAt().toString());
+                            }
+                            return resp;
+                        })
                         .toList();
 
         return ResponseEntity.ok(response);

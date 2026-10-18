@@ -13,4 +13,12 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     @Query("SELECT COUNT(n) > 0 FROM Notification n WHERE n.consultation.id = :consultationId AND n.type = :type")
     boolean existsByConsultationIdAndType(@Param("consultationId") String consultationId, @Param("type") String type);
+
+    @Query("SELECT COUNT(n) > 0 FROM Notification n WHERE n.consultation.id = :consultationId AND n.type = :type AND n.user.id = :userId")
+    boolean existsByConsultationIdAndTypeAndUserId(
+            @Param("consultationId") String consultationId,
+            @Param("type") String type,
+            @Param("userId") Integer userId
+    );
 }
+

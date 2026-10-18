@@ -28,7 +28,7 @@ public class Attendance {
     private LocalDate attendanceDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 15)
+    @Column(nullable = false, length = 30)
     private Status status;
 
     @Column(columnDefinition = "TEXT")
@@ -47,7 +47,8 @@ public class Attendance {
     public enum Status {
         PRESENT,
         NO_SHOW,
-        EXCUSED
+        EXCUSED,
+        LECTURER_NO_SHOW
     }
 
     // Getters and Setters

@@ -21,10 +21,16 @@ public class NotificationController {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final com.alcas.backend.service.ConsultationReminderScheduler consultationReminderScheduler;
 
-    public NotificationController(NotificationRepository notificationRepository, UserRepository userRepository) {
+    public NotificationController(
+            NotificationRepository notificationRepository,
+            UserRepository userRepository,
+            com.alcas.backend.service.ConsultationReminderScheduler consultationReminderScheduler
+    ) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
+        this.consultationReminderScheduler = consultationReminderScheduler;
     }
 
     @GetMapping
@@ -106,5 +112,17 @@ public class NotificationController {
             notificationRepository.deleteAll(list);
         }
         return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    @PostMapping("/reminders/trigger")
+    public ResponseEntity<?> triggerRemindersManual(
+            @RequestParam(required = false) String timestamp
+    ) {
+        java.time.LocalDateTime refTime = (timestamp != null && !timestamp.isBlank())
+                ? java.time.LocalDateTime.parse(timestamp)
+                : java.time.LocalDateTime.now();
+
+        Map<String, Object> result = consultationReminderScheduler.checkAndDispatchReminders(refTime);
+        return ResponseEntity.ok(result);
     }
 }

@@ -40,8 +40,11 @@ public class Consultation {
     private String location;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 30)
     private Status status = Status.PENDING;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
 
     @Column(name = "lecturer_instructions", columnDefinition = "TEXT")
     private String lecturerInstructions;
@@ -80,7 +83,8 @@ public class Consultation {
         COMPLETED,
         NO_SHOW,
         REJECTED,
-        CANCELLED
+        CANCELLED,
+        LECTURER_NO_SHOW
     }
 
     // Getters and Setters
@@ -243,5 +247,13 @@ public class Consultation {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 }

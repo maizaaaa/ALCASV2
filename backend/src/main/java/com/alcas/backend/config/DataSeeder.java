@@ -109,56 +109,131 @@ public class DataSeeder {
     @Bean
     CommandLineRunner seedSchools(SchoolRepository schoolRepository, ProgramRepository programRepository) {
         return args -> {
-            String[] defaultSchools = {
-                "School of Computing (SOC)",
-                "School of Technology Management and Logistics (STML)",
-                "School of Business Management (SBM)",
-                "School of Quantitative Sciences (SQS)"
+            String[][] schoolsAndPrograms = {
+                {
+                    "Tunku Puteri Intan Shafinaz School of Accountancy (TISSA)",
+                    "Bachelor in Accounting with Honours",
+                    "Bachelor in Accounting (Information System) with Honours"
+                },
+                {
+                    "School of Business Management (SBM)",
+                    "Bachelor of Business Administration with Honours",
+                    "Bachelor of Entrepreneurship with Honours",
+                    "Bachelor of Human Resource Management with Honours",
+                    "Bachelor of Marketing with Honours"
+                },
+                {
+                    "School of Economics, Finance and Banking (SEFB)",
+                    "Bachelor of Science in Economics with Honours",
+                    "Bachelor of Science in Agribusiness Management with Honours",
+                    "Bachelor of Finance with Honours",
+                    "Bachelor of Banking with Honours",
+                    "Bachelor of Risk Management and Insurance with Honours"
+                },
+                {
+                    "Islamic Business School (IBS)",
+                    "Bachelor of Islamic Finance & Banking",
+                    "Bachelor of Muamalat Administration",
+                    "Bachelor of Halal Management"
+                },
+                {
+                    "School of Technology Management and Logistics (STML)",
+                    "Bachelor Technology Management with Honours",
+                    "Bachelor Operations Management with Honours",
+                    "Bachelor of Business Administration (Logistics & Transportation) with Honours"
+                },
+                {
+                    "UUM National Golf Academy (UUMNGA)",
+                    "Bachelor of Business Administration (Golf Management) with Honours"
+                },
+                {
+                    "School of Creative Industry Management and Performing Arts (SCIMPA)",
+                    "Bachelor in Creative Industry Management"
+                },
+                {
+                    "School of Multimedia Technology and Communication (SMMTC)",
+                    "Bachelor of Communication with Honours",
+                    "Bachelor of Media Technology with Honours",
+                    "Bachelor of Science (Multimedia) with Honours"
+                },
+                {
+                    "School of Applied Psychology, Sosial Work and Policy (SAPSP)",
+                    "Bachelor of Counselling with Honours",
+                    "Bachelor of Social Work Management with Honours"
+                },
+                {
+                    "School of Quantitative Science (SQS)",
+                    "Bachelor of Science in Decision Mathematics and Data Analytics with Honours",
+                    "Bachelor of Science with Honours (Business Mathematics)",
+                    "Bachelor of Science with Honours (Industrial Statistics)"
+                },
+                {
+                    "School of Education (SOE)",
+                    "Bachelor of Education with Honours (Accountancy)",
+                    "Bachelor of Education with Honours (Business Administation)",
+                    "Bachelor of Education with Honours (Guidance & Counseling)",
+                    "Bachelor of Education with Honours (Information Technology)",
+                    "Bachelor of Education with Honours (Moral Education)"
+                },
+                {
+                    "School of Computing (SOC)",
+                    "Bachelor of Science with Honours (Information Technology)",
+                    "Bachelor of Computer Science with Honours"
+                },
+                {
+                    "School of Languages, Civilisation and Philosophy (SLCP)",
+                    "Bachelor of Arts (Honours) Liguistics and Information Technology",
+                    "Bachelor of Arts in Contemporary Literature and Creative Industry Management (Honours)",
+                    "Bachelor of Applied Liguistics and Business Administration (Honours)"
+                },
+                {
+                    "School of Law (SOL)",
+                    "Bachelor of Law with Honours",
+                    "Bacholor of Philosophy, Law and Business with Honours"
+                },
+                {
+                    "School of International Studies (SOIS)",
+                    "Bachelor of International Affairs Management with Honours",
+                    "Bachelor of International Business Management with Honours"
+                },
+                {
+                    "School of Government (SOG)",
+                    "Bachelor of Public Management with Honours",
+                    "Bachelor of Development Management with Honours"
+                },
+                {
+                    "School of Tourism, Hospitality and Event Management (STHEM)",
+                    "Bachelor in Event Management (Honours)",
+                    "Bachelor in Tourism Management (Honours)",
+                    "Bachelor in Hospitality Management (Honours)"
+                }
             };
-            for (String schoolName : defaultSchools) {
-                boolean exists = schoolRepository.findAll().stream()
-                        .anyMatch(s -> s.getName() != null && (s.getName().equalsIgnoreCase(schoolName)
-                                || s.getName().toLowerCase().contains(schoolName.toLowerCase().substring(0, 15))));
-                if (!exists) {
-                    School s = new School();
-                    s.setName(schoolName);
-                    schoolRepository.save(s);
-                }
-            }
 
-            for (School school : schoolRepository.findAll()) {
-                String sName = school.getName().toLowerCase();
-                String[] progs = {};
-                if (sName.contains("computing")) {
-                    progs = new String[] {
-                        "Bachelor of Science with Hons (Information Technology)",
-                        "Bachelor of Computer Science (BCS)",
-                        "Bachelor of Software Engineering (BSE)"
-                    };
-                } else if (sName.contains("logistics") || sName.contains("technology management")) {
-                    progs = new String[] {
-                        "Bachelor of Technology Management (BTM)",
-                        "Bachelor of Logistics and Transportation (BLT)"
-                    };
-                } else if (sName.contains("business")) {
-                    progs = new String[] {
-                        "Bachelor of Business Administration (BBA)",
-                        "Bachelor of Marketing (BM)"
-                    };
-                } else if (sName.contains("quantitative")) {
-                    progs = new String[] {
-                        "Bachelor of Science in Decision Science (BDS)",
-                        "Bachelor of Science in Industrial Statistics (BIS)"
-                    };
+            for (String[] entry : schoolsAndPrograms) {
+                String schoolName = entry[0];
+                School school = schoolRepository.findAll().stream()
+                        .filter(s -> s.getName() != null && (s.getName().equalsIgnoreCase(schoolName)
+                                || (schoolName.contains("(") && s.getName().toLowerCase().contains(schoolName.substring(0, schoolName.indexOf("(")).trim().toLowerCase()))))
+                        .findFirst()
+                        .orElse(null);
+
+                if (school == null) {
+                    school = new School();
+                    school.setName(schoolName);
+                    school = schoolRepository.save(school);
+                } else if (!school.getName().equals(schoolName)) {
+                    school.setName(schoolName);
+                    school = schoolRepository.save(school);
                 }
 
-                for (String pName : progs) {
+                for (int i = 1; i < entry.length; i++) {
+                    String progName = entry[i];
                     boolean pExists = programRepository.findBySchoolId(school.getId()).stream()
-                            .anyMatch(p -> p.getName() != null && p.getName().equalsIgnoreCase(pName));
+                            .anyMatch(p -> p.getName() != null && p.getName().equalsIgnoreCase(progName));
                     if (!pExists) {
                         Program p = new Program();
                         p.setSchool(school);
-                        p.setName(pName);
+                        p.setName(progName);
                         programRepository.save(p);
                     }
                 }

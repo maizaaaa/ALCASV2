@@ -218,6 +218,111 @@ public class EmailService {
                 + "</html>";
     }
 
+    public void sendConsultationReminderEmail(
+            String toEmail,
+            String recipientName,
+            String userRole,
+            String otherPartyName,
+            String scheduledDate,
+            String scheduledTime,
+            String location,
+            String consultationMode,
+            String reminderWindow
+    ) {
+        String timeframe = "24 hours".equalsIgnoreCase(reminderWindow) || "24h".equalsIgnoreCase(reminderWindow)
+                ? "in 24 Hours"
+                : "in 1 Hour";
+
+        String subject = "Upcoming Consultation Reminder (" + timeframe + ") - Universiti Utara Malaysia";
+        String displayName = (recipientName != null && !recipientName.isBlank()) ? recipientName : userRole;
+        String htmlContent = buildConsultationReminderHtmlTemplate(
+                displayName,
+                userRole,
+                otherPartyName,
+                scheduledDate,
+                scheduledTime,
+                location,
+                consultationMode,
+                timeframe
+        );
+
+        log.info("--------------------------------------------------------------------------------");
+        log.info("[ALCAS REMINDER EMAIL] Target: {} | Window: {} | Date: {} {}", toEmail, timeframe, scheduledDate, scheduledTime);
+        log.info("--------------------------------------------------------------------------------");
+
+        sendHtmlEmail(toEmail, subject, htmlContent);
+    }
+
+    private String buildConsultationReminderHtmlTemplate(
+            String name,
+            String role,
+            String otherPartyName,
+            String date,
+            String time,
+            String location,
+            String mode,
+            String timeframe
+    ) {
+        String portalLink = frontendUrl != null ? frontendUrl : "http://localhost:4200";
+        String partnerRole = "Lecturer".equalsIgnoreCase(role) ? "Student" : "Lecturer";
+        String locDisplay = (location != null && !location.isBlank())
+                ? location
+                : ("Online".equalsIgnoreCase(mode) ? "Virtual Meeting Room" : "Lecturer Office");
+
+        return "<!DOCTYPE html>"
+                + "<html lang=\"en\">"
+                + "<head><meta charset=\"UTF-8\"><title>Consultation Reminder</title></head>"
+                + "<body style=\"margin:0; padding:0; background-color:#F1F5F9; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#1E293B;\">"
+                + "  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#F1F5F9; padding:40px 15px;\">"
+                + "    <tr>"
+                + "      <td align=\"center\">"
+                + "        <table width=\"100%\" style=\"max-width:580px; background:#FFFFFF; border-radius:12px; overflow:hidden; box-shadow:0 10px 25px -5px rgba(0,0,0,0.08); border:1px solid #E2E8F0;\" cellpadding=\"0\" cellspacing=\"0\">"
+                + "          <tr>"
+                + "            <td style=\"background:linear-gradient(135deg, #0F766E 0%, #14B8A6 100%); padding:28px 30px; text-align:center;\">"
+                + "              <h1 style=\"color:#FFFFFF; margin:0 0 6px; font-size:22px; font-weight:700;\">UNIVERSITI UTARA MALAYSIA</h1>"
+                + "              <p style=\"color:#CCFBF1; margin:0; font-size:13px; font-weight:500; letter-spacing:1px; text-transform:uppercase;\">ALCAS Consultation Reminder</p>"
+                + "            </td>"
+                + "          </tr>"
+                + "          <tr>"
+                + "            <td style=\"padding:32px 32px 24px;\">"
+                + "              <div style=\"display:inline-block; background:#CCFBF1; color:#0F766E; font-weight:700; font-size:12px; padding:4px 12px; border-radius:20px; text-transform:uppercase; margin-bottom:14px;\">"
+                + "                Upcoming Session " + escapeHtml(timeframe)
+                + "              </div>"
+                + "              <h2 style=\"margin:0 0 14px; font-size:19px; color:#0F172A;\">Consultation Session Alert</h2>"
+                + "              <p style=\"margin:0 0 16px; font-size:15px; line-height:1.6; color:#475569;\">"
+                + "                Dear <strong>" + escapeHtml(name) + "</strong>,"
+                + "              </p>"
+                + "              <p style=\"margin:0 0 20px; font-size:15px; line-height:1.6; color:#475569;\">"
+                + "                This is an automated reminder that you have a consultation session scheduled with "
+                + "                <strong>" + escapeHtml(partnerRole) + " " + escapeHtml(otherPartyName) + "</strong>."
+                + "              </p>"
+                + "              <div style=\"background:#F8FAFC; border:1px solid #E2E8F0; border-left:4px solid #0F766E; border-radius:8px; padding:18px 20px; margin:20px 0;\">"
+                + "                <table width=\"100%\" style=\"font-size:14px; color:#334155;\">"
+                + "                  <tr><td style=\"padding:4px 0; font-weight:600; width:130px;\">Scheduled Date:</td><td>" + escapeHtml(date) + "</td></tr>"
+                + "                  <tr><td style=\"padding:4px 0; font-weight:600;\">Scheduled Time:</td><td>" + escapeHtml(time) + "</td></tr>"
+                + "                  <tr><td style=\"padding:4px 0; font-weight:600;\">Mode:</td><td>" + escapeHtml(mode != null ? mode : "Face to Face") + "</td></tr>"
+                + "                  <tr><td style=\"padding:4px 0; font-weight:600;\">Location / Link:</td><td>" + escapeHtml(locDisplay) + "</td></tr>"
+                + "                </table>"
+                + "              </div>"
+                + "              <div style=\"text-align:center; margin:28px 0 10px;\">"
+                + "                <a href=\"" + portalLink + "\" target=\"_blank\" style=\"display:inline-block; background:linear-gradient(135deg, #0D9488 0%, #0F766E 100%); color:#FFFFFF; text-decoration:none; padding:12px 28px; font-size:14px; font-weight:600; border-radius:8px; box-shadow:0 4px 12px rgba(13,148,136,0.25);\">"
+                + "                  View in ALCAS Portal"
+                + "                </a>"
+                + "              </div>"
+                + "            </td>"
+                + "          </tr>"
+                + "          <tr>"
+                + "            <td style=\"background:#F8FAFC; padding:18px 30px; border-top:1px solid #E2E8F0; text-align:center; font-size:12px; color:#94A3B8;\">"
+                + "              Universiti Utara Malaysia &bull; Academic Lecturer Consultation Appointment System (ALCAS)"
+                + "            </td>"
+                + "          </tr>"
+                + "        </table>"
+                + "      </td>"
+                + "    </tr>"
+                + "  </table>"
+                + "</body></html>";
+    }
+
     private String escapeHtml(String input) {
         if (input == null) return "";
         return input.replace("&", "&amp;")

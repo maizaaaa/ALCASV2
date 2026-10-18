@@ -359,4 +359,25 @@ public class ConsultationResponse {
     public void setRescheduleInitiator(String rescheduleInitiator) {
         this.rescheduleInitiator = rescheduleInitiator;
     }
+
+    private String createdAt;
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    private String notes;
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
 }
+

@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.alcas.backend.entity.Attendance;
 import com.alcas.backend.entity.Consultation;
 import com.alcas.backend.entity.LecturerSchedule;
 import com.alcas.backend.entity.Notification;
@@ -19,6 +20,7 @@ import com.alcas.backend.entity.StudentClassSchedule;
 import com.alcas.backend.entity.User;
 import com.alcas.backend.exception.BookingConflictException;
 import com.alcas.backend.exception.UnauthorizedException;
+import com.alcas.backend.repository.AttendanceRepository;
 import com.alcas.backend.repository.ConsultationRepository;
 import com.alcas.backend.repository.LecturerScheduleRepository;
 import com.alcas.backend.repository.NotificationRepository;
@@ -34,6 +36,7 @@ public class ConsultationService {
     private final StudentClassScheduleRepository studentClassScheduleRepository;
     private final NotificationRepository notificationRepository;
     private final SystemSettingService systemSettingService;
+    private final AttendanceRepository attendanceRepository;
 
     public ConsultationService(
             ConsultationRepository consultationRepository,
@@ -41,7 +44,8 @@ public class ConsultationService {
             LecturerScheduleRepository lecturerScheduleRepository,
             StudentClassScheduleRepository studentClassScheduleRepository,
             NotificationRepository notificationRepository,
-            SystemSettingService systemSettingService) {
+            SystemSettingService systemSettingService,
+            AttendanceRepository attendanceRepository) {
 
         this.consultationRepository = consultationRepository;
         this.userRepository = userRepository;
@@ -49,6 +53,7 @@ public class ConsultationService {
         this.studentClassScheduleRepository = studentClassScheduleRepository;
         this.notificationRepository = notificationRepository;
         this.systemSettingService = systemSettingService;
+        this.attendanceRepository = attendanceRepository;
     }
 
     public Consultation createConsultation(
@@ -987,6 +992,109 @@ public class ConsultationService {
                         + saved.getScheduledDate() + " at " + saved.getScheduledTime()
                         + (cancelReason != null && !cancelReason.isBlank() ? ". Reason: " + cancelReason : "."));
                 lectNotif.setType("CANCELLATION");
+                lectNotif.setIsRead(false);
+                lectNotif.setConsultation(saved);
+                lectNotif.setCreatedAt(notifNow);
+                notificationRepository.save(lectNotif);
+            }
+        } catch (Exception ignored) {
+        }
+
+        return saved;
+    }
+
+    public Consultation reportLecturerNoShow(String consultationId, Integer studentId, String studentRemark) {
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User authenticatedUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+
+        if (!authenticatedUser.getId().equals(studentId)) {
+            throw new UnauthorizedException("You are not allowed to report for another student");
+        }
+
+        Consultation consultation = consultationRepository.findById(consultationId)
+                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+
+        if (!consultation.getStudent().getUserId().equals(studentId)) {
+            throw new UnauthorizedException("You are not allowed to report on this consultation.");
+        }
+
+        if (consultation.getStatus() != Consultation.Status.CONFIRMED) {
+            throw new RuntimeException("Only confirmed appointments can be reported for lecturer absence.");
+        }
+
+        // Validate that at least 15 minutes have passed since the start time
+        LocalDateTime appointmentStart = LocalDateTime.of(consultation.getScheduledDate(), consultation.getScheduledTime());
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime thresholdTime = appointmentStart.plusMinutes(15);
+
+        if (now.isBefore(thresholdTime)) {
+            throw new RuntimeException("Lecturer absence can only be reported after at least 15 minutes have passed from the scheduled start time.");
+        }
+
+        String remark = (studentRemark != null && !studentRemark.isBlank())
+                ? studentRemark.trim()
+                : "Waited for 15+ minutes";
+
+        consultation.setStatus(Consultation.Status.LECTURER_NO_SHOW);
+        consultation.setNotes(remark);
+        consultation.setLecturerRemarks(remark);
+        consultation.setUpdatedAt(now);
+
+        Consultation saved = consultationRepository.save(consultation);
+
+        try {
+            Attendance attendance = attendanceRepository.findByConsultationId(saved.getId()).orElse(null);
+            if (attendance == null) {
+                attendance = new Attendance();
+                attendance.setConsultation(saved);
+            }
+            attendance.setLecturer(saved.getLecturer());
+            attendance.setStudent(saved.getStudent());
+            attendance.setAttendanceDate(saved.getScheduledDate());
+            attendance.setStatus(Attendance.Status.LECTURER_NO_SHOW);
+            attendance.setNotes(remark);
+            if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
+                attendance.setMarkedBy(saved.getStudent().getUser());
+            }
+            attendance.setMarkedAt(now);
+            attendanceRepository.save(attendance);
+        } catch (Exception ignored) {
+        }
+
+        try {
+            LocalDateTime notifNow = LocalDateTime.now();
+            String studentName = (saved.getStudent() != null && saved.getStudent().getUser() != null)
+                    ? saved.getStudent().getUser().getFullName()
+                    : "Student";
+            String lecturerName = (saved.getLecturer() != null && saved.getLecturer().getUser() != null)
+                    ? saved.getLecturer().getUser().getFullName()
+                    : "Lecturer";
+
+            if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
+                Notification notif = new Notification();
+                notif.setUser(saved.getStudent().getUser());
+                notif.setTitle("Lecturer Absence Reported");
+                notif.setMessage("You reported lecturer absence for your session with " + lecturerName + " on "
+                        + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ". Status updated to LECTURER_NO_SHOW.");
+                notif.setType("NO_SHOW");
+                notif.setIsRead(false);
+                notif.setConsultation(saved);
+                notif.setCreatedAt(notifNow);
+                notificationRepository.save(notif);
+            }
+
+            if (saved.getLecturer() != null && saved.getLecturer().getUser() != null) {
+                Notification lectNotif = new Notification();
+                lectNotif.setUser(saved.getLecturer().getUser());
+                lectNotif.setTitle("Student Reported Lecturer Absence");
+                lectNotif.setMessage(studentName + " reported that you were absent for the consultation scheduled on "
+                        + saved.getScheduledDate() + " at " + saved.getScheduledTime() + ". Remark: \"" + remark + "\"");
+                lectNotif.setType("NO_SHOW");
                 lectNotif.setIsRead(false);
                 lectNotif.setConsultation(saved);
                 lectNotif.setCreatedAt(notifNow);

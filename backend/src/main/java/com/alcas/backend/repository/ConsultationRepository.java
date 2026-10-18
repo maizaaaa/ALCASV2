@@ -41,4 +41,39 @@ public interface ConsultationRepository
             List<Consultation.Status> statuses
     );
 
+    List<Consultation> findByStatus(Consultation.Status status);
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT c FROM Consultation c " +
+        "JOIN FETCH c.student s " +
+        "JOIN FETCH s.user su " +
+        "JOIN FETCH c.lecturer l " +
+        "JOIN FETCH l.user lu " +
+        "WHERE c.scheduledDate = :scheduledDate " +
+        "AND c.scheduledTime = :scheduledTime " +
+        "AND c.status IN :statuses"
+    )
+    List<Consultation> findUpcomingExactTime(
+            @org.springframework.data.repository.query.Param("scheduledDate") LocalDate scheduledDate,
+            @org.springframework.data.repository.query.Param("scheduledTime") LocalTime scheduledTime,
+            @org.springframework.data.repository.query.Param("statuses") List<Consultation.Status> statuses
+    );
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT c FROM Consultation c " +
+        "JOIN FETCH c.student s " +
+        "JOIN FETCH s.user su " +
+        "JOIN FETCH c.lecturer l " +
+        "JOIN FETCH l.user lu " +
+        "WHERE c.scheduledDate = :scheduledDate " +
+        "AND c.scheduledTime >= :startTime " +
+        "AND c.scheduledTime <= :endTime " +
+        "AND c.status IN :statuses"
+    )
+    List<Consultation> findUpcomingForReminder(
+            @org.springframework.data.repository.query.Param("scheduledDate") LocalDate scheduledDate,
+            @org.springframework.data.repository.query.Param("startTime") LocalTime startTime,
+            @org.springframework.data.repository.query.Param("endTime") LocalTime endTime,
+            @org.springframework.data.repository.query.Param("statuses") List<Consultation.Status> statuses
+    );
 }

@@ -224,7 +224,8 @@ public class AdminController {
     public List<ConsultationResponse> getAllConsultations() {
         return consultationRepository.findAll(Sort.by(Sort.Direction.DESC, "scheduledDate", "scheduledTime"))
                 .stream()
-                .map(consultation -> new ConsultationResponse(
+                .map(consultation -> {
+                    ConsultationResponse resp = new ConsultationResponse(
                         consultation.getId(),
                         consultation.getStudent() != null ? consultation.getStudent().getUserId() : null,
                         consultation.getStudent() != null && consultation.getStudent().getUser() != null
@@ -246,7 +247,12 @@ public class AdminController {
                         consultation.getRescheduleReason(),
                         consultation.getRejectReason(),
                         consultation.getCancelReason()
-                ))
+                    );
+                    if (consultation.getCreatedAt() != null) {
+                        resp.setCreatedAt(consultation.getCreatedAt().toString());
+                    }
+                    return resp;
+                })
                 .toList();
     }
 
@@ -408,8 +414,27 @@ public class AdminController {
     }
 
     @GetMapping("/attendance")
-    @Transactional(readOnly = true)
+    @Transactional
     public List<AdminAttendanceResponse> getAllAttendance() {
+        // Sync any consultations with LECTURER_NO_SHOW status that don't have attendance yet
+        List<Consultation> lecturerNoShows = consultationRepository.findByStatus(Consultation.Status.LECTURER_NO_SHOW);
+        for (Consultation c : lecturerNoShows) {
+            if (!attendanceRepository.existsByConsultationId(c.getId())) {
+                Attendance att = new Attendance();
+                att.setConsultation(c);
+                att.setLecturer(c.getLecturer());
+                att.setStudent(c.getStudent());
+                att.setAttendanceDate(c.getScheduledDate());
+                att.setStatus(Attendance.Status.LECTURER_NO_SHOW);
+                att.setNotes(c.getNotes() != null && !c.getNotes().isBlank() ? c.getNotes() : (c.getLecturerRemarks() != null ? c.getLecturerRemarks() : "Student reported lecturer absence"));
+                if (c.getStudent() != null && c.getStudent().getUser() != null) {
+                    att.setMarkedBy(c.getStudent().getUser());
+                }
+                att.setMarkedAt(c.getUpdatedAt() != null ? c.getUpdatedAt() : LocalDateTime.now());
+                attendanceRepository.save(att);
+            }
+        }
+
         return attendanceRepository.findAllWithDetails()
                 .stream()
                 .map(this::toAdminAttendanceResponse)
@@ -426,6 +451,7 @@ public class AdminController {
         Attendance attendance = attendanceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Attendance record not found with id: " + id));
 
+        Attendance.Status originalStatus = attendance.getStatus();
         Attendance.Status newStatus = Attendance.Status.valueOf(status.toUpperCase().replace('-', '_'));
         attendance.setStatus(newStatus);
 
@@ -438,6 +464,8 @@ public class AdminController {
                 attendance.getConsultation().setStatus(Consultation.Status.COMPLETED);
             } else if (newStatus == Attendance.Status.NO_SHOW) {
                 attendance.getConsultation().setStatus(Consultation.Status.NO_SHOW);
+            } else if (newStatus == Attendance.Status.LECTURER_NO_SHOW) {
+                attendance.getConsultation().setStatus(Consultation.Status.LECTURER_NO_SHOW);
             }
         }
 
@@ -467,28 +495,58 @@ public class AdminController {
                     : "Lecturer";
             String dateStr = attendance.getAttendanceDate() != null ? attendance.getAttendanceDate().toString() : "the scheduled session";
 
-            if (studentUser != null) {
-                Notification studentNotif = new Notification();
-                studentNotif.setUser(studentUser);
-                studentNotif.setTitle("Attendance Update: Absence Excused");
-                studentNotif.setMessage("Notice: Your absence for the consultation session with " + lecturerName + " on " + dateStr + " has been excused by the administrator.");
-                studentNotif.setType("EXCUSED");
-                studentNotif.setIsRead(false);
-                studentNotif.setConsultation(attendance.getConsultation());
-                studentNotif.setCreatedAt(LocalDateTime.now());
-                notificationRepository.save(studentNotif);
-            }
+            boolean wasLecturerNoShow = originalStatus == Attendance.Status.LECTURER_NO_SHOW;
 
-            if (lecturerUser != null) {
-                Notification lectNotif = new Notification();
-                lectNotif.setUser(lecturerUser);
-                lectNotif.setTitle("Attendance Update: Student Absence Excused");
-                lectNotif.setMessage("Notice: The absence for student " + studentName + " on " + dateStr + " has been excused by the administrator.");
-                lectNotif.setType("EXCUSED");
-                lectNotif.setIsRead(false);
-                lectNotif.setConsultation(attendance.getConsultation());
-                lectNotif.setCreatedAt(LocalDateTime.now());
-                notificationRepository.save(lectNotif);
+            if (wasLecturerNoShow) {
+                // Excuse lecturer absence: notify both lecturer and student appropriately
+                if (lecturerUser != null) {
+                    Notification lectNotif = new Notification();
+                    lectNotif.setUser(lecturerUser);
+                    lectNotif.setTitle("Attendance Notice: Absence Excused");
+                    lectNotif.setMessage("Notice: Your reported absence for consultation session with student " + studentName + " on " + dateStr + " has been excused by the administrator.");
+                    lectNotif.setType("EXCUSED");
+                    lectNotif.setIsRead(false);
+                    lectNotif.setConsultation(attendance.getConsultation());
+                    lectNotif.setCreatedAt(LocalDateTime.now());
+                    notificationRepository.save(lectNotif);
+                }
+
+                if (studentUser != null) {
+                    Notification studentNotif = new Notification();
+                    studentNotif.setUser(studentUser);
+                    studentNotif.setTitle("Attendance Update: Lecturer Absence Excused");
+                    studentNotif.setMessage("Notice: The reported absence for lecturer " + lecturerName + " on " + dateStr + " has been reviewed and excused by the administrator.");
+                    studentNotif.setType("EXCUSED");
+                    studentNotif.setIsRead(false);
+                    studentNotif.setConsultation(attendance.getConsultation());
+                    studentNotif.setCreatedAt(LocalDateTime.now());
+                    notificationRepository.save(studentNotif);
+                }
+            } else {
+                // Excuse student absence: normal flow
+                if (studentUser != null) {
+                    Notification studentNotif = new Notification();
+                    studentNotif.setUser(studentUser);
+                    studentNotif.setTitle("Attendance Update: Absence Excused");
+                    studentNotif.setMessage("Notice: Your absence for the consultation session with " + lecturerName + " on " + dateStr + " has been excused by the administrator.");
+                    studentNotif.setType("EXCUSED");
+                    studentNotif.setIsRead(false);
+                    studentNotif.setConsultation(attendance.getConsultation());
+                    studentNotif.setCreatedAt(LocalDateTime.now());
+                    notificationRepository.save(studentNotif);
+                }
+
+                if (lecturerUser != null) {
+                    Notification lectNotif = new Notification();
+                    lectNotif.setUser(lecturerUser);
+                    lectNotif.setTitle("Attendance Update: Student Absence Excused");
+                    lectNotif.setMessage("Notice: The absence for student " + studentName + " on " + dateStr + " has been excused by the administrator.");
+                    lectNotif.setType("EXCUSED");
+                    lectNotif.setIsRead(false);
+                    lectNotif.setConsultation(attendance.getConsultation());
+                    lectNotif.setCreatedAt(LocalDateTime.now());
+                    notificationRepository.save(lectNotif);
+                }
             }
         }
 
@@ -536,44 +594,91 @@ public class AdminController {
                 : "Lecturer";
         String dateStr = attendance.getAttendanceDate() != null ? attendance.getAttendanceDate().toString() : "the scheduled session";
 
-        // 1. Notification for Student
-        if (studentUser != null) {
-            Notification studentNotif = new Notification();
-            studentNotif.setUser(studentUser);
-            studentNotif.setTitle("Attendance Warning: Missed Consultation");
-            studentNotif.setMessage(customMessage != null ? customMessage :
-                    "Warning: You were recorded as a NO-SHOW for your consultation session with " + lecturerName + " on " + dateStr + ". Please contact your lecturer or provide a valid reason.");
-            studentNotif.setType("WARNING");
-            studentNotif.setIsRead(false);
-            studentNotif.setConsultation(attendance.getConsultation());
-            studentNotif.setCreatedAt(LocalDateTime.now());
-            notificationRepository.save(studentNotif);
-        }
+        boolean isLecturerNoShow = attendance.getStatus() == Attendance.Status.LECTURER_NO_SHOW;
 
-        // 2. Notification for Lecturer
-        if (lecturerUser != null) {
-            Notification lectNotif = new Notification();
-            lectNotif.setUser(lecturerUser);
-            lectNotif.setTitle("Attendance Notice: Student No-Show");
-            lectNotif.setMessage(customMessage != null ? customMessage :
-                    "Notice: Student " + studentName + " was marked as a NO-SHOW for the scheduled consultation session on " + dateStr + ".");
-            lectNotif.setType("WARNING");
-            lectNotif.setIsRead(false);
-            lectNotif.setConsultation(attendance.getConsultation());
-            lectNotif.setCreatedAt(LocalDateTime.now());
-            notificationRepository.save(lectNotif);
-        }
+        if (isLecturerNoShow) {
+            // 1. Warning sent to Lecturer
+            if (lecturerUser != null) {
+                Notification lectNotif = new Notification();
+                lectNotif.setUser(lecturerUser);
+                lectNotif.setTitle("Attendance Warning: Lecturer Absence / No-Show");
+                lectNotif.setMessage(customMessage != null ? customMessage :
+                        "Warning: Student " + studentName + " reported that you were absent for the scheduled consultation session on " + dateStr + ". Please adhere to scheduled consultation commitments.");
+                lectNotif.setType("WARNING");
+                lectNotif.setIsRead(false);
+                lectNotif.setConsultation(attendance.getConsultation());
+                lectNotif.setCreatedAt(LocalDateTime.now());
+                notificationRepository.save(lectNotif);
+            }
 
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Warning notification has been sent to " + studentName + " and " + lecturerName + "."
-        ));
+            // 2. Report Review Notice sent to Student (informs student that admin reviewed the report without mentioning warning to lecturer)
+            if (studentUser != null) {
+                Notification studentNotif = new Notification();
+                studentNotif.setUser(studentUser);
+                studentNotif.setTitle("Report Reviewed by Admin");
+                studentNotif.setMessage("Notice: The administrator has reviewed your report regarding the consultation session with " + lecturerName + " on " + dateStr + ".");
+                studentNotif.setType("REPORT_REVIEWED");
+                studentNotif.setIsRead(false);
+                studentNotif.setConsultation(attendance.getConsultation());
+                studentNotif.setCreatedAt(LocalDateTime.now());
+                notificationRepository.save(studentNotif);
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Warning notification has been sent to lecturer " + lecturerName + "."
+            ));
+        } else {
+            // 1. Notification for Student
+            if (studentUser != null) {
+                Notification studentNotif = new Notification();
+                studentNotif.setUser(studentUser);
+                studentNotif.setTitle("Attendance Warning: Missed Consultation");
+                studentNotif.setMessage(customMessage != null ? customMessage :
+                        "Warning: You were recorded as a NO-SHOW for your consultation session with " + lecturerName + " on " + dateStr + ". Please contact your lecturer or provide a valid reason.");
+                studentNotif.setType("WARNING");
+                studentNotif.setIsRead(false);
+                studentNotif.setConsultation(attendance.getConsultation());
+                studentNotif.setCreatedAt(LocalDateTime.now());
+                notificationRepository.save(studentNotif);
+            }
+
+            // 2. Notification for Lecturer
+            if (lecturerUser != null) {
+                Notification lectNotif = new Notification();
+                lectNotif.setUser(lecturerUser);
+                lectNotif.setTitle("Attendance Notice: Student No-Show");
+                lectNotif.setMessage(customMessage != null ? customMessage :
+                        "Notice: Student " + studentName + " was marked as a NO-SHOW for the scheduled consultation session on " + dateStr + ".");
+                lectNotif.setType("WARNING");
+                lectNotif.setIsRead(false);
+                lectNotif.setConsultation(attendance.getConsultation());
+                lectNotif.setCreatedAt(LocalDateTime.now());
+                notificationRepository.save(lectNotif);
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Warning notification has been sent to " + studentName + " and " + lecturerName + "."
+            ));
+        }
     }
 
     private AdminAttendanceResponse toAdminAttendanceResponse(Attendance attendance) {
         boolean warningIssued = (attendance.getWarningIssued() != null && attendance.getWarningIssued());
         if (!warningIssued && attendance.getConsultation() != null && attendance.getConsultation().getId() != null) {
             warningIssued = notificationRepository.existsByConsultationIdAndType(attendance.getConsultation().getId(), "WARNING");
+        }
+
+        String statusStr = "";
+        if (attendance.getStatus() != null) {
+            if (attendance.getStatus() == Attendance.Status.NO_SHOW) {
+                statusStr = "NO-SHOW";
+            } else if (attendance.getStatus() == Attendance.Status.LECTURER_NO_SHOW) {
+                statusStr = "LECTURER-NO-SHOW";
+            } else {
+                statusStr = attendance.getStatus().name();
+            }
         }
 
         AdminAttendanceResponse response = new AdminAttendanceResponse(
@@ -587,7 +692,7 @@ public class AdminController {
                 attendance.getLecturer() != null && attendance.getLecturer().getUser() != null
                 ? attendance.getLecturer().getUser().getFullName() : "Unknown Lecturer",
                 attendance.getAttendanceDate() != null ? attendance.getAttendanceDate().toString() : "",
-                attendance.getStatus() != null ? (attendance.getStatus() == Attendance.Status.NO_SHOW ? "NO-SHOW" : attendance.getStatus().name()) : "",
+                statusStr,
                 attendance.getNotes() != null ? attendance.getNotes() : "",
                 attendance.getMarkedBy() != null ? attendance.getMarkedBy().getId() : null,
                 attendance.getMarkedBy() != null ? attendance.getMarkedBy().getFullName() : null,
