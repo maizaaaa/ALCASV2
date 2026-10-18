@@ -3,7 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 
 export interface AuthResponse {
   token: string;
@@ -69,7 +69,27 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/forgot-password`, { email });
+    return this.http.post(`${this.apiUrl}/forgot-password`, { email }, { responseType: 'text' }).pipe(
+      map((res: string) => {
+        try {
+          return JSON.parse(res);
+        } catch {
+          return { success: true, message: res };
+        }
+      })
+    );
+  }
+
+  resetPassword(payload: { email: string; code: string; newPassword: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reset-password`, payload, { responseType: 'text' }).pipe(
+      map((res: string) => {
+        try {
+          return JSON.parse(res);
+        } catch {
+          return { success: true, message: res };
+        }
+      })
+    );
   }
 
   logout() {

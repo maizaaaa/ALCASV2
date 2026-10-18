@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { AuthService } from '../auth-service';
 
 @Component({
   selector: 'app-verification-code',
@@ -12,6 +13,7 @@ import { Router, RouterLink } from '@angular/router';
 })
 export class VerificationCode implements OnInit {
   isDarkMode = false;
+  email = '';
   otpDigits = ['', '', '', '', '', ''];
   verificationCode = '';
   isSubmitting = false;
@@ -23,6 +25,9 @@ export class VerificationCode implements OnInit {
   private platformId = inject(PLATFORM_ID);
   private document = inject(DOCUMENT);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -34,6 +39,13 @@ export class VerificationCode implements OnInit {
         this.document.documentElement.classList.remove('dark');
       }
     }
+
+    this.route.queryParams.subscribe((params) => {
+      if (params['email']) {
+        this.email = params['email'].trim();
+      }
+      this.cdr.detectChanges();
+    });
   }
 
 
@@ -142,16 +154,19 @@ export class VerificationCode implements OnInit {
       return;
     }
 
-    // Mock validation logic: assume success for any 6-digit code
+    this.isSubmitting = false;
+    this.isVerified = true;
+    this.successMessage = 'Verification code accepted! Redirecting to password reset page...';
+    this.cdr.detectChanges();
+
     setTimeout(() => {
-      this.isSubmitting = false;
-      this.isVerified = true;
-      this.successMessage = 'Account successfully verified! Redirecting to reset password page...';
-      
-      setTimeout(() => {
-        this.router.navigate(['/reset-password']);
-      }, 1500);
-    }, 1500);
+      this.router.navigate(['/reset-password'], {
+        queryParams: {
+          email: this.email,
+          code: this.verificationCode,
+        },
+      });
+    }, 1200);
   }
 
   resendCode() {
@@ -159,9 +174,25 @@ export class VerificationCode implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    setTimeout(() => {
-      this.isResending = false;
-      this.successMessage = 'A new verification code has been sent to your email!';
-    }, 1500);
+    if (this.email) {
+      this.authService.forgotPassword(this.email).subscribe({
+        next: (res: any) => {
+          this.isResending = false;
+          this.successMessage = res?.message || 'A new verification code has been dispatched to ' + this.email;
+          this.cdr.detectChanges();
+        },
+        error: (err: any) => {
+          this.isResending = false;
+          this.errorMessage = err.error?.message || err.message || 'Failed to resend code. Please try again.';
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      setTimeout(() => {
+        this.isResending = false;
+        this.successMessage = 'A new verification code has been sent to your email!';
+        this.cdr.detectChanges();
+      }, 1200);
+    }
   }
 }
